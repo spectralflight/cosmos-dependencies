@@ -1,3 +1,3 @@
 # Cosmos Dependencies
 
-Pre-built wheels for Cosmos dependencies.
+Package index containing pre-build wheels for Cosmos source dependencies.
