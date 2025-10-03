@@ -1,3 +1,13 @@
+## Main
+
+### nvidia-cosmos-header
+
+<img width="1457" height="595" alt="nvidia-cosmos-header" src="https://github.com/user-attachments/assets/25810505-a0f7-44e2-b136-d6e678849e18" />
+
+### cosmos-predict-diagram
+
+<img width="3153" height="880" alt="cosmos-predict-diagram" src="https://github.com/user-attachments/assets/8f436cdd-3d04-46ea-b333-d8e9ccdc6d9c" />
+
 ## Base
 
 ### Text2World
@@ -41,4 +51,5 @@ https://github.com/user-attachments/assets/ca440ba6-50b1-4b63-b590-063e5e942b6a
 ### Text2World
 
 https://github.com/user-attachments/assets/aae580f5-1379-4416-81ad-c863b51d4cf9
+
 
