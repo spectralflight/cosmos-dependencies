@@ -1,8 +1,12 @@
 ## Main
 
-### nvidia-cosmos-header
+### cosmos-logo-small
 
-<img width="1457" height="595" alt="nvidia-cosmos-header" src="https://github.com/user-attachments/assets/25810505-a0f7-44e2-b136-d6e678849e18" />
+<img width="274" height="152" alt="cosmos-logo" src="https://github.com/user-attachments/assets/28f2d612-bbd6-44a3-8795-833d05e9f05f" />
+
+### cosmos-header
+
+<img width="1457" height="595" alt="cosmos-header" src="https://github.com/user-attachments/assets/25810505-a0f7-44e2-b136-d6e678849e18" />
 
 ### cosmos-predict-diagram
 
@@ -51,5 +55,6 @@ https://github.com/user-attachments/assets/ca440ba6-50b1-4b63-b590-063e5e942b6a
 ### Text2World
 
 https://github.com/user-attachments/assets/aae580f5-1379-4416-81ad-c863b51d4cf9
+
 
 
