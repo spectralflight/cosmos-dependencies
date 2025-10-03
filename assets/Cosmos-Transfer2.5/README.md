@@ -1,3 +1,7 @@
+# Robot Example
+## Input
+https://github.com/user-attachments/assets/bffc031e-3933-4511-a659-136965931ab0
+
 ## Edge
 
 ### Control
@@ -22,4 +26,5 @@ https://github.com/user-attachments/assets/cc288be4-449d-4f27-aa05-e6444186e52e
 
 ### Output
 https://github.com/user-attachments/assets/45f1f019-ff63-49f5-b573-79d34cbe1de5
+
 
