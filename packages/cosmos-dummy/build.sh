@@ -13,4 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-uv build --wheel -o "${OUTPUT_DIR}"
+uv build \
+    --wheel \
+    -o "${OUTPUT_DIR}" \
+    "$@"
