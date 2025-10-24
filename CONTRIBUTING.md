@@ -1,16 +1,5 @@
 # Contributing
 
-## Wheels
-
-Unfortunately, we cannot accept externally built wheels. Forking the repository will allow you to host your own index.
-
-To copy over existing wheels:
-
-```shell
-gh release download --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) -D tmp/assets --pattern '*.whl'
-gh release upload --repo <username>/cosmos-dependencies v$(uv version --short) tmp/assets/*.whl
-```
-
 ## Code
 
 Run linting/formatting:
@@ -29,4 +18,15 @@ Check licenses:
 
 ```shell
 just license
+```
+
+## Wheels
+
+Unfortunately, we cannot accept externally built wheels. You are welcome to fork the repository and host your own package index if desired.
+
+To copy over existing wheels:
+
+```shell
+gh release download --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) -D tmp/assets --pattern '*.whl'
+gh release upload --repo <username>/cosmos-dependencies v$(uv version --short) tmp/assets/*.whl
 ```

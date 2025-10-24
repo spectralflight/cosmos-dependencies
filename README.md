@@ -31,7 +31,7 @@ curl -L 'https://github.com/cli/cli/releases/download/v2.82.1/gh_2.82.1_linux_am
 gh auth login
 ```
 
-## Usage
+## Build Wheels
 
 Run the docker container:
 
@@ -51,7 +51,7 @@ On the host, fix the file permissions:
 sudo chown $USER -R .
 ```
 
-## Release
+## Upload Wheels
 
 1. Upload wheels
 
@@ -67,3 +67,13 @@ just index-create
 ```
 
 1. Open a PR and merge to [cosmos-dependencies](https://github.com/nvidia-cosmos/cosmos-dependencies).
+
+## Contributing
+
+We thrive on community collaboration! [NVIDIA-Cosmos](https://github.com/nvidia-cosmos/) wouldn't be where it is without contributions from developers like you. Check out our [Contributing Guide](CONTRIBUTING.md) to get started, and share your feedback through issues.
+
+Big thanks 🙏 to everyone helping us push the boundaries of open-source physical AI!
+
+## License
+
+This repository is licensed under the [Apache License 2.0](LICENSE).
