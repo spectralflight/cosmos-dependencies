@@ -38,7 +38,8 @@ docker-cu128:
 docker-cu130:
   just -f "{{source_file()}}" _docker nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04
 
-tag := 'v$(uv version --short)'
+version := `uv version --short`
+tag := 'v' + version
 index_dir := 'docs/' + tag
 
 # Create the package index

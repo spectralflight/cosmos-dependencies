@@ -25,11 +25,11 @@ import subprocess
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import parse
 import tyro
-from wheel_filename import ParsedWheelFilename, parse_wheel_filename
+from wheel_filename import parse_wheel_filename
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -42,8 +42,8 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 
 @dataclass
 class _WheelInfo:
-    asset: dict[str, Any]
-    pwf: ParsedWheelFilename
+    filename: str
+    url: str
 
 
 def _get_index_line(package_name: str) -> str:
@@ -85,16 +85,22 @@ def main(args: Args):
     all_wheels: dict[str, dict[str, list[_WheelInfo]]] = collections.defaultdict(lambda: collections.defaultdict(list))
     version_pattern = parse.compile("{version}+cu{cuda_version:3d}.torch{torch_version:3d}", case_sensitive=True)
     for asset in assets:
-        whl_name = asset["name"]
-        if not whl_name.endswith(".whl"):
+        filename: str = asset["name"]
+        if not filename.endswith(".whl"):
             continue
-        pwf = parse_wheel_filename(whl_name)
+
+        url: str = asset["url"]
+        pwf = parse_wheel_filename(filename)
+        package_name = pwf.project.replace("_", "-")
+
+        # Parse cuda/torch version
         match = version_pattern.parse(pwf.version)
         if match is None:
-            warnings.warn(f"Skipping invalid wheel filename: {whl_name}")
+            warnings.warn(f"Skipping invalid wheel filename: {filename}")
             continue
         index_name = f"cu{match['cuda_version']}_torch{match['torch_version']}"
-        all_wheels[index_name][pwf.project].append(_WheelInfo(asset=asset, pwf=pwf))
+
+        all_wheels[index_name][package_name].append(_WheelInfo(filename=filename, url=url))
 
     all_lines: dict[str, list[str]] = collections.defaultdict(list)
 
@@ -110,9 +116,7 @@ def main(args: Args):
 
             package_lines = []
             for whl_info in package_wheels:
-                whl_name = whl_info.asset["name"]
-                whl_url = whl_info.asset["url"]
-                package_lines.append(f"<a href='{whl_url}'>{whl_name}</a><br>")
+                package_lines.append(f"<a href='{whl_info.url}'>{whl_info.filename}</a><br>")
             all_lines[package_name].extend(package_lines)
             _write_html(
                 output_path / index_name / "simple" / package_name / "index.html",
