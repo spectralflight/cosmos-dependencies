@@ -1,11 +1,69 @@
 # Cosmos Dependencies
 
-Package index containing pre-build wheels for Cosmos source dependencies.
+Repository for building and publishing Cosmos dependencies.
 
-[Index](https://nvidia-cosmos.github.io/cosmos-dependencies/simple)
+Index URLs:
 
-Usage:
+* [all](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.1.0/simple)
+* [cu128_torch271](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.1.0/cu128_torch271/simple)
+
+## Setup
+
+Install system dependencies:
+
+[uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ```shell
-pip install --extra-index-url https://nvidia-cosmos.github.io/cosmos-dependencies/cu128_torch271/simple ...
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 ```
+
+[just](https://github.com/casey/just?tab=readme-ov-file#installation)
+
+```shell
+uv tool install -U rust-just
+```
+
+[gh](https://github.com/cli/cli?tab=readme-ov-file#installation):
+
+```shell
+curl -L 'https://github.com/cli/cli/releases/download/v2.82.1/gh_2.82.1_linux_amd64.tar.gz' | tar xz -C "$HOME/.local"
+gh auth login
+```
+
+## Usage
+
+Run the docker container:
+
+```shell
+just docker-<cuda_version>
+```
+
+Build a single package:
+
+```shell
+just build <package_name> <package_version> <python_version> <torch_version> <cuda_version>
+```
+
+On the host, fix the file permissions:
+
+```shell
+sudo chown $USER -R .
+```
+
+## Release
+
+1. Upload wheels
+
+```shell
+gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) build/**/*.whl
+rm -rf build/**/*.whl
+```
+
+1. Create and locally host the package index
+
+```shell
+just index-create
+```
+
+1. Open a PR and merge to [cosmos-dependencies](https://github.com/nvidia-cosmos/cosmos-dependencies).
