@@ -60,4 +60,8 @@ env -i \
 	TORCH_VERSION="${TORCH_VERSION}" \
 	CUDA_VERSION="${CUDA_VERSION}" \
 	OUTPUT_DIR="${OUTPUT_DIR}" \
+	PATH="${PATH:-}" \
+	XDG_CACHE_HOME="${XDG_CACHE_HOME:-}" \
+	UV_CACHE_DIR="${UV_CACHE_DIR:-}" \
+	PIP_CACHE_DIR="${PIP_CACHE_DIR:-}" \
 	bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
