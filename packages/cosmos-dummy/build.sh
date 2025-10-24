@@ -14,6 +14,6 @@
 # limitations under the License.
 
 uv build \
-    --wheel \
-    -o "${OUTPUT_DIR}" \
-    "$@"
+	--wheel \
+	-o "${OUTPUT_DIR}" \
+	"$@"

@@ -46,17 +46,18 @@ if [[ ! "${CUDA_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
 	exit 1
 fi
 
+root_dir="$(pwd)"
 name="${PACKAGE_NAME//-/_}-${PACKAGE_VERSION}-py${PYTHON_VERSION}-cu${CUDA_VERSION}-torch${TORCH_VERSION}"
-export OUTPUT_DIR="$(pwd)/build/${name}"
+export OUTPUT_DIR="${root_dir}/build/${name}"
 rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 log_file="${OUTPUT_DIR}/build.log"
 echo "Logging to ${log_file}"
 env -i \
-    PACKAGE_NAME="${PACKAGE_NAME}" \
-    PACKAGE_VERSION="${PACKAGE_VERSION}" \
-    PYTHON_VERSION="${PYTHON_VERSION}" \
-    TORCH_VERSION="${TORCH_VERSION}" \
-    CUDA_VERSION="${CUDA_VERSION}" \
-    OUTPUT_DIR="${OUTPUT_DIR}" \
-    bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
+	PACKAGE_NAME="${PACKAGE_NAME}" \
+	PACKAGE_VERSION="${PACKAGE_VERSION}" \
+	PYTHON_VERSION="${PYTHON_VERSION}" \
+	TORCH_VERSION="${TORCH_VERSION}" \
+	CUDA_VERSION="${CUDA_VERSION}" \
+	OUTPUT_DIR="${OUTPUT_DIR}" \
+	bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
