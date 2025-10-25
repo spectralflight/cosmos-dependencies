@@ -1,0 +1,3 @@
+*.lock linguist-generated=true
+*.html linguist-generated=true
+ATTRIBUTIONS.md linguist-generated=true
