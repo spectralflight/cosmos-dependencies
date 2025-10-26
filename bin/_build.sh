@@ -19,14 +19,19 @@ package_dir="${root_dir}/packages/${PACKAGE_NAME}"
 CUDA_NAME="${CUDA_VERSION//./}"
 TORCH_NAME="${TORCH_VERSION//./}"
 
+echo "Building ${PACKAGE_NAME}=${PACKAGE_VERSION} python=${PYTHON_VERSION} torch=${TORCH_VERSION} cuda=${CUDA_VERSION}" "$@"
+
 # Print system information.
 date
 uname -a
 cat /etc/os-release
 ldd --version
 gcc --version
+printenv
 
-echo "Building ${PACKAGE_NAME}=${PACKAGE_VERSION} python=${PYTHON_VERSION} torch=${TORCH_VERSION} cuda=${CUDA_VERSION}" "$@"
+# Configure ccache
+ccache --zero-stats
+export CCACHE_NOHASHDIR="true"
 
 # Set CUDA environment variables
 export CUDA_HOME="/usr/local/cuda-${CUDA_VERSION}"
@@ -44,7 +49,7 @@ uv venv --clear --python "${PYTHON_VERSION}" "${venv_dir}"
 # shellcheck source=/dev/null
 source "${venv_dir}/bin/activate"
 uv sync --active
-uv pip install "torch==${TORCH_VERSION}" --index-url "https://download.pytorch.org/whl/cu${CUDA_NAME}"
+uv pip install "torch==${TORCH_VERSION}.*" --index-url "https://download.pytorch.org/whl/cu${CUDA_NAME}"
 
 # Set build environment variables
 eval "$(python -c "
@@ -60,6 +65,6 @@ deactivate
 popd || exit 1
 
 # Fix wheel filenames.
-for whl_path in "${OUTPUT_DIR}"/*.whl; do
-	uv run bin/fix_wheel_filename.py -i "${whl_path}" --cuda="${CUDA_NAME}" --torch="${TORCH_NAME}"
-done
+uv run bin/fix_wheel_filename.py -i "${OUTPUT_DIR}"/*.whl --cuda="${CUDA_NAME}" --torch="${TORCH_NAME}"
+
+ccache --show-stats

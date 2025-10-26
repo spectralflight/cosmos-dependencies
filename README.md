@@ -4,8 +4,8 @@ Repository for building and publishing Cosmos dependencies.
 
 Index URLs:
 
-* [all](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.1.0/simple)
-* [cu128_torch271](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.1.0/cu128_torch271/simple)
+* [all](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.2.0/simple)
+* [cu128_torch27](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.2.0/cu128_torch27/simple)
 
 ## Setup
 
@@ -37,18 +37,18 @@ Run the docker container:
 
 ```shell
 just docker-<cuda_version>
+
+# Example
+just docker-cu128
 ```
 
 Build a single package:
 
 ```shell
 just build <package_name> <package_version> <python_version> <torch_version> <cuda_version>
-```
 
-On the host, fix the file permissions:
-
-```shell
-sudo chown $USER -R .
+# Example
+just build natten 0.21.0 3.12 2.7 12.8
 ```
 
 ## Upload Wheels
@@ -56,17 +56,24 @@ sudo chown $USER -R .
 1. Upload wheels
 
 ```shell
-gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) build/**/*.whl
-rm -rf build/**/*.whl
+just upload
 ```
 
 1. Create and locally host the package index
 
 ```shell
-just index-create
+just index-serve
 ```
 
 1. Open a PR and merge to [cosmos-dependencies](https://github.com/nvidia-cosmos/cosmos-dependencies).
+
+## Bump Version
+
+```shell
+gh release download --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) -D tmp/assets --pattern '*'
+uv version --bump minor
+gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) tmp/assets/*
+```
 
 ## Contributing
 

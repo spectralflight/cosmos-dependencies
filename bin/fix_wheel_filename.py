@@ -26,29 +26,30 @@ from wheel_filename import parse_wheel_filename
 
 @dataclass
 class Args:
-    input_path: Annotated[Path, tyro.conf.arg(aliases=("-i",))]
+    input_paths: Annotated[list[Path], tyro.conf.arg(aliases=("-i",))]
     """Input wheel path."""
 
     cuda: int
     """CUDA version (e.g. 128)."""
     torch: int
-    """Torch version (e.g. 271)."""
+    """Torch version (e.g. 27)."""
 
     dry_run: bool = False
     """If True, do not rename the wheel."""
 
 
 def main(args: Args):
-    pwf = parse_wheel_filename(args.input_path.name)
-    version = pwf.version.split("+")[0]
-    pwf = pwf._replace(version=f"{version}+cu{args.cuda}.torch{args.torch}")
-    output_path = args.input_path.parent / str(pwf)
-    if output_path == args.input_path:
-        print(f"Wheel filename is already correct: '{args.input_path}'")
-        return
-    print(f"Renaming wheel: '{args.input_path}' -> '{output_path}'")
-    if not args.dry_run:
-        shutil.move(args.input_path, output_path)
+    for input_path in args.input_paths:
+        pwf = parse_wheel_filename(input_path.name)
+        version = pwf.version.split("+")[0]
+        pwf = pwf._replace(version=f"{version}+cu{args.cuda}.torch{args.torch}")
+        output_path = input_path.parent / str(pwf)
+        if output_path == input_path:
+            print(f"Wheel filename is already correct: '{input_path}'")
+            continue
+        print(f"Renaming wheel: '{input_path}' -> '{output_path}'")
+        if not args.dry_run:
+            shutil.move(input_path, output_path)
 
 
 if __name__ == "__main__":

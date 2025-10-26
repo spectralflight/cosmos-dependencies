@@ -22,6 +22,7 @@ import collections
 import json
 import shutil
 import subprocess
+import urllib.parse
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,15 +59,19 @@ def _write_html(html_path: Path, lines: list[str]) -> None:
 
 @dataclass
 class Args:
-    output_path: Annotated[Path, tyro.conf.arg(aliases=("-o",))]
+    input_dir: Annotated[Path, tyro.conf.arg(aliases=("-i",))]
+    """Input directory."""
+    output_dir: Annotated[Path, tyro.conf.arg(aliases=("-o",))]
+    """Output directory."""
     tag: str
+    """Release tag."""
 
     repo: str = "nvidia-cosmos/cosmos-dependencies"
+    """GitHub repository."""
 
 
 def main(args: Args):
-    output_path: Path = args.output_path
-    shutil.rmtree(output_path, ignore_errors=True)
+    shutil.rmtree(args.output_dir, ignore_errors=True)
 
     # Get the assets from the release
     cmd = [
@@ -83,13 +88,17 @@ def main(args: Args):
 
     # Group wheels by cuda/torch version and package
     all_wheels: dict[str, dict[str, list[_WheelInfo]]] = collections.defaultdict(lambda: collections.defaultdict(list))
-    version_pattern = parse.compile("{version}+cu{cuda_version:3d}.torch{torch_version:3d}", case_sensitive=True)
+
+    # Get wheels from release assets
+    version_pattern = parse.compile("{version}+cu{cuda_version:d}.torch{torch_version:d}", case_sensitive=True)
     for asset in assets:
         filename: str = asset["name"]
         if not filename.endswith(".whl"):
             continue
 
         url: str = asset["url"]
+        hash_name, hash_value = asset["digest"].split(":")
+        url += f"#{hash_name}={hash_value}"
         pwf = parse_wheel_filename(filename)
         package_name = pwf.project.replace("_", "-")
 
@@ -101,6 +110,24 @@ def main(args: Args):
         index_name = f"cu{match['cuda_version']}_torch{match['torch_version']}"
 
         all_wheels[index_name][package_name].append(_WheelInfo(filename=filename, url=url))
+
+    # Parse urls.txt files
+    urls_files = args.input_dir.glob("*/urls.txt")
+    assert urls_files
+    for urls_file in urls_files:
+        index_name = urls_file.parent.name
+        urls = urls_file.read_text().splitlines()
+        assert urls
+        for url in urls:
+            url = url.strip()
+            if not url or url.startswith("#"):
+                # Skip comments and empty lines
+                continue
+            url_parts = urllib.parse.urlparse(url)
+            filename = urllib.parse.unquote(url_parts.path.rsplit("/", 1)[-1])
+            pwf = parse_wheel_filename(filename)
+            package_name = pwf.project.replace("_", "-")
+            all_wheels[index_name][package_name].append(_WheelInfo(filename=filename, url=url))
 
     all_lines: dict[str, list[str]] = collections.defaultdict(list)
 
@@ -119,23 +146,23 @@ def main(args: Args):
                 package_lines.append(f"<a href='{whl_info.url}'>{whl_info.filename}</a><br>")
             all_lines[package_name].extend(package_lines)
             _write_html(
-                output_path / index_name / "simple" / package_name / "index.html",
+                args.output_dir / index_name / "simple" / package_name / "index.html",
                 package_lines,
             )
 
         _write_html(
-            output_path / index_name / "simple/index.html",
+            args.output_dir / index_name / "simple/index.html",
             index_lines,
         )
 
     # Create global index
     _write_html(
-        output_path / "simple/index.html",
+        args.output_dir / "simple/index.html",
         [_get_index_line(package_name) for package_name in all_lines],
     )
     for package_name, package_lines in all_lines.items():
         _write_html(
-            output_path / "simple" / package_name / "index.html",
+            args.output_dir / "simple" / package_name / "index.html",
             package_lines,
         )
 
