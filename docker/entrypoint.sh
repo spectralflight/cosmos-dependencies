@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -13,16 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[project]
-name = "natten"
-version = "0.1.0"
-requires-python = ">=3.10"
-dependencies = [
-    "cosmos-dependencies[build]",
-    "cmake==3.*",
-    # https://github.com/SHI-Labs/NATTEN/blob/main/pyproject.toml#L2
-    "setuptools >= 64",
-]
+# Docker entrypoint script.
 
-[tool.uv.sources]
-cosmos-dependencies = { path = "../.." }
+set -e
+
+export PATH="${PATH-}:$HOME/.local/bin"
+
+exec "$@"

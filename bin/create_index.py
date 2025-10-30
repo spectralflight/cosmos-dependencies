@@ -77,6 +77,15 @@ def _download_html(url: str, html_path: Path, *, base_url: str) -> None:
     ]
     subprocess.check_call(cmd)
 
+    # Strip comments and empty lines
+    lines: list[str] = []
+    for line in html_path.read_text().splitlines():
+        line = line.rstrip()
+        if not line or line.lstrip().startswith("<!--"):
+            continue
+        lines.append(line)
+    html_path.write_text("\n".join(lines) + "\n")
+
 
 def _write_html(html_path: Path, lines: set[_IndexLine]) -> None:
     """Write index HTML file."""
