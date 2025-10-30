@@ -13,14 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Fix wheel filename."""
+"""Fix wheel.
 
-import shutil
+* Ensure wheel metadata matches filename.
+* Optionally, set local version.
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
 import tyro
+from change_wheel_version import change_wheel_version
 from wheel_filename import parse_wheel_filename
 
 
@@ -29,27 +33,31 @@ class Args:
     input_paths: Annotated[list[Path], tyro.conf.arg(aliases=("-i",))]
     """Input wheel path."""
 
-    cuda: int
-    """CUDA version (e.g. 128)."""
-    torch: int
-    """Torch version (e.g. 27)."""
-
-    dry_run: bool = False
-    """If True, do not rename the wheel."""
+    local_version: str | None = None
+    """Local version (e.g. 'cu128.torch27')."""
 
 
 def main(args: Args):
     for input_path in args.input_paths:
+        print(f"Fixing wheel: '{input_path}'")
         pwf = parse_wheel_filename(input_path.name)
-        version = pwf.version.split("+")[0]
-        pwf = pwf._replace(version=f"{version}+cu{args.cuda}.torch{args.torch}")
-        output_path = input_path.parent / str(pwf)
+        parts = pwf.version.split("+")
+        assert len(parts) in [1, 2]
+        version = parts[0]
+        if args.local_version is not None:
+            local_version = args.local_version
+        else:
+            local_version = parts[1]
+        output_path = change_wheel_version(
+            wheel=input_path,
+            version=version,
+            local_version=local_version,
+        )
         if output_path == input_path:
-            print(f"Wheel filename is already correct: '{input_path}'")
+            print(f"Checked wheel: '{input_path}'")
             continue
-        print(f"Renaming wheel: '{input_path}' -> '{output_path}'")
-        if not args.dry_run:
-            shutil.move(input_path, output_path)
+        input_path.unlink()
+        print(f"Renamed wheel: '{input_path}' -> '{output_path}'")
 
 
 if __name__ == "__main__":

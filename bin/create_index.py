@@ -32,6 +32,13 @@ import parse
 import tyro
 from wheel_filename import parse_wheel_filename
 
+_TORCH_BASE_URL = "https://download.pytorch.org"
+_TORCH_PACKAGES = [
+    "torch",
+    "torchvision",
+    "triton",
+]
+
 _HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
 <body>
@@ -41,23 +48,44 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-@dataclass
-class _WheelInfo:
-    filename: str
-    url: str
+@dataclass(frozen=True, order=True)
+class _IndexLine:
+    """Index line."""
+
+    name: str
+    url: str | None = None
+
+    def __str__(self) -> str:
+        if self.url is not None:
+            url = self.url
+        else:
+            url = f"{self.name}/"
+        return f"<a href='{url}'>{self.name}</a><br>"
 
 
-def _get_index_line(package_name: str) -> str:
-    return f"<a href='{package_name}/'>{package_name}</a><br>"
+def _download_html(url: str, html_path: Path, *, base_url: str) -> None:
+    """Download index HTML file."""
+    html_path.parent.mkdir(exist_ok=True, parents=True)
+    cmd = [
+        "wget",
+        "--quiet",
+        "--convert-links",
+        f"--base={base_url}",
+        url,
+        "-O",
+        html_path,
+    ]
+    subprocess.check_call(cmd)
 
 
-def _write_html(html_path: Path, lines: list[str]) -> None:
-    index_html = _HTML_TEMPLATE.format(body="\n".join(lines))
+def _write_html(html_path: Path, lines: set[_IndexLine]) -> None:
+    """Write index HTML file."""
+    index_html = _HTML_TEMPLATE.format(body="\n".join(map(str, sorted(lines))))
     html_path.parent.mkdir(exist_ok=True, parents=True)
     html_path.write_text(index_html)
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class Args:
     input_dir: Annotated[Path, tyro.conf.arg(aliases=("-i",))]
     """Input directory."""
@@ -86,8 +114,8 @@ def main(args: Args):
     ]
     assets = json.loads(subprocess.check_output(cmd, text=True))["assets"]
 
-    # Group wheels by cuda/torch version and package
-    all_wheels: dict[str, dict[str, list[_WheelInfo]]] = collections.defaultdict(lambda: collections.defaultdict(list))
+    # Group wheels by cuda/torch version and package name
+    all_wheels: dict[str, dict[str, set[_IndexLine]]] = collections.defaultdict(lambda: collections.defaultdict(set))
 
     # Get wheels from release assets
     version_pattern = parse.compile("{version}+cu{cuda_version:d}.torch{torch_version:d}", case_sensitive=True)
@@ -109,15 +137,14 @@ def main(args: Args):
             continue
         index_name = f"cu{match['cuda_version']}_torch{match['torch_version']}"
 
-        all_wheels[index_name][package_name].append(_WheelInfo(filename=filename, url=url))
+        all_wheels[index_name][package_name].add(_IndexLine(filename, url))
 
-    # Parse urls.txt files
-    urls_files = args.input_dir.glob("*/urls.txt")
+    # Parse wheel URL files
+    urls_files = args.input_dir.glob("*.txt")
     assert urls_files
     for urls_file in urls_files:
-        index_name = urls_file.parent.name
+        index_name = urls_file.stem
         urls = urls_file.read_text().splitlines()
-        assert urls
         for url in urls:
             url = url.strip()
             if not url or url.startswith("#"):
@@ -127,42 +154,49 @@ def main(args: Args):
             filename = urllib.parse.unquote(url_parts.path.rsplit("/", 1)[-1])
             pwf = parse_wheel_filename(filename)
             package_name = pwf.project.replace("_", "-")
-            all_wheels[index_name][package_name].append(_WheelInfo(filename=filename, url=url))
+            all_wheels[index_name][package_name].add(_IndexLine(filename, url))
 
-    all_lines: dict[str, list[str]] = collections.defaultdict(list)
+    all_lines: dict[str, set[_IndexLine]] = collections.defaultdict(set)
 
     # Create cuda/torch specific indices
     for index_name, index_wheels in all_wheels.items():
-        index_lines = []
+        index_dir = args.output_dir / index_name / "simple"
+        cuda_name, _torch_name = index_name.split("_")
+        index_lines = set()
 
         # Create package indices
         for package_name, package_wheels in index_wheels.items():
-            if package_name == "cosmos-dummy":
-                continue
-            index_lines.append(_get_index_line(package_name))
-
-            package_lines = []
-            for whl_info in package_wheels:
-                package_lines.append(f"<a href='{whl_info.url}'>{whl_info.filename}</a><br>")
-            all_lines[package_name].extend(package_lines)
+            index_lines.add(_IndexLine(package_name))
+            all_lines[package_name].update(package_wheels)
             _write_html(
-                args.output_dir / index_name / "simple" / package_name / "index.html",
-                package_lines,
+                index_dir / package_name / "index.html",
+                package_wheels,
             )
 
+        for package_name in _TORCH_PACKAGES:
+            index_lines.add(_IndexLine(package_name))
+            _download_html(
+                f"{_TORCH_BASE_URL}/whl/{cuda_name}/{package_name}/",
+                index_dir / package_name / "index.html",
+                base_url=_TORCH_BASE_URL,
+            )
         _write_html(
-            args.output_dir / index_name / "simple/index.html",
+            index_dir / "index.html",
             index_lines,
         )
 
     # Create global index
-    _write_html(
-        args.output_dir / "simple/index.html",
-        [_get_index_line(package_name) for package_name in all_lines],
-    )
+    index_dir = args.output_dir / "simple"
+    index_lines = set(_IndexLine(package_name) for package_name in all_lines)
+    for package_name in _TORCH_PACKAGES:
+        index_lines.add(_IndexLine(package_name))
+        _download_html(
+            f"{_TORCH_BASE_URL}/whl/{package_name}/", index_dir / package_name / "index.html", base_url=_TORCH_BASE_URL
+        )
+    _write_html(index_dir / "index.html", index_lines)
     for package_name, package_lines in all_lines.items():
         _write_html(
-            args.output_dir / "simple" / package_name / "index.html",
+            index_dir / package_name / "index.html",
             package_lines,
         )
 

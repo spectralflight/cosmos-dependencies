@@ -17,11 +17,11 @@ _pre-commit *args: setup
 lint: _pre-commit
 
 # Build a package.
-build package_name package_version python_version torch_version cuda_version *args:
-  ./bin/build.sh {{package_name}} {{package_version}} {{python_version}} {{torch_version}} {{cuda_version}} {{args}}
+build package_name package_version python_version torch_version cuda_version build_dir='build' *args:
+  ./bin/build.sh {{package_name}} {{package_version}} {{python_version}} {{torch_version}} {{cuda_version}} {{build_dir}} {{args}}
 
 # Build a dummy package.
-build-dummy: (build 'cosmos-dummy' '0.1.0' '3.10' '2.7' '12.8')
+build-dummy: (build 'cosmos-dummy' '0.1.0' '3.10' '2.7' '12.8' 'tmp/build')
 
 # Run the docker container.
 _docker base_image build_args='' run_args='':
@@ -29,12 +29,16 @@ _docker base_image build_args='' run_args='':
   set -euxo pipefail
   docker build --build-arg=BASE_IMAGE={{base_image}} {{build_args}} .
   image_tag=$(docker build --build-arg=BASE_IMAGE={{base_image}} {{build_args}} . -q)
+  export XDG_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
+  export XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
+  export XDG_BIN_HOME=${XDG_BIN_HOME:-${XDG_DATA_HOME}/../bin}
   docker run \
     -it \
     --rm \
     -v .:/app \
-    -v /app/.venv \
-    -v /root/.cache/uv:/root/.cache/uv \
+    -v ${XDG_CACHE_HOME}:${HOME}/.cache \
+    -v ${XDG_DATA_HOME}:${HOME}/.local/share \
+    -v ${XDG_BIN_HOME}:${HOME}/.local/bin \
     -v /etc/passwd:/etc/passwd:ro \
     -v /etc/group:/etc/group:ro \
     --user=$(id -u):$(id -g) \
@@ -51,7 +55,7 @@ docker-cu130: (_docker 'nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04')
 
 upload:
   gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) build/**/*.whl
-  rm -rf build/**/*.whl
+  rm -rfv build/**/*.whl
 
 version := `uv version --short`
 tag := 'v' + version

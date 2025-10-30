@@ -43,9 +43,9 @@ echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
 nvcc --version
 
 # Install build dependencies
-pushd "${package_dir}" || exit 1
-venv_dir="$(uv cache dir)/cosmos_dependencies/venv"
-uv venv --clear --python "${PYTHON_VERSION}" "${venv_dir}"
+pushd "${package_dir}"
+venv_dir="$(uv cache dir)/cosmos-dependencies/${OUTPUT_NAME}"
+uv venv --python "${PYTHON_VERSION}" "${venv_dir}"
 # shellcheck source=/dev/null
 source "${venv_dir}/bin/activate"
 uv sync --active
@@ -62,9 +62,10 @@ echo "_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI}"
 # shellcheck source=/dev/null
 source "${package_dir}/build.sh" "$@"
 deactivate
+rm -rf "${venv_dir}"
 popd || exit 1
 
 # Fix wheel filenames.
-uv run bin/fix_wheel_filename.py -i "${OUTPUT_DIR}"/*.whl --cuda="${CUDA_NAME}" --torch="${TORCH_NAME}"
+uv run bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --local-version="cu${CUDA_NAME}.torch${TORCH_NAME}"
 
 ccache --show-stats
