@@ -29,10 +29,6 @@ ldd --version
 gcc --version
 printenv
 
-# Configure ccache
-ccache --zero-stats
-export CCACHE_NOHASHDIR="true"
-
 # Set CUDA environment variables
 export CUDA_HOME="/usr/local/cuda-${CUDA_VERSION}"
 # Check if CUDA_HOME is valid.
@@ -59,6 +55,10 @@ import torch
 print(f'export _GLIBCXX_USE_CXX11_ABI={1 if torch.compiled_with_cxx11_abi() else 0}')
 ")"
 
+# Configure ccache
+ccache --zero-stats
+export CCACHE_NOHASHDIR="true"
+
 # Build the package.
 # shellcheck source=/dev/null
 source "${package_dir}/build.sh" "$@"
@@ -66,7 +66,7 @@ deactivate
 rm -rf "${venv_dir}"
 popd || exit 1
 
-# Fix wheel filenames.
-uv run bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --local-version="cu${CUDA_NAME}.torch${TORCH_NAME}"
-
 ccache --show-stats
+
+# Fix wheel filenames.
+uv run bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --version="${PACKAGE_VERSION}" --local-version="cu${CUDA_NAME}.torch${TORCH_NAME}"

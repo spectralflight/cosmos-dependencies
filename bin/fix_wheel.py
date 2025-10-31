@@ -33,8 +33,10 @@ class Args:
     input_paths: Annotated[list[Path], tyro.conf.arg(aliases=("-i",))]
     """Input wheel path."""
 
+    version: str | None = None
+    """Override version (e.g. '0.0.31.post1')."""
     local_version: str | None = None
-    """Local version (e.g. 'cu128.torch27')."""
+    """Override local version (e.g. 'cu128.torch27')."""
 
 
 def main(args: Args):
@@ -44,10 +46,11 @@ def main(args: Args):
         parts = pwf.version.split("+")
         assert len(parts) in [1, 2]
         version = parts[0]
+        local_version = parts[1]
+        if args.version is not None:
+            version = args.version
         if args.local_version is not None:
             local_version = args.local_version
-        else:
-            local_version = parts[1]
         output_path = change_wheel_version(
             wheel=input_path,
             version=version,

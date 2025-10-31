@@ -64,8 +64,8 @@ docker-cu129: (_docker 'nvidia/cuda:12.9.1-cudnn-devel-ubuntu20.04')
 # Run the CUDA 13.0 docker container.
 docker-cu130: (_docker 'nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04')
 
-upload pattern:
-  gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) {{pattern}}
+upload pattern *args:
+  gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) {{pattern}} {{args}}
   rm -rfv {{pattern}}
 
 version := `uv version --short`
@@ -73,8 +73,11 @@ tag := 'v' + version
 index_dir := 'docs/' + tag
 
 # Create the package index
-index-create *args:
+_index-create *args:
   uv run bin/create_index.py -i assets -o {{index_dir}} --tag={{tag}} {{args}}
+
+# Create the package index
+index-create *args: license (_index-create args)
 
 # Locally serve the package index
 index-serve *args: index-create

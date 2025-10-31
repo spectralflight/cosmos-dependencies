@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# https://github.com/Dao-AILab/flash-attention?tab=readme-ov-file#installation-and-features
-export MAX_JOBS=${MAX_JOBS:-$(($(nproc) / 4))}
+# https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers
 
-# https://github.com/Dao-AILab/flash-attention/blob/main/hopper/setup.py
-export FLASH_ATTENTION_FORCE_BUILD=TRUE
+# https://github.com/facebookresearch/xformers/blob/main/setup.py
+export XFORMERS_BUILD_TYPE="Release"
 
 pip wheel \
 	-v \
@@ -25,5 +24,5 @@ pip wheel \
 	--no-build-isolation \
 	--check-build-dependencies \
 	--wheel-dir="${OUTPUT_DIR}" \
-	"git+https://github.com/Dao-AILab/flash-attention.git@v${PACKAGE_VERSION}#subdirectory=hopper" \
+	"git+https://github.com/facebookresearch/xformers.git@v${PACKAGE_VERSION}#egg=xformers" \
 	"$@"
