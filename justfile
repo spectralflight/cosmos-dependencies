@@ -73,8 +73,11 @@ tag := 'v' + version
 index_dir := 'docs/' + tag
 
 # Create the package index
-index-create *args: license
+_index-create *args:
   uv run bin/create_index.py -i assets -o {{index_dir}} --tag={{tag}} {{args}}
+
+# Create the package index
+index-create *args: license (_index-create args)
 
 # Locally serve the package index
 index-serve *args: index-create
