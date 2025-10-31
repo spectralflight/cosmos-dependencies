@@ -37,6 +37,7 @@ _TORCH_PACKAGES = [
     "torch",
     "torchvision",
     "triton",
+    "xformers",
 ]
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
