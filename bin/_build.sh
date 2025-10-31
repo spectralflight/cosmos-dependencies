@@ -69,4 +69,4 @@ popd || exit 1
 ccache --show-stats
 
 # Fix wheel filenames.
-uv run bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --local-version="cu${CUDA_NAME}.torch${TORCH_NAME}"
+uv run bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --version="${PACKAGE_VERSION}" --local-version="cu${CUDA_NAME}.torch${TORCH_NAME}"

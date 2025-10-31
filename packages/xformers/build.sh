@@ -16,7 +16,7 @@
 # https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers
 
 # https://github.com/facebookresearch/xformers/blob/main/setup.py
-XFORMERS_BUILD_TYPE="Release"
+export XFORMERS_BUILD_TYPE="Release"
 
 pip wheel \
 	-v \

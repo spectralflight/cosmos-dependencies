@@ -86,11 +86,11 @@ gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short
 ## Version Constraints
 
 * cuda
-    * [torch](https://pytorch.org/get-started/previous-versions/)
+  * [torch](https://pytorch.org/get-started/previous-versions/)
 * gcc
-    * [cuda](/usr/local/cuda/targets/x86_64-linux/include/crt/host_config.h)
+  * [cuda](/usr/local/cuda/targets/x86_64-linux/include/crt/host_config.h)
 * flash-attn
-    * [transformer-engine `FlashAttentionUtils.max_version`](https://github.com/NVIDIA/TransformerEngine/blob/main/transformer_engine/pytorch/attention/dot_product_attention/utils.py)
+  * [transformer-engine `FlashAttentionUtils.max_version`](https://github.com/NVIDIA/TransformerEngine/blob/main/transformer_engine/pytorch/attention/dot_product_attention/utils.py)
 
 ## Contributing
 
