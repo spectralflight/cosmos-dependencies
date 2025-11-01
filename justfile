@@ -27,15 +27,16 @@ build-dummy cuda_version: (build 'cosmos-dummy' '0.1.0' '3.10' '2.7' cuda_versio
 _docker base_image build_args='' run_args='':
   #!/usr/bin/env bash
   set -euxo pipefail
-  docker build --build-arg=BASE_IMAGE={{base_image}} {{build_args}} .
-  image_tag=$(docker build --build-arg=BASE_IMAGE={{base_image}} {{build_args}} . -q)
+  build_args="--build-arg=BASE_IMAGE={{base_image}} {{build_args}}"
+  docker build $build_args .
+  image_tag=$(docker build $build_args -q .)
   # Mount cache directories to avoid re-downloading dependencies.
   # Mount bin/data directories to avoid re-downloading python binaries and tools.
   export XDG_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
   export XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
   export XDG_BIN_HOME=${XDG_BIN_HOME:-${XDG_DATA_HOME}/../bin}
   export UV_CACHE_DIR=${UV_CACHE_DIR:-${XDG_CACHE_HOME}/uv}
-  export CCACHE_DIR=${CCACHE_DIR:-${XDG_CACHE_HOME}/ccache}
+  export CCACHE_DIR=${CCACHE_DIR:-${HOME}/.ccache}
   # Some packages use `torch.cuda.is_available()` which requires a GPU.
   docker run \
     -it \
@@ -46,23 +47,23 @@ _docker base_image build_args='' run_args='':
     -v ${XDG_DATA_HOME}:${HOME}/.local/share \
     -v ${XDG_BIN_HOME}:${HOME}/.local/bin \
     -v ${UV_CACHE_DIR}:${HOME}/.cache/uv \
-    -v ${CCACHE_DIR}:${HOME}/.cache/ccache \
+    -v ${CCACHE_DIR}:${HOME}/.ccache \
     -v /etc/passwd:/etc/passwd:ro \
     -v /etc/group:/etc/group:ro \
     --user=$(id -u):$(id -g) \
     {{run_args}} $image_tag
 
 # Run the CUDA 12.6 docker container.
-docker-cu126: (_docker 'nvidia/cuda:12.6.3-cudnn-devel-ubuntu20.04')
+docker-cu126 *args: (_docker 'nvidia/cuda:12.6.3-cudnn-devel-ubuntu20.04' args)
 
 # Run the CUDA 12.8 docker container.
-docker-cu128: (_docker 'nvidia/cuda:12.8.1-cudnn-devel-ubuntu20.04')
+docker-cu128 *args: (_docker 'nvidia/cuda:12.8.1-cudnn-devel-ubuntu20.04' args)
 
 # Run the CUDA 12.9 docker container.
-docker-cu129: (_docker 'nvidia/cuda:12.9.1-cudnn-devel-ubuntu20.04')
+docker-cu129 *args: (_docker 'nvidia/cuda:12.9.1-cudnn-devel-ubuntu20.04' args)
 
 # Run the CUDA 13.0 docker container.
-docker-cu130: (_docker 'nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04')
+docker-cu130 *args: (_docker 'nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04' args)
 
 upload pattern *args:
   gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) {{pattern}} {{args}}
