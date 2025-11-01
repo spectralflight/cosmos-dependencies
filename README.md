@@ -4,8 +4,8 @@ Repository for building and publishing Cosmos dependencies.
 
 Index URLs:
 
-* [all](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.2.0/simple)
-* [cu128_torch27](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.2.0/cu128_torch27/simple)
+* [all](https://nvidia-cosmos.github.io/cosmos-dependencies/latest/simple)
+* [cu128_torch27](https://nvidia-cosmos.github.io/cosmos-dependencies/latest/cu128_torch27/simple)
 
 ## Setup
 
@@ -14,20 +14,22 @@ Install system dependencies:
 [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ```shell
+export XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
+source $XDG_BIN_HOME/env
 ```
 
 [just](https://github.com/casey/just?tab=readme-ov-file#installation)
 
 ```shell
-uv tool install -U rust-just
+cd "$XDG_BIN_HOME" && curl https://zyedidia.github.io/eget.sh | sh
+eget casey/just --to $HOME/.local/bin
 ```
 
-[gh](https://github.com/cli/cli?tab=readme-ov-file#installation):
+If uploading wheels, [gh](https://github.com/cli/cli?tab=readme-ov-file#installation):
 
 ```shell
-curl -L 'https://github.com/cli/cli/releases/download/v2.82.1/gh_2.82.1_linux_amd64.tar.gz' | tar xz -C "$HOME/.local"
+eget cli/cli --to=$XDG_BIN_HOME
 gh auth login
 ```
 

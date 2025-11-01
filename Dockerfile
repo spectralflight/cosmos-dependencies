@@ -32,17 +32,40 @@ RUN --mount=type=cache,target=/var/cache/apt \
         tree \
         wget
 
-ENV PATH="/usr/lib/ccache:/usr/local/bin:$PATH"
-
-# Install uv: https://docs.astral.sh/uv/getting-started/installation/
-# https://github.com/astral-sh/uv-docker-example/blob/main/Dockerfile
-COPY --from=ghcr.io/astral-sh/uv:0.8.12 /uv /uvx /usr/local/bin/
-
-# Install just: https://just.systems/man/en/pre-built-binaries.html
-RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin --tag 1.42.4
+# Create a user and group for the application.
+ARG USERNAME=user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Set the working directory for the application.
 WORKDIR /app
+RUN mkdir -p /app/.venv \
+    && chown -R $USERNAME:$USERNAME /app/.venv
+VOLUME /app/.venv
+
+USER $USERNAME
+
+ENV HOME=/home/$USERNAME
+ENV XDG_BIN_HOME=$HOME/.local/bin
+ENV XDG_CACHE_HOME=$HOME/.cache
+ENV UV_CACHE_DIR=$XDG_CACHE_HOME/uv
+ENV UV_PYTHON_CACHE_DIR=$UV_CACHE_DIR
+ENV CCACHE_DIR=$HOME/.ccache
+RUN mkdir -p $XDG_BIN_HOME $XDG_CACHE_HOME
+ENV PATH="/usr/lib/ccache:$XDG_BIN_HOME:$PATH"
+
+# Install uv: https://docs.astral.sh/uv/getting-started/installation/
+# https://github.com/astral-sh/uv-docker-example/blob/main/Dockerfile
+COPY --from=ghcr.io/astral-sh/uv:0.8.12 /uv /uvx $XDG_BIN_HOME/
+
+# Install just: https://just.systems/man/en/pre-built-binaries.html
+RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to $XDG_BIN_HOME --tag 1.42.4
 
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
 CMD ["/bin/bash"]
