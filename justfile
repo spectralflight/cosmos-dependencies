@@ -27,7 +27,7 @@ build-dummy cuda_version: (build 'cosmos-dummy' '0.1.0' '3.10' '2.7' cuda_versio
 _docker base_image build_args='' run_args='':
   #!/usr/bin/env bash
   set -euxo pipefail
-  build_args="--build-arg=BASE_IMAGE={{base_image}} {{build_args}}"
+  build_args="--build-arg=BASE_IMAGE={{base_image}} --build-arg=USER_ID=$(id -u) --build-arg=GROUP_ID=$(id -g) {{build_args}}"
   docker build $build_args .
   image_tag=$(docker build $build_args -q .)
   # Mount cache directories to avoid re-downloading dependencies.
@@ -42,11 +42,10 @@ _docker base_image build_args='' run_args='':
     --rm \
     --gpus 1 \
     -v .:/app \
-    -v /app/.venv \
-    -v ${XDG_CACHE_HOME}:${HOME}/.cache \
-    -v ${UV_CACHE_DIR}:${HOME}/.cache/uv \
-    -v ${UV_PYTHON_CACHE_DIR}:${HOME}/.cache/uv \
-    -v ${CCACHE_DIR}:${HOME}/.ccache \
+    -v ${XDG_CACHE_HOME}:/home/user/.cache \
+    -v ${UV_CACHE_DIR}:/home/user/.cache/uv \
+    -v ${UV_PYTHON_CACHE_DIR}:/home/user/.cache/uv \
+    -v ${CCACHE_DIR}:/home/user/.ccache \
     --user=$(id -u):$(id -g) \
     {{run_args}} $image_tag
 

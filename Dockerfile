@@ -34,10 +34,10 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 # Create a user and group for the application.
 ARG USERNAME=user
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+ARG USER_ID=1000
+ARG GROUP_ID=$USER_ID
+RUN groupadd --gid $GROUP_ID $USERNAME \
+    && useradd --uid $USER_ID --gid $GROUP_ID -m $USERNAME \
     && apt-get update \
     && apt-get install -y --no-install-recommends sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
@@ -45,9 +45,6 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # Set the working directory for the application.
 WORKDIR /app
-RUN mkdir -p /app/.venv \
-    && chown -R $USERNAME:$USERNAME /app/.venv
-VOLUME /app/.venv
 
 USER $USERNAME
 
