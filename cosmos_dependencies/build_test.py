@@ -13,22 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[project]
-name = "vllm"
-version = "0.1.0"
-requires-python = ">=3.10"
-dependencies = [
-    "cosmos-dependencies[build]",
-    # https://github.com/vllm-project/vllm/blob/main/pyproject.toml#L3
-    "cmake>=3.26.1",
-    "ninja",
-    "packaging>=24.2",
-    "setuptools>=77.0.3,<80.0.0",
-    "setuptools-scm>=8.0",
-    "torch == 2.9.0",
-    "wheel",
-    "jinja2",
-]
+from cosmos_dependencies.build import _parse_torch_cuda_arch, build_env
 
-[tool.uv.sources]
-cosmos-dependencies = { path = "../..", editable = true }
+
+def test_parse_torch_cuda_arch():
+    assert _parse_torch_cuda_arch("sm_80") == (8, 0)
+    assert _parse_torch_cuda_arch("sm_86") == (8, 6)
+    assert _parse_torch_cuda_arch("sm_120") == (12, 0)
+
+
+def test_print_build_env():
+    build_env()
