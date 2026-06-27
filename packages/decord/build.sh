@@ -15,11 +15,6 @@
 
 ./build_lib.sh
 ln -sf /usr/local/lib/libdecord.so /usr/local/cuda/lib64/libdecord.so
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/dmlc/decord.git@v${PACKAGE_VERSION}#subdirectory=python" \
 	"$@"

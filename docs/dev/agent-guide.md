@@ -54,7 +54,6 @@ inside the repository. The file accepts literal `KEY=VALUE` lines, optional
 `export KEY=VALUE` lines, blank lines, and whole-line comments. It does not
 perform shell expansion, and it cannot override core wrapper-controlled
 variables such as `PACKAGE_NAME`, `OUTPUT_DIR`, cache paths, or `PATH`.
-`COSMOS_DEPS_BUILD_ENV_FILE` remains accepted as a compatibility alias.
 
 Example local env file for a small `natten` smoke build:
 

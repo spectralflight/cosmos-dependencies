@@ -53,60 +53,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pai-deps"
-version = "1.6.0"
-source = { editable = "." }
-
-[package.optional-dependencies]
-build = [
-    { name = "cmake" },
-    { name = "ninja" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging" },
-    { name = "pip" },
-    { name = "setuptools" },
-    { name = "wheel" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "change-wheel-version" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pygments" },
-    { name = "pyrefly" },
-    { name = "pytest" },
-    { name = "torch" },
-    { name = "tyro" },
-    { name = "wheel-filename" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cmake", marker = "extra == 'build'" },
-    { name = "ninja", marker = "extra == 'build'" },
-    { name = "numpy", marker = "extra == 'build'" },
-    { name = "packaging", marker = "extra == 'build'" },
-    { name = "pip", marker = "extra == 'build'", specifier = ">=26.1.2" },
-    { name = "setuptools", marker = "extra == 'build'" },
-    { name = "wheel", marker = "extra == 'build'", specifier = ">=0.46.2" },
-]
-provides-extras = ["build"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "change-wheel-version", git = "https://github.com/spectralflight/change_wheel_version.git?rev=ae6432577b1b0c54af76d52e6328e214287f2db9" },
-    { name = "numpy" },
-    { name = "pygments", specifier = ">=2.20.0" },
-    { name = "pyrefly", specifier = ">=1.0.0" },
-    { name = "pytest", specifier = ">=9.0.3" },
-    { name = "torch", specifier = "==2.10.0+cu128", index = "https://download.pytorch.org/whl" },
-    { name = "tyro" },
-    { name = "wheel-filename" },
-]
-
-[[package]]
 name = "cuda-bindings"
 version = "12.9.4"
 source = { registry = "https://pypi.org/simple" }
@@ -656,6 +602,62 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/65/ee/299d360cdc32edc7d2cf530f3accf79c4fca01e96ffc950d8a52213bd8e4/packaging-26.0.tar.gz", hash = "sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4", size = 143416, upload-time = "2026-01-21T20:50:39.064Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/b9/c538f279a4e237a006a2c98387d081e9eb060d203d8ed34467cc0f0b9b53/packaging-26.0-py3-none-any.whl", hash = "sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529", size = 74366, upload-time = "2026-01-21T20:50:37.788Z" },
+]
+
+[[package]]
+name = "pai-deps"
+version = "1.6.0"
+source = { editable = "." }
+dependencies = [
+    { name = "change-wheel-version" },
+    { name = "tyro" },
+    { name = "wheel-filename" },
+]
+
+[package.optional-dependencies]
+build = [
+    { name = "cmake" },
+    { name = "ninja" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "packaging" },
+    { name = "pip" },
+    { name = "setuptools" },
+    { name = "wheel" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pygments" },
+    { name = "pyrefly" },
+    { name = "pytest" },
+    { name = "torch" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "change-wheel-version", git = "https://github.com/spectralflight/change_wheel_version.git?rev=ae6432577b1b0c54af76d52e6328e214287f2db9" },
+    { name = "cmake", marker = "extra == 'build'" },
+    { name = "ninja", marker = "extra == 'build'" },
+    { name = "numpy", marker = "extra == 'build'" },
+    { name = "packaging", marker = "extra == 'build'" },
+    { name = "pip", marker = "extra == 'build'", specifier = ">=26.1.2" },
+    { name = "setuptools", marker = "extra == 'build'" },
+    { name = "tyro" },
+    { name = "wheel", marker = "extra == 'build'", specifier = ">=0.46.2" },
+    { name = "wheel-filename" },
+]
+provides-extras = ["build"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "numpy" },
+    { name = "pygments", specifier = ">=2.20.0" },
+    { name = "pyrefly", specifier = ">=1.0.0" },
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "torch", specifier = "==2.10.0+cu128", index = "https://download.pytorch.org/whl" },
 ]
 
 [[package]]

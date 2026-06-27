@@ -16,27 +16,27 @@ setup:
     cd "{{ repo }}" && mise exec -- uv python install
 
 # Setup pre-commit hooks.
-hooks *args: setup
-    cd "{{ repo }}" && mise exec -- pre-commit install -c ci/.pre-commit-config-base.yaml {{ args }}
+hooks: setup
+    cd "{{ repo }}" && mise exec -- pre-commit install -c ci/.pre-commit-config-base.yaml
 
 # Run pre-commit base safety hooks.
-pre-commit-base *args:
-    cd "{{ repo }}" && mise exec -- pre-commit run -c ci/.pre-commit-config-base.yaml -a {{ args }}
+pre-commit-base:
+    cd "{{ repo }}" && mise exec -- pre-commit run -c ci/.pre-commit-config-base.yaml -a
 
 # Run full pre-commit hooks.
-pre-commit *args: pre-commit-base
-    cd "{{ repo }}" && mise exec -- pre-commit run -a {{ args }} || mise exec -- pre-commit run -a {{ args }}
+pre-commit: pre-commit-base
+    cd "{{ repo }}" && mise exec -- pre-commit run -a || mise exec -- pre-commit run -a
 
 # Run linting and formatting hooks.
 lint: pre-commit
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Run Python linting.
 ruff:
@@ -68,7 +68,7 @@ typecheck:
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/scan_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen python -m pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/scan_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='origin/main':
@@ -88,8 +88,12 @@ test: lint toolchain package-docs package-contracts typecheck unit index-smoke
 # Run fast local checks without mutating hooks.
 fast: shell shell-format ruff format toolchain package-docs package-contracts release-artifacts typecheck unit index-guard manifest-guard
 
-# Run dependency security checks.
-security:
+# Scan tracked source files for leaked secrets.
+secrets:
+    cd "{{ repo }}" && mise exec -- ./ci/gitleaks_tracked.sh
+
+# Run dependency and secret security checks.
+security: secrets
     cd "{{ repo }}" && mise exec -- ./ci/uv_audit.sh --frozen
 
 # Run the full local check ladder.

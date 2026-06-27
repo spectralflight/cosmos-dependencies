@@ -8,11 +8,6 @@
 export SAM2_BUILD_CUDA="${SAM2_BUILD_CUDA:-1}"
 export SAM2_BUILD_ALLOW_ERRORS="${SAM2_BUILD_ALLOW_ERRORS:-0}"
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/facebookresearch/sam2.git@${SAM2_GIT_REF}" \
 	"$@"

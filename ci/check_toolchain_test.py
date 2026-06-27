@@ -49,3 +49,29 @@ def test_forbidden_patterns_catch_mise_exec_uvx_without_flagging_policy_prose():
 
     assert re.search(uvx_pattern, "mise exec -- uvx pip-licenses\n")
     assert not re.search(uvx_pattern, "Do not use `uvx` in committed workflows.\n")
+
+
+def test_check_just_argument_forwarding_rejects_variadic_passthrough(tmp_path: Path):
+    justfile = tmp_path / ".just"
+    justfile.write_text(
+        """
+package *args:
+    echo {{ args }}
+"""
+    )
+
+    errors = check_toolchain.check_just_argument_forwarding([justfile])
+
+    assert len(errors) == 2
+    assert all("just recipes must not" in error for error in errors)
+
+
+def test_check_forbidden_public_artifacts_rejects_video_codec_sdk_bundle(tmp_path: Path):
+    sdk_dir = tmp_path / "packages" / "decord" / "Video_Codec_SDK_13.0.19"
+    sdk_dir.mkdir(parents=True)
+
+    errors = check_toolchain.check_forbidden_public_artifacts(tmp_path)
+
+    assert errors == [
+        "packages/decord/Video_Codec_SDK_13.0.19: do not vendor full NVIDIA Video Codec SDK bundles in the public repo"
+    ]

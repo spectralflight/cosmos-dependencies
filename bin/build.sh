@@ -166,8 +166,8 @@ _load_inline_env() {
 }
 
 build_env_extra_args=()
-_load_env_file "${PAI_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPS_BUILD_ENV_FILE:-}}"
-_load_inline_env "${PAI_DEPS_BUILD_ENV:-${COSMOS_DEPS_BUILD_ENV:-}}"
+_load_env_file "${PAI_DEPS_BUILD_ENV_FILE:-}"
+_load_inline_env "${PAI_DEPS_BUILD_ENV:-}"
 
 _git_commit() {
 	git -c safe.directory=/app rev-parse HEAD 2>/dev/null || git rev-parse HEAD 2>/dev/null || printf "unknown"

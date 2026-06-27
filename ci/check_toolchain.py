@@ -28,6 +28,7 @@ FORBIDDEN_PATTERNS = {
     r"curl\b[^\n|]*\|\s*(?:sh|bash)\b": "curl-piped installers are not allowed in committed workflows",
     r"just\.systems/install\.sh": "install just from mise.lock, not the installer script",
     COMMAND_PREFIX + r"eget\b": "install standalone tools through mise, not eget",
+    r"\bCOSMOS_DEPS_": "use PAI_DEPS_* environment variables; COSMOS_DEPS_* aliases are retired",
 }
 SCAN_PATHS = [
     "README.md",
@@ -42,6 +43,15 @@ SCAN_PATHS = [
 SCAN_SKIP = {
     "ci/check_toolchain.py",
     "ci/check_toolchain_test.py",
+}
+JUST_ARGUMENT_FORWARDING_PATTERNS = {
+    r"\{\{\s*args\s*\}\}": "just recipes must not interpolate variadic args; use explicit recipes or scripts",
+    r"(?m)^\s*[^#\s][^:\n]*\*args\s*:": "just recipes must not use variadic args; use explicit recipes or scripts",
+}
+FORBIDDEN_PUBLIC_ARTIFACT_PATTERNS = {
+    "packages/**/Video_Codec_SDK_*": "do not vendor full NVIDIA Video Codec SDK bundles in the public repo",
+    "packages/**/libnvcuvid.so": "do not vendor NVIDIA Video Codec binary link stubs in the public repo",
+    "packages/**/libnvidia-encode.so": "do not vendor NVIDIA Video Codec binary link stubs in the public repo",
 }
 
 
@@ -184,6 +194,30 @@ def check_unlocked_tool_invocations() -> list[str]:
     return errors
 
 
+def check_just_argument_forwarding(paths: list[Path] | None = None) -> list[str]:
+    if paths is None:
+        paths = [REPO / "justfile", *sorted((REPO / "just").glob("**/.just"))]
+    errors: list[str] = []
+    for path in paths:
+        text = path.read_text(errors="ignore")
+        relative = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else str(path)
+        for pattern, message in JUST_ARGUMENT_FORWARDING_PATTERNS.items():
+            for match in re.finditer(pattern, text):
+                line = text.count("\n", 0, match.start()) + 1
+                errors.append(f"{relative}:{line}: {message}")
+    return errors
+
+
+def check_forbidden_public_artifacts(repo: Path = REPO) -> list[str]:
+    errors: list[str] = []
+    for pattern, message in FORBIDDEN_PUBLIC_ARTIFACT_PATTERNS.items():
+        for path in sorted(repo.glob(pattern)):
+            if path.exists():
+                relative = path.relative_to(repo).as_posix()
+                errors.append(f"{relative}: {message}")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--docker-only", action="store_true", help="Only check Docker pins against mise.lock.")
@@ -193,6 +227,8 @@ def main() -> int:
     if not args.docker_only:
         errors.extend(check_mise_lock())
         errors.extend(check_unlocked_tool_invocations())
+        errors.extend(check_just_argument_forwarding())
+        errors.extend(check_forbidden_public_artifacts())
     if errors:
         for error in errors:
             print(f"Error: {error}", file=sys.stderr)

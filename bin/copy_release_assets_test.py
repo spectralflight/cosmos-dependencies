@@ -81,3 +81,21 @@ def test_expand_wheel_triplets_rejects_missing_sidecars():
         assert "missing required release asset sidecar" in str(error)
     else:
         raise AssertionError("expected ValueError")
+
+
+def test_destination_collisions_reports_matching_asset_names(tmp_path: Path):
+    files = [
+        tmp_path / "pkg-1.0.0.whl.build.log",
+        tmp_path / "pkg-1.0.0.whl.build.json",
+        tmp_path / "pkg-1.0.0.whl",
+    ]
+    assets = [
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl"),
+        copy_release_assets.ReleaseAsset("other.whl"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.log"),
+    ]
+
+    assert copy_release_assets.destination_collisions(assets, files) == [
+        "pkg-1.0.0.whl",
+        "pkg-1.0.0.whl.build.log",
+    ]

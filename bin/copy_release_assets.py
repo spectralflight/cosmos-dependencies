@@ -68,6 +68,11 @@ def expand_wheel_triplets(selected_assets: list[ReleaseAsset], all_assets: list[
     return ordered
 
 
+def destination_collisions(destination_assets: list[ReleaseAsset], files: list[Path]) -> list[str]:
+    destination_names = {asset.name for asset in destination_assets}
+    return sorted(file.name for file in files if file.name in destination_names)
+
+
 def _get_release_assets(*, repo: str, tag: str) -> list[ReleaseAsset]:
     cmd = [
         "gh",
@@ -141,6 +146,14 @@ def _upload_assets(
         return
 
     upload_args = ["--clobber"] if clobber else []
+    if not clobber:
+        collisions = destination_collisions(_get_release_assets(repo=repo, tag=tag), files)
+        if collisions:
+            formatted_collisions = "\n".join(f"- {name}" for name in collisions)
+            raise SystemExit(
+                f"Destination release {repo}@{tag} already has matching assets; "
+                f"refusing partial upload without --clobber:\n{formatted_collisions}"
+            )
     for file in files:
         subprocess.check_call(["gh", "release", "upload", "--repo", repo, tag, str(file), *upload_args])
 
@@ -170,8 +183,7 @@ def main() -> int:
         "--dry-run", action="store_true", help="Print selected assets without downloading or uploading."
     )
     args = parser.parse_args()
-    allow_clobber = os.environ.get("PAI_DEPS_ALLOW_CLOBBER") or os.environ.get("COSMOS_DEPS_ALLOW_CLOBBER")
-    if args.clobber and allow_clobber != "1":
+    if args.clobber and os.environ.get("PAI_DEPS_ALLOW_CLOBBER") != "1":
         raise SystemExit("--clobber requires PAI_DEPS_ALLOW_CLOBBER=1.")
 
     assets = _get_release_assets(repo=args.source_repo, tag=args.source_tag)

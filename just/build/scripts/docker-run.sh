@@ -23,8 +23,8 @@ EOF
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
-cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPS_DOCKER_CUDA_VERSION:-12.8.1}}"
-cache_volume="${PAI_DEPS_DOCKER_CACHE_VOLUME:-${COSMOS_DEPS_DOCKER_CACHE_VOLUME:-pai-deps-cache}}"
+cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-12.8.1}"
+cache_volume="${PAI_DEPS_DOCKER_CACHE_VOLUME:-pai-deps-cache}"
 tty_mode="auto"
 docker_as_root="0"
 build_args=()
@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-env_file="${PAI_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPS_BUILD_ENV_FILE:-}}"
+env_file="${PAI_DEPS_BUILD_ENV_FILE:-}"
 if [[ -n "${env_file}" ]]; then
 	if [[ ! -f "${env_file}" ]]; then
 		echo "Error: PAI_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
@@ -126,7 +126,7 @@ docker run \
 	-e CCACHE_DIR="/cache/ccache" \
 	-e PAI_DEPS_DOCKER_IMAGE="${image_tag}" \
 	-e PAI_DEPS_BUILD_ENV_FILE="${env_file}" \
-	-e PAI_DEPS_BUILD_ENV="${PAI_DEPS_BUILD_ENV:-${COSMOS_DEPS_BUILD_ENV:-}}" \
+	-e PAI_DEPS_BUILD_ENV="${PAI_DEPS_BUILD_ENV:-}" \
 	-v "${repo_root}:/app" \
 	-v "${cache_volume}:/cache" \
 	"${run_args[@]}" \

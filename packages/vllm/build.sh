@@ -24,11 +24,6 @@ export CMAKE_BUILD_TYPE="Release"
 export MAX_JOBS=${MAX_JOBS:-$(nproc)}
 export NVCC_THREADS=${NVCC_THREADS:-2}
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/vllm-project/vllm.git@v${PACKAGE_VERSION}" \
 	"$@"

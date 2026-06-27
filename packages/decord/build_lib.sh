@@ -15,6 +15,65 @@
 # limitations under the License.
 
 # https://github.com/dmlc/decord?tab=readme-ov-file#installation
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+interface_dir="${DECORD_VIDEO_CODEC_INTERFACE_DIR:-${script_dir}/video-codec-interface-13.0.19/include}"
+
+arch="$(uname -m)"
+case "${arch}" in
+x86_64)
+	debian_arch="x86_64-linux-gnu"
+	;;
+aarch64)
+	debian_arch="aarch64-linux-gnu"
+	;;
+*)
+	debian_arch="${arch}-linux-gnu"
+	;;
+esac
+
+_has_video_codec_libs() {
+	local lib_dir="$1"
+	[[ -f "${lib_dir}/libnvcuvid.so" && -f "${lib_dir}/libnvidia-encode.so" ]]
+}
+
+_find_video_codec_lib_dir() {
+	local lib_dir
+	if [[ -n "${DECORD_VIDEO_CODEC_LIB_DIR:-}" ]]; then
+		if _has_video_codec_libs "${DECORD_VIDEO_CODEC_LIB_DIR}"; then
+			printf "%s" "${DECORD_VIDEO_CODEC_LIB_DIR}"
+			return 0
+		fi
+		echo "Error: DECORD_VIDEO_CODEC_LIB_DIR must contain libnvcuvid.so and libnvidia-encode.so: ${DECORD_VIDEO_CODEC_LIB_DIR}" >&2
+		return 1
+	fi
+
+	for lib_dir in \
+		"/usr/local/cuda/lib64/stubs" \
+		"/usr/local/cuda/lib64" \
+		"/usr/local/nvidia/lib64" \
+		"/usr/lib/${debian_arch}" \
+		"/usr/lib64"; do
+		if _has_video_codec_libs "${lib_dir}"; then
+			printf "%s" "${lib_dir}"
+			return 0
+		fi
+	done
+
+	cat >&2 <<EOF
+Error: decord requires NVIDIA Video Codec link libraries.
+Set DECORD_VIDEO_CODEC_LIB_DIR to a directory containing libnvcuvid.so and
+libnvidia-encode.so, for example a locally downloaded Video Codec SDK
+Lib/linux/stubs/${arch} directory or a driver library directory mounted by the
+NVIDIA container runtime.
+EOF
+	return 1
+}
+
+if [[ ! -f "${interface_dir}/nvcuvid.h" || ! -f "${interface_dir}/cuviddec.h" || ! -f "${interface_dir}/nvEncodeAPI.h" ]]; then
+	echo "Error: DECORD_VIDEO_CODEC_INTERFACE_DIR must contain the NVIDIA Video Codec interface headers: ${interface_dir}" >&2
+	exit 1
+fi
+
 apt-get update
 apt-get install -y --no-install-recommends \
 	build-essential \
@@ -26,10 +85,13 @@ apt-get install -y --no-install-recommends \
 	libavformat-dev \
 	libavutil-dev
 
-cp "Video_Codec_SDK_13.0.19/Lib/linux/stubs/$(uname -m)/"* /usr/local/cuda/lib64/
-cp Video_Codec_SDK_13.0.19/Interface/* /usr/local/cuda/include
+video_codec_lib_dir="$(_find_video_codec_lib_dir)"
+cp "${video_codec_lib_dir}/libnvcuvid.so" /usr/local/cuda/lib64/
+cp "${video_codec_lib_dir}/libnvidia-encode.so" /usr/local/cuda/lib64/
+cp "${interface_dir}/"* /usr/local/cuda/include/
 
 temp_dir="$(mktemp -d)"
+trap 'rm -rf "${temp_dir}"' EXIT
 cd "${temp_dir}"
 git clone --depth 1 --branch "v${PACKAGE_VERSION}" --recursive https://github.com/dmlc/decord
 cd decord

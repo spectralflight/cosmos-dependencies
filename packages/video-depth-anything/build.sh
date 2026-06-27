@@ -39,11 +39,6 @@ setup(
 )
 EOF
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	. \
 	"$@"

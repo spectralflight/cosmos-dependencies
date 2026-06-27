@@ -29,6 +29,7 @@ def _descriptor_to_dict(package: PackageDescriptor) -> dict[str, object]:
         "gpu_risk": package.gpu_risk,
         "build": {
             "backend": package.build.backend,
+            "requires_torch": package.build.requires_torch,
             "source": {
                 "url": package.build.source.url,
                 "revision": package.build.source.revision,
@@ -102,6 +103,7 @@ def show_package(name: str, *, json_output: bool) -> int:
     print(f"upstream: {package.upstream}")
     print(f"gpu_risk: {package.gpu_risk}")
     print(f"build_backend: {package.build.backend}")
+    print(f"requires_torch: {package.build.requires_torch}")
     if package.build.source.url:
         print(f"source_url: {package.build.source.url}")
     print(f"docs_exists: {package.docs_path.is_file()}")

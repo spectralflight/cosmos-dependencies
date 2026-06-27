@@ -32,6 +32,7 @@ class BuildDescriptor:
     script: str = "build.sh"
     common_pip_flags: bool = False
     local: bool = False
+    requires_torch: bool = True
     prebuild_scripts: tuple[str, ...] = ()
     system_packages: tuple[str, ...] = ()
     revision_overrides: dict[str, str] = field(default_factory=dict)
@@ -104,6 +105,7 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
         script=str(build_data.get("script", "build.sh")),
         common_pip_flags=bool(build_data.get("common_pip_flags", False)),
         local=bool(build_data.get("local", False)),
+        requires_torch=bool(build_data.get("requires_torch", True)),
         prebuild_scripts=_string_tuple(build_data, "prebuild_scripts"),
         system_packages=_string_tuple(build_data, "system_packages"),
         revision_overrides=_string_dict(build_data, "revision_overrides"),

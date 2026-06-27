@@ -45,7 +45,6 @@ def _run_build_script(
     work_dir: Path,
     env_file: Path | None = None,
     inline_env: str | None = None,
-    legacy_env_file: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     _write_fake_build_script(work_dir)
     env = {
@@ -57,8 +56,7 @@ def _run_build_script(
         "USER": "tester",
     }
     if env_file is not None:
-        env_key = "COSMOS_DEPS_BUILD_ENV_FILE" if legacy_env_file else "PAI_DEPS_BUILD_ENV_FILE"
-        env[env_key] = str(env_file)
+        env["PAI_DEPS_BUILD_ENV_FILE"] = str(env_file)
     if inline_env is not None:
         env["PAI_DEPS_BUILD_ENV"] = inline_env
     return subprocess.run(
@@ -141,17 +139,6 @@ def test_build_script_loads_inline_build_env(tmp_path: Path) -> None:
     assert "NATTEN_N_WORKERS=2\n" in build_env
     assert "TORCH_CUDA_ARCH_LIST=9.0\n" in build_env
     assert "NATTEN_N_WORKERS=99\n" not in build_env
-
-
-def test_build_script_keeps_legacy_env_file_alias(tmp_path: Path) -> None:
-    env_file = tmp_path / "legacy.env"
-    env_file.write_text("NATTEN_N_WORKERS=2\n")
-
-    result = _run_build_script(tmp_path, env_file, legacy_env_file=True)
-
-    assert result.returncode == 0, result.stdout + result.stderr
-    build_env = _read_build_env(tmp_path)
-    assert "NATTEN_N_WORKERS=2\n" in build_env
 
 
 def test_build_script_rejects_reserved_env_file_variables(tmp_path: Path) -> None:

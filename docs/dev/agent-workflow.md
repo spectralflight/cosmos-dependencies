@@ -48,7 +48,7 @@ just no-gpu-check
 
 This lane does not start Docker, does not build packages, and does not request
 GPU access. It runs shell, Python, toolchain, package descriptor, package
-contract, provenance, index, manifest, and audit checks.
+contract, provenance, index, manifest, secret-scan, and audit checks.
 
 Use focused checks while editing:
 

@@ -31,11 +31,6 @@ esac
 export TORCH_CUDA_ARCH_LIST='9.0' # Hopper
 # export TORCH_CUDA_ARCH_LIST='10.0;12.0' # Blackwell
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/thu-ml/SageAttention.git@${PACKAGE_REVISION}" \
 	"$@"

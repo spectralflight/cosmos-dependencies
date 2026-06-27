@@ -31,11 +31,6 @@ export NATTEN_VERBOSE=1
 : "${NATTEN_CUDA_ARCH:=${TORCH_CUDA_ARCH_LIST};10.3}"
 export NATTEN_CUDA_ARCH
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/SHI-Labs/NATTEN.git@${PACKAGE_REVISION}" \
 	"$@"

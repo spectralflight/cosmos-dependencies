@@ -7,10 +7,13 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from pai_deps.package_metadata import PackageDescriptor, discover_package_descriptors
 
-COMMON_PIP_WHEEL_TOKENS = [
+REPO = Path(__file__).resolve().parents[1]
+BUILD_HELPERS = REPO / "bin/build_helpers.sh"
+COMMON_PIP_WHEEL_HELPER_TOKENS = [
     "pip wheel",
     "--no-deps",
     "--no-build-isolation",
@@ -18,7 +21,7 @@ COMMON_PIP_WHEEL_TOKENS = [
     "--wheel-dir",
     '"$@"',
 ]
-UV_BUILD_TOKENS = ["uv build", "--wheel", "-o", '"$@"']
+UV_BUILD_HELPER_TOKENS = ["uv build", "--wheel", "-o", '"$@"']
 
 
 def _script_text(package: PackageDescriptor) -> str:
@@ -34,6 +37,16 @@ def _check_contains(source: str, token: str, *, label: str) -> list[str]:
     return []
 
 
+def _check_build_helpers() -> list[str]:
+    errors: list[str] = []
+    text = BUILD_HELPERS.read_text()
+    for token in COMMON_PIP_WHEEL_HELPER_TOKENS:
+        errors.extend(_check_contains(text, token, label=BUILD_HELPERS.relative_to(REPO).as_posix()))
+    for token in UV_BUILD_HELPER_TOKENS:
+        errors.extend(_check_contains(text, token, label=BUILD_HELPERS.relative_to(REPO).as_posix()))
+    return errors
+
+
 def _check_package(package: PackageDescriptor) -> list[str]:
     errors: list[str] = []
     text = _script_text(package)
@@ -42,14 +55,12 @@ def _check_package(package: PackageDescriptor) -> list[str]:
     match package.build.backend:
         case "pip-wheel-git":
             if package.build.common_pip_flags:
-                for token in COMMON_PIP_WHEEL_TOKENS:
-                    errors.extend(_check_contains(text, token, label=label))
+                errors.extend(_check_contains(text, "pai_deps_pip_wheel", label=label))
             errors.extend(_check_contains(text, package.build.source.url, label=label))
             if package.build.source.subdirectory:
                 errors.extend(_check_contains(text, f"#subdirectory={package.build.source.subdirectory}", label=label))
         case "uv-build":
-            for token in UV_BUILD_TOKENS:
-                errors.extend(_check_contains(text, token, label=label))
+            errors.extend(_check_contains(text, "pai_deps_uv_build_wheel", label=label))
         case _:
             errors.append(f"{label}: unsupported backend {package.build.backend!r}")
 
@@ -68,7 +79,7 @@ def _check_package(package: PackageDescriptor) -> list[str]:
 
 
 def check_packages(packages: list[PackageDescriptor] | None = None) -> list[str]:
-    errors: list[str] = []
+    errors: list[str] = _check_build_helpers() if packages is None else []
     for package in packages or discover_package_descriptors():
         errors.extend(_check_package(package))
     return errors

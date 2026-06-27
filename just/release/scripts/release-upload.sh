@@ -28,8 +28,8 @@ EOF
 }
 
 version="$(awk -F'"' '/^version = / { print $2; exit }' pyproject.toml)"
-repo="${PAI_DEPS_RELEASE_REPO:-${COSMOS_DEPS_RELEASE_REPO:-}}"
-tag="${PAI_DEPS_RELEASE_TAG:-${COSMOS_DEPS_RELEASE_TAG:-v${version}}}"
+repo="${PAI_DEPS_RELEASE_REPO:-}"
+tag="${PAI_DEPS_RELEASE_TAG:-v${version}}"
 title=""
 notes="Local build artifact upload."
 target=""
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	--clobber)
-		if [[ "${PAI_DEPS_ALLOW_CLOBBER:-${COSMOS_DEPS_ALLOW_CLOBBER:-0}}" != "1" ]]; then
+		if [[ "${PAI_DEPS_ALLOW_CLOBBER:-0}" != "1" ]]; then
 			echo "Error: --clobber requires PAI_DEPS_ALLOW_CLOBBER=1." >&2
 			exit 1
 		fi

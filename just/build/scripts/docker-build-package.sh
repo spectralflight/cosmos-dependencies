@@ -27,10 +27,10 @@ torch_version="$4"
 build_dir="$5"
 shift 5
 
-attempts="${PAI_DEPS_BUILD_ATTEMPTS:-${COSMOS_DEPS_BUILD_ATTEMPTS:-1}}"
-retry_delay="${PAI_DEPS_BUILD_RETRY_DELAY:-${COSMOS_DEPS_BUILD_RETRY_DELAY:-30}}"
-cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPS_DOCKER_CUDA_VERSION:-12.8.1}}"
-run_as_root="${PAI_DEPS_DOCKER_AS_ROOT:-${COSMOS_DEPS_DOCKER_AS_ROOT:-0}}"
+attempts="${PAI_DEPS_BUILD_ATTEMPTS:-1}"
+retry_delay="${PAI_DEPS_BUILD_RETRY_DELAY:-30}"
+cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-12.8.1}"
+run_as_root="${PAI_DEPS_DOCKER_AS_ROOT:-0}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 exit_code=0
 docker_run_args=()

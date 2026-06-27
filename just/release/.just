@@ -12,32 +12,32 @@ default:
     @just --justfile "{{ source_file() }}" --list
 
 # Generate a temporary package index for an index name.
-create index_name=tag *args:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }} {{ args }}
+create index_name=tag:
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Publish a package index under docs for GitHub Pages.
-publish index_name=tag *args:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --index-name {{ quote(index_name) }} {{ args }}
+publish index_name=tag:
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Create a package index from an explicit manifest.
-create-manifest manifest_path output_dir *args:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --manifest {{ quote(manifest_path) }} {{ args }}
+create-manifest manifest_path output_dir:
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --manifest {{ quote(manifest_path) }}
 
 # Create a package index for an arbitrary release under a caller-selected path.
-create-release repo_name release_tag output_dir *args:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ args }}
+create-release repo_name release_tag output_dir:
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }}
 
 # Upload wheels to a GitHub release without deleting local artifacts.
-upload pattern repo_name release_tag=tag *args:
-    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ args }} {{ quote(pattern) }}
+upload pattern repo_name release_tag=tag:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ quote(pattern) }}
 
 # Print the assets and sidecar status for a release upload without touching GitHub.
-upload-plan pattern repo_name release_tag=tag *args:
-    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --dry-run --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ args }} {{ quote(pattern) }}
+upload-plan pattern repo_name release_tag=tag:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --dry-run --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ quote(pattern) }}
 
 # Upload wheels to a dated batch release for a logical package index.
-upload-batch pattern batch_id repo_name index_tag=tag *args:
-    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --repo {{ quote(repo_name) }} --tag {{ quote("wheels-" + index_tag + "-batch." + batch_id) }} --title {{ quote("Wheel batch " + index_tag + " " + batch_id) }} --notes {{ quote("Wheel batch for " + index_tag + ".") }} --not-latest {{ args }} {{ quote(pattern) }}
+upload-batch pattern batch_id repo_name index_tag=tag:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --repo {{ quote(repo_name) }} --tag {{ quote("wheels-" + index_tag + "-batch." + batch_id) }} --title {{ quote("Wheel batch " + index_tag + " " + batch_id) }} --notes {{ quote("Wheel batch for " + index_tag + ".") }} --not-latest {{ quote(pattern) }}
 
 # Copy selected assets from one GitHub release to another.
 copy-assets source_repo source_tag dest_repo dest_tag include='*':
@@ -51,9 +51,9 @@ copy-plan source_repo source_tag dest_repo dest_tag include='*':
 verify-install index_dir package_name package_version import_name='' python_version='3.12':
     cd "{{ repo }}" && PYTHON_VERSION={{ quote(python_version) }} mise exec -- "{{ scripts }}/verify-index-install.sh" {{ quote(index_dir) }} {{ quote(package_name) }} {{ quote(package_version) }} {{ quote(import_name) }}
 
-# Serve the package index.
-serve index_name=tag *args:
-    cd "{{ repo }}" && mise exec -- uv run --frozen -m http.server -d {{ quote("docs/" + index_name) }} {{ args }}
+# Serve the package index on port 8000.
+serve index_name=tag:
+    cd "{{ repo }}" && mise exec -- uv run --frozen -m http.server -d {{ quote("docs/" + index_name) }}
 
 # Generate a temporary package index for the current version.
 test-index index_name=tag:

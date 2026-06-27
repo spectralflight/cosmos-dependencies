@@ -15,11 +15,6 @@
 
 # https://github.com/IDEA-Research/GroundingDINO?tab=readme-ov-file#hammer_and_wrench-install
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/IDEA-Research/GroundingDINO.git@v${PACKAGE_VERSION}" \
 	"$@"

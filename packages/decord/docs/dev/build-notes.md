@@ -18,6 +18,9 @@ Torch extension; the Torch suffix is this repo's index convention.
 
 - Upstream repository: https://github.com/dmlc/decord
 - PyPI: https://pypi.org/project/decord/0.6.0/
+- NVIDIA Video Codec SDK: https://developer.nvidia.com/video-codec-sdk
+- NVIDIA Video Codec SDK license page:
+  https://developer.nvidia.com/nvidia-video-codec-sdk-license-agreement
 
 ## Version Constraints
 
@@ -27,9 +30,11 @@ Codec SDK pieces.
 
 ## Build Environment
 
-Local helper uses Video Codec SDK 13.0.19 headers/stubs, configures CMake with
-`-DUSE_CUDA=ON -DCMAKE_BUILD_TYPE=Release`, installs `libdecord.so`, then
-wheels the Python package from the upstream `python` subdirectory.
+Local helper uses the checked-in Video Codec interface headers, locates
+`libnvcuvid.so` and `libnvidia-encode.so` from a caller-provided or system
+library directory, configures CMake with `-DUSE_CUDA=ON
+-DCMAKE_BUILD_TYPE=Release`, installs `libdecord.so`, then wheels the Python
+package from the upstream `python` subdirectory.
 
 Upstream build knobs include `-DUSE_CUDA=ON`, optional CUDA path,
 `-DCMAKE_CUDA_COMPILER`, and optional `-DFFMPEG_DIR`.
@@ -39,6 +44,12 @@ Local wrapper variables:
 - `DECORD_BUILD_JOBS`: passed to `make -j`.
 - `DECORD_CUDA_ARCHITECTURES`: passed to CMake as
   `CMAKE_CUDA_ARCHITECTURES`.
+- `DECORD_VIDEO_CODEC_INTERFACE_DIR`: optional override for the directory
+  containing `cuviddec.h`, `nvcuvid.h`, and `nvEncodeAPI.h`. Defaults to the
+  package-local `video-codec-interface-13.0.19/include`.
+- `DECORD_VIDEO_CODEC_LIB_DIR`: optional directory containing
+  `libnvcuvid.so` and `libnvidia-encode.so`. If unset, the script checks common
+  CUDA, NVIDIA container runtime, and distro driver library directories.
 
 ## OOM Controls
 
@@ -73,13 +84,24 @@ Use GPU/NVDEC smoke only on a host with driver/video decode support.
   FFmpeg changes.
 - Decord installs system packages during the package prebuild step, so its
   Docker build currently needs `PAI_DEPS_DOCKER_AS_ROOT=1`.
+- The repo intentionally vendors only the NVIDIA Video Codec interface headers.
+  The full Video Codec SDK archive and binary stubs are not checked in because
+  the SDK license restricts stand-alone redistribution of SDK portions.
 
 ## Future Fixes
 
 - Split system package installation from untrusted package build code so Decord
   can install apt packages as root and compile as the non-root build user.
+- Replace the link-library discovery with a base image or setup phase that
+  provides explicit Video Codec SDK stubs without committing SDK binaries to
+  this public repository.
 
 ## Research Notes
 
-Imported from upstream docs/source and read-only package research on
-2026-06-27. No Docker builds or package builds were run.
+Imported from upstream docs/source and package research on 2026-06-27. NVIDIA's
+public Video Codec SDK page provides a separate gated download for the full SDK
+and a separate interface header download. The local SDK license permits only
+limited SDK distribution as incorporated object code and prohibits distributing
+the SDK as a stand-alone product, so this package keeps only the header files
+whose file-local notices permit redistribution. No decord Docker build was run
+during the license cleanup.

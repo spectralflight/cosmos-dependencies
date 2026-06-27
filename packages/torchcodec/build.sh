@@ -33,11 +33,6 @@ export pybind11_DIR
 export I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION=1
 export ENABLE_CUDA=1
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/meta-pytorch/torchcodec.git@${PACKAGE_REVISION}" \
 	"$@"

@@ -10,29 +10,33 @@ default:
     @just --justfile "{{ source_file() }}" --list
 
 # Lock the root project.
-lock *args:
-    cd "{{ repo }}" && mise exec -- uv lock {{ args }}
+lock:
+    cd "{{ repo }}" && mise exec -- uv lock
+
+# Check the root project lockfile.
+lock-check:
+    cd "{{ repo }}" && mise exec -- uv lock --check
 
 # Check all root and package lockfiles.
 lock-check-all:
     cd "{{ repo }}" && mise exec -- "{{ scripts }}/lock-projects.sh" --check
 
 # Lock all root and package projects.
-lock-all *args:
-    cd "{{ repo }}" && mise exec -- "{{ scripts }}/lock-projects.sh" {{ args }}
+lock-all:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/lock-projects.sh"
 
 # Upgrade and lock all root and package projects.
-upgrade-all *args:
-    cd "{{ repo }}" && mise exec -- "{{ scripts }}/lock-projects.sh" --upgrade {{ args }}
+upgrade-all:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/lock-projects.sh" --upgrade
 
 # Upgrade and lock one project directory.
-upgrade project_dir *args:
-    cd "{{ repo }}" && mise exec -- uv lock --project {{ quote(project_dir) }} --upgrade {{ args }}
+upgrade project_dir:
+    cd "{{ repo }}" && mise exec -- uv lock --project {{ quote(project_dir) }} --upgrade
 
 # Audit root and package build dependencies.
-audit *args:
-    cd "{{ repo }}" && mise exec -- ./ci/uv_audit.sh {{ args }}
+audit:
+    cd "{{ repo }}" && mise exec -- ./ci/uv_audit.sh
 
 # Audit without advisory allowlist ignores.
-audit-strict *args:
-    cd "{{ repo }}" && PAI_DEPS_AUDIT_STRICT=1 mise exec -- ./ci/uv_audit.sh {{ args }}
+audit-strict:
+    cd "{{ repo }}" && PAI_DEPS_AUDIT_STRICT=1 mise exec -- ./ci/uv_audit.sh

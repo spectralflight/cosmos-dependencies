@@ -20,11 +20,6 @@ export FLASH_ATTENTION_DISABLE_SM80=TRUE
 # https://github.com/Dao-AILab/flash-attention/blob/main/hopper/setup.py
 export FLASH_ATTENTION_FORCE_BUILD=TRUE
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/alihassanijr/flash_attn_3_nv.git@v${PACKAGE_VERSION}" \
 	"$@"

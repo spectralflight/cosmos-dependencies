@@ -18,11 +18,6 @@
 # https://github.com/facebookresearch/xformers/blob/main/setup.py
 export XFORMERS_BUILD_TYPE="Release"
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/facebookresearch/xformers.git@v${PACKAGE_VERSION}#egg=xformers" \
 	"$@"

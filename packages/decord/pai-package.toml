@@ -42,4 +42,9 @@ revision = "v{package_version}"
 subdirectory = "python"
 
 [build.env]
-exports = ["DECORD_BUILD_JOBS", "DECORD_CUDA_ARCHITECTURES"]
+exports = [
+  "DECORD_BUILD_JOBS",
+  "DECORD_CUDA_ARCHITECTURES",
+  "DECORD_VIDEO_CODEC_INTERFACE_DIR",
+  "DECORD_VIDEO_CODEC_LIB_DIR",
+]

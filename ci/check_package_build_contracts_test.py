@@ -32,7 +32,7 @@ url = "https://example.invalid/pkg.git"
 revision = "v{package_version}"
 """
     )
-    (package_dir / "build.sh").write_text('pip wheel --no-deps --no-build-isolation --check-build-dependencies "$@"\n')
+    (package_dir / "build.sh").write_text('pai_deps_pip_wheel "$@"\n')
 
     packages = discover_package_descriptors(tmp_path)
 

@@ -24,11 +24,12 @@ index workflows. It is not a CUDA package.
 
 The package declares Python `>=3.10`. Torch and CUDA labels in produced wheel
 names are pipeline provenance only; the package has no functional Torch/CUDA
-runtime requirement.
+runtime requirement and declares `requires_torch = false` so Docker smoke builds
+do not download Torch.
 
 ## Build Environment
 
-The package runs:
+The package runs the shared local wheel helper, equivalent to:
 
 ```bash
 uv build --wheel -o "${OUTPUT_DIR}"

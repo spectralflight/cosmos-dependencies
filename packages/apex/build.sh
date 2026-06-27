@@ -26,11 +26,6 @@ export APEX_CUDA_EXT=1
 export APEX_PARALLEL_BUILD=8
 export NVCC_APPEND_FLAGS="--threads 4"
 
-pip wheel \
-	-v \
-	--no-deps \
-	--no-build-isolation \
-	--check-build-dependencies \
-	--wheel-dir="${OUTPUT_DIR}" \
+pai_deps_pip_wheel \
 	"git+https://github.com/NVIDIA/apex.git@${tag}" \
 	"$@"

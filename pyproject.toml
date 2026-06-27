@@ -17,7 +17,11 @@
 name = "pai-deps"
 version = "1.6.0"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "change-wheel-version",
+    "tyro",
+    "wheel-filename",
+]
 
 [project.optional-dependencies]
 build = [
@@ -32,14 +36,11 @@ build = [
 
 [dependency-groups]
 dev = [
-    "change-wheel-version",
     "numpy",
     "pyrefly>=1.0.0",
     "pygments>=2.20.0",
     "pytest>=9.0.3",
     "torch==2.10.0+cu128",
-    "tyro",
-    "wheel-filename",
 ]
 
 [tool.uv.sources]

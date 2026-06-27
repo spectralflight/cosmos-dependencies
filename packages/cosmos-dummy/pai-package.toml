@@ -24,3 +24,4 @@ gpu_risk = "none"
 backend = "uv-build"
 script = "build.sh"
 local = true
+requires_torch = false
