@@ -20,7 +20,10 @@ repos:
       - id: check-added-large-files
         args: ["--maxkb=5000"] # 5MB
       - id: forbid-submodules
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+  - repo: local
     hooks:
       - id: gitleaks
+        name: Detect hardcoded secrets
+        entry: gitleaks dir --redact --no-banner
+        language: system
+        types_or: [text]
