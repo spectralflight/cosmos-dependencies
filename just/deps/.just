@@ -3,6 +3,7 @@ set shell := ["bash", "-c"]
 deps_dir := source_directory()
 repo := deps_dir + "/../.."
 scripts := deps_dir + "/scripts"
+export UV_CACHE_DIR := env_var_or_default("UV_CACHE_DIR", repo + "/tmp/uv-cache")
 
 # Show dependency recipes.
 default:
@@ -34,4 +35,4 @@ audit *args:
 
 # Audit without advisory allowlist ignores.
 audit-strict *args:
-    cd "{{ repo }}" && COSMOS_DEPS_AUDIT_STRICT=1 mise exec -- ./ci/uv_audit.sh {{ args }}
+    cd "{{ repo }}" && PAI_DEPS_AUDIT_STRICT=1 mise exec -- ./ci/uv_audit.sh {{ args }}

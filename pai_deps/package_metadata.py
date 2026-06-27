@@ -13,7 +13,7 @@ import tomllib
 
 REPO = Path(__file__).resolve().parents[1]
 PACKAGES_DIR = REPO / "packages"
-DESCRIPTOR_NAME = "cosmos-package.toml"
+DESCRIPTOR_NAME = "pai-package.toml"
 VALID_BACKENDS = {"pip-wheel-git", "uv-build"}
 VALID_STATUSES = {"maintained", "smoke", "historical", "unknown"}
 VALID_GPU_RISKS = {"none", "low", "medium", "high"}

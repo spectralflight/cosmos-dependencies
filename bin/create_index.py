@@ -24,14 +24,14 @@ import json
 import shutil
 import subprocess
 import urllib.parse
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated
 
 import tyro
 from wheel_filename import WheelFilename
 
-from cosmos_dependencies.index_manifest import load_index_manifest
+from pai_deps.index_manifest import load_index_manifest
 
 _TORCH_BASE_URL = "https://download.pytorch.org"
 _TORCH_PACKAGES = [
@@ -101,12 +101,14 @@ def _write_html(html_path: Path, lines: set[_IndexLine]) -> None:
 class Args:
     output_dir: Annotated[Path, tyro.conf.arg(aliases=("-o",))]
     """Output directory."""
-    repo: str = "nvidia-cosmos/cosmos-dependencies"
+    repo: str = "spectralflight/pai-deps"
     """GitHub repository. Used with --tag and as the manifest fallback repo."""
     tag: str | None = None
     """Release tag. Required unless --manifest is set."""
     manifest: Path | None = None
     """Index manifest containing one or more GitHub releases."""
+    index_name: str | None = None
+    """Index name. Uses indices/<name>/manifest.json when present, otherwise a release tag."""
     wheels_file: Path | None = None
     """Wheels file."""
 
@@ -140,6 +142,17 @@ def _collect_release_assets(args: Args) -> list[dict]:
     for release in manifest.releases:
         assets.extend(_get_release_assets(repo=release.repo, tag=release.tag))
     return assets
+
+
+def _resolve_index_name(args: Args) -> Args:
+    if args.index_name is None:
+        return args
+    if args.tag is not None or args.manifest is not None:
+        raise ValueError("Pass --index-name by itself, or pass explicit --tag/--manifest.")
+    manifest = Path("indices") / args.index_name / "manifest.json"
+    if manifest.is_file():
+        return replace(args, manifest=manifest.resolve())
+    return replace(args, tag=args.index_name)
 
 
 def _collect_index_lines(*, assets: list[dict], wheels_file: Path | None = None) -> dict[str, set[_IndexLine]]:
@@ -194,6 +207,7 @@ def _write_index(output_dir: Path, all_lines: dict[str, set[_IndexLine]]) -> Non
 
 
 def main(args: Args):
+    args = _resolve_index_name(args)
     shutil.rmtree(args.output_dir, ignore_errors=True)
     assets = _collect_release_assets(args)
     all_lines = _collect_index_lines(assets=assets, wheels_file=args.wheels_file)

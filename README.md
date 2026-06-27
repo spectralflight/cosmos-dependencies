@@ -22,7 +22,7 @@ Do not use unlocked committed workflows such as `uvx`, `uv tool install`,
 
 Package-specific truth is colocated under `packages/<name>`:
 
-- `cosmos-package.toml`: package descriptor and build-contract deltas.
+- `pai-package.toml`: package descriptor and build-contract deltas.
 - `build.sh`: package-local build implementation.
 - `docs/dev/build-notes.md`: package-local agent notes.
 - `pyproject.toml` and `uv.lock`: package build environment.

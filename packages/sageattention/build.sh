@@ -27,7 +27,7 @@ case "$PACKAGE_VERSION" in
 	;;
 esac
 
-# TODO(joallen):
+# TODO: confirm the best default architecture list for current CUDA images.
 export TORCH_CUDA_ARCH_LIST='9.0' # Hopper
 # export TORCH_CUDA_ARCH_LIST='10.0;12.0' # Blackwell
 

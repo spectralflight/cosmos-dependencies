@@ -44,7 +44,7 @@ nvcc --version
 # Install build dependencies
 uv python install "${PYTHON_VERSION}"
 pushd "${package_dir}"
-venv_dir="$(uv cache dir)/cosmos-dependencies/${OUTPUT_NAME}"
+venv_dir="$(uv cache dir)/pai-deps/${OUTPUT_NAME}"
 uv venv --python "${PYTHON_VERSION}" "${venv_dir}"
 # shellcheck source=/dev/null
 source "${venv_dir}/bin/activate"
@@ -53,7 +53,7 @@ uv pip install "torch==${TORCH_VERSION}.*" --index-url "https://download.pytorch
 
 # Set build environment variables
 eval "$(python -c "
-from cosmos_dependencies.build import build_env
+from pai_deps.build import build_env
 build_env()
 ")"
 

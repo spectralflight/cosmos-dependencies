@@ -10,7 +10,7 @@ do not build concurrently with other package builds.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/vllm/build.sh`
 
 ## Upstream Sources

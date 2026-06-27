@@ -21,10 +21,10 @@ set -euo pipefail
 export HOME="${HOME:-/root}"
 export PATH="${PATH-}:${HOME}/.local/bin"
 
-if [ "$(id -u)" -eq 0 ] && [ "${COSMOS_DOCKER_AS_ROOT:-0}" != "1" ]; then
-	build_uid="${COSMOS_BUILD_UID:-1000}"
-	build_gid="${COSMOS_BUILD_GID:-${build_uid}}"
-	build_home="${COSMOS_BUILD_HOME:-/home/cosmos}"
+if [ "$(id -u)" -eq 0 ] && [ "${PAI_DEPS_DOCKER_AS_ROOT:-0}" != "1" ]; then
+	build_uid="${PAI_DEPS_BUILD_UID:-1000}"
+	build_gid="${PAI_DEPS_BUILD_GID:-${build_uid}}"
+	build_home="${PAI_DEPS_BUILD_HOME:-/home/cosmos}"
 
 	if ! getent group "${build_gid}" >/dev/null; then
 		groupadd --gid "${build_gid}" cosmos
@@ -40,7 +40,7 @@ if [ "$(id -u)" -eq 0 ] && [ "${COSMOS_DOCKER_AS_ROOT:-0}" != "1" ]; then
 	export XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 	export XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 	export UV_CACHE_DIR="${UV_CACHE_DIR:-/cache/uv}"
-	export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${HOME}/.venv/cosmos-dependencies}"
+	export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${HOME}/.venv/pai-deps}"
 	export CCACHE_DIR="${CCACHE_DIR:-/cache/ccache}"
 	export PATH="${PATH}:${XDG_BIN_HOME}"
 

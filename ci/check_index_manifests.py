@@ -10,7 +10,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from cosmos_dependencies.index_manifest import IndexManifest, load_index_manifest_text
+from pai_deps.index_manifest import IndexManifest, load_index_manifest_text
 
 
 @dataclass(frozen=True)
@@ -127,6 +127,17 @@ def check_manifest_change(
 
     if new_manifest.stability != "stable":
         errors.append(ManifestError(path=path, message="stable manifest cannot become unstable"))
+
+    if new_manifest.default_repo != old_manifest.default_repo:
+        errors.append(
+            ManifestError(
+                path=path,
+                message=(
+                    "stable manifest default_repo cannot change "
+                    f"from {old_manifest.default_repo} to {new_manifest.default_repo}"
+                ),
+            )
+        )
 
     old_releases = set(old_manifest.releases)
     new_releases = set(new_manifest.releases)

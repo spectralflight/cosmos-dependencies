@@ -13,8 +13,8 @@ local build artifacts. New releases are created with all matched files attached
 in one gh command, so immutable repositories publish only after assets exist.
 
 Options:
-  --repo OWNER/REPO  Release repository, required unless COSMOS_DEPS_RELEASE_REPO is set
-  --tag TAG          Release tag, default: COSMOS_DEPS_RELEASE_TAG or current pyproject tag
+  --repo OWNER/REPO  Release repository, required unless PAI_DEPS_RELEASE_REPO is set
+  --tag TAG          Release tag, default: PAI_DEPS_RELEASE_TAG or current pyproject tag
   --title TITLE      Release title, default: TAG
   --notes NOTES      Release notes, default: local build artifact upload
   --target TARGET    Git commitish for a new release, default: HEAD
@@ -28,12 +28,13 @@ EOF
 }
 
 version="$(awk -F'"' '/^version = / { print $2; exit }' pyproject.toml)"
-repo="${COSMOS_DEPS_RELEASE_REPO:-${COSMOS_DEPENDENCIES_RELEASE_REPO:-}}"
-tag="${COSMOS_DEPS_RELEASE_TAG:-${COSMOS_DEPENDENCIES_RELEASE_TAG:-v${version}}}"
+repo="${PAI_DEPS_RELEASE_REPO:-${COSMOS_DEPS_RELEASE_REPO:-}}"
+tag="${PAI_DEPS_RELEASE_TAG:-${COSMOS_DEPS_RELEASE_TAG:-v${version}}}"
 title=""
 notes="Local build artifact upload."
 target=""
 dry_run=0
+clobber=0
 create_args=()
 upload_args=()
 patterns=()
@@ -77,10 +78,11 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	--clobber)
-		if [[ "${COSMOS_DEPS_ALLOW_CLOBBER:-0}" != "1" ]]; then
-			echo "Error: --clobber requires COSMOS_DEPS_ALLOW_CLOBBER=1." >&2
+		if [[ "${PAI_DEPS_ALLOW_CLOBBER:-${COSMOS_DEPS_ALLOW_CLOBBER:-0}}" != "1" ]]; then
+			echo "Error: --clobber requires PAI_DEPS_ALLOW_CLOBBER=1." >&2
 			exit 1
 		fi
+		clobber=1
 		upload_args+=("--clobber")
 		shift
 		;;
@@ -120,7 +122,11 @@ if [[ ${#files[@]} -eq 0 ]]; then
 fi
 
 title="${title:-${tag}}"
-python ci/check_release_artifacts.py "${files[@]}"
+expanded_files="$(mktemp)"
+trap 'rm -f "${expanded_files}"' EXIT
+uv run --frozen python ci/check_release_artifacts.py --print-upload-files "${files[@]}" >"${expanded_files}"
+mapfile -t files <"${expanded_files}"
+uv run --frozen python ci/scan_release_artifacts.py "${files[@]}"
 if [[ "${dry_run}" -eq 1 ]]; then
 	echo "Release upload plan"
 	echo "  repo: ${repo}"
@@ -132,7 +138,31 @@ if [[ "${dry_run}" -eq 1 ]]; then
 	exit 0
 fi
 
-if ! gh release view --repo "${repo}" "${tag}" >/dev/null 2>&1; then
+release_exists=0
+if gh release view --repo "${repo}" "${tag}" >/dev/null 2>&1; then
+	release_exists=1
+fi
+
+if [[ "${release_exists}" -eq 1 && "${clobber}" -eq 0 ]]; then
+	mapfile -t existing_assets < <(gh release view --repo "${repo}" "${tag}" --json assets --jq '.assets[].name')
+	collisions=()
+	for file in "${files[@]}"; do
+		file_name="$(basename "${file}")"
+		for existing_asset in "${existing_assets[@]}"; do
+			if [[ "${file_name}" == "${existing_asset}" ]]; then
+				collisions+=("${file_name}")
+				break
+			fi
+		done
+	done
+	if [[ ${#collisions[@]} -gt 0 ]]; then
+		echo "Error: release already has matching assets; use --clobber only for explicitly replaceable scratch releases." >&2
+		printf '  %s\n' "${collisions[@]}" >&2
+		exit 1
+	fi
+fi
+
+if [[ "${release_exists}" -eq 0 ]]; then
 	target="${target:-$(git rev-parse HEAD)}"
 	gh release create \
 		--repo "${repo}" \

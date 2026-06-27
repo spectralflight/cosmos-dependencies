@@ -10,7 +10,7 @@ Treat current scripts as historical until a real build is requested.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/flash-attn/build.sh`
 
 ## Upstream Sources

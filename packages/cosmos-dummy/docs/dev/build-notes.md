@@ -10,7 +10,7 @@ index workflows. It is not a CUDA package.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/cosmos-dummy/build.sh`
 - Local recipe: `just build dummy`
 - Docker recipe: `just build dummy`

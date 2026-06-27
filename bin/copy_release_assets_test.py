@@ -50,3 +50,34 @@ def test_select_assets_uses_sorted_output():
         "a.whl",
         "z.whl",
     ]
+
+
+def test_expand_wheel_triplets_adds_required_sidecars():
+    assets = [
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.json"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.log"),
+        copy_release_assets.ReleaseAsset("README.txt"),
+    ]
+
+    expanded = copy_release_assets.expand_wheel_triplets([copy_release_assets.ReleaseAsset("pkg-1.0.0.whl")], assets)
+
+    assert [asset.name for asset in expanded] == [
+        "pkg-1.0.0.whl.build.log",
+        "pkg-1.0.0.whl.build.json",
+        "pkg-1.0.0.whl",
+    ]
+
+
+def test_expand_wheel_triplets_rejects_missing_sidecars():
+    assets = [
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.json"),
+    ]
+
+    try:
+        copy_release_assets.expand_wheel_triplets([copy_release_assets.ReleaseAsset("pkg-1.0.0.whl")], assets)
+    except ValueError as error:
+        assert "missing required release asset sidecar" in str(error)
+    else:
+        raise AssertionError("expected ValueError")

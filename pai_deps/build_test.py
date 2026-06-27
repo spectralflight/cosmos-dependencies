@@ -15,7 +15,7 @@
 
 import torch
 
-import cosmos_dependencies.build as build
+import pai_deps.build as build
 
 
 def test_parse_torch_cuda_arch():

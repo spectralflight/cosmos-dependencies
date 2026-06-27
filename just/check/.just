@@ -4,6 +4,7 @@ check_dir := source_directory()
 repo := check_dir + "/../.."
 version := `awk -F'"' '/^version = / { print $2; exit }' ../../pyproject.toml`
 tag := "v" + version
+export UV_CACHE_DIR := env_var_or_default("UV_CACHE_DIR", repo + "/tmp/uv-cache")
 
 # Show check recipes.
 default:
@@ -31,19 +32,19 @@ lint: pre-commit
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh
+    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Run Python linting.
 ruff:
-    cd "{{ repo }}" && mise exec -- ruff check bin ci cosmos_dependencies
+    cd "{{ repo }}" && mise exec -- ruff check bin ci pai_deps
 
 # Check Python formatting.
 format:
-    cd "{{ repo }}" && mise exec -- ruff format --check bin ci cosmos_dependencies
+    cd "{{ repo }}" && mise exec -- ruff format --check bin ci pai_deps
 
 # Check locked toolchain policy and Docker tool pins.
 toolchain:
@@ -67,7 +68,7 @@ typecheck:
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py cosmos_dependencies/build_test.py cosmos_dependencies/package_metadata_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/scan_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='origin/main':
@@ -79,7 +80,7 @@ manifest-guard base='origin/main':
 
 # Generate a temporary package index.
 index-smoke index_name=tag:
-    cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json"; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --tag={{ quote(index_name) }}; fi
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Run the standard local test lane.
 test: lint toolchain package-docs package-contracts typecheck unit index-smoke

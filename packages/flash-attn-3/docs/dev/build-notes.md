@@ -10,7 +10,7 @@ explicitly needs Hopper FA3 wheels.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/flash-attn-3/build.sh`
 
 ## Upstream Sources

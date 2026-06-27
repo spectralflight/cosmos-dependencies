@@ -97,3 +97,47 @@ def test_check_wheel_rejects_stale_provenance_hash(tmp_path):
 
     assert any("wheel.sha256 does not match" in error for error in errors)
     assert any("wheel.size" in error for error in errors)
+
+
+def test_check_wheel_rejects_sensitive_build_env_keys(tmp_path):
+    wheel = tmp_path / "pkg-1.0.0-py3-none-any.whl"
+    log = tmp_path / (wheel.name + ".build.log")
+    provenance = tmp_path / (wheel.name + ".build.json")
+    wheel_bytes = b"wheel"
+    log_bytes = b"log"
+    wheel.write_bytes(wheel_bytes)
+    log.write_bytes(log_bytes)
+    provenance.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "package": "pkg",
+                "package_version": "1.0.0",
+                "python_version": "3.12",
+                "torch_version": "2.9",
+                "cuda_version": "12.8.1",
+                "output_name": "out",
+                "git_commit": "abc123",
+                "git_dirty": False,
+                "docker_image": "sha256:abc",
+                "platform": {"machine": "x86_64", "system": "Linux"},
+                "build_env": {"MY_SECRET_TOKEN": "redacted"},
+                "wheel": {"filename": wheel.name, "sha256": _sha256(wheel_bytes), "size": len(wheel_bytes)},
+                "build_log": {"filename": log.name, "sha256": _sha256(log_bytes), "size": len(log_bytes)},
+            }
+        )
+    )
+
+    errors = check_release_artifacts.check_wheel(wheel)
+
+    assert any("sensitive-looking keys" in error for error in errors)
+
+
+def test_upload_files_for_wheels_orders_sidecars_before_wheel(tmp_path):
+    wheel = tmp_path / "pkg-1.0.0-py3-none-any.whl"
+
+    assert check_release_artifacts.upload_files_for_wheels([wheel]) == [
+        tmp_path / "pkg-1.0.0-py3-none-any.whl.build.log",
+        tmp_path / "pkg-1.0.0-py3-none-any.whl.build.json",
+        wheel,
+    ]

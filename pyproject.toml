@@ -14,7 +14,7 @@
 # limitations under the License.
 
 [project]
-name = "cosmos-dependencies"
+name = "pai-deps"
 version = "1.6.0"
 requires-python = ">=3.10"
 dependencies = []
@@ -61,10 +61,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 packages = [
-    "cosmos_dependencies",
+    "pai_deps",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "cosmos_dependencies",
+    "pai_deps",
 ]

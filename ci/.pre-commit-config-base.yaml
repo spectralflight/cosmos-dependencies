@@ -24,6 +24,6 @@ repos:
     hooks:
       - id: gitleaks
         name: Detect hardcoded secrets
-        entry: gitleaks dir --redact --no-banner
-        language: system
-        types_or: [text]
+        entry: ./ci/gitleaks_tracked.sh
+        language: script
+        pass_filenames: false

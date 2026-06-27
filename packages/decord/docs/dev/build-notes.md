@@ -10,7 +10,7 @@ Torch extension; the Torch suffix is this repo's index convention.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/decord/build.sh`
 - Native library helper: `packages/decord/build_lib.sh`
 
@@ -72,7 +72,7 @@ Use GPU/NVDEC smoke only on a host with driver/video decode support.
 - FFmpeg 6 source patches in `build_lib.sh` are brittle against newer decord or
   FFmpeg changes.
 - Decord installs system packages during the package prebuild step, so its
-  Docker build currently needs `COSMOS_DEPS_DOCKER_AS_ROOT=1`.
+  Docker build currently needs `PAI_DEPS_DOCKER_AS_ROOT=1`.
 
 ## Future Fixes
 

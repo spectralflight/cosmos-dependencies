@@ -131,7 +131,7 @@ def check_docker_tool_pins() -> list[str]:
         if not isinstance(version, str):
             errors.append(f"mise.lock {tool} missing version")
             continue
-        version_arg = f"COSMOS_DEPS_{tool.upper()}_VERSION"
+        version_arg = f"PAI_DEPS_{tool.upper()}_VERSION"
         if docker_args.get(version_arg) != version:
             errors.append(f"Dockerfile {version_arg}={docker_args.get(version_arg)!r}, expected {version!r}")
         for platform, arg_suffix in (("linux-arm64", "LINUX_ARM64"), ("linux-x64", "LINUX_X64")):
@@ -140,7 +140,7 @@ def check_docker_tool_pins() -> list[str]:
             except ValueError as error:
                 errors.append(str(error))
                 continue
-            checksum_arg = f"COSMOS_DEPS_{tool.upper()}_{arg_suffix}_SHA256"
+            checksum_arg = f"PAI_DEPS_{tool.upper()}_{arg_suffix}_SHA256"
             if docker_args.get(checksum_arg) != platform_record["checksum"]:
                 errors.append(
                     f"Dockerfile {checksum_arg}={docker_args.get(checksum_arg)!r}, "

@@ -32,6 +32,9 @@ REQUIRED_TOP_LEVEL = {
     "wheel",
     "build_log",
 }
+SENSITIVE_BUILD_ENV_RE = re.compile(
+    r"(?:^|_)(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|CREDENTIAL|API_KEY|ACCESS_KEY|SESSION_TOKEN)(?:_|$)"
+)
 
 
 def _expand_patterns(patterns: list[str]) -> list[Path]:
@@ -42,7 +45,26 @@ def _expand_patterns(patterns: list[str]) -> list[Path]:
         if not matches and path.is_file():
             matches = [path]
         files.extend(matches)
+    return sorted({path for path in files if path.is_file()})
+
+
+def _wheel_paths(files: list[Path]) -> list[Path]:
     return sorted({path for path in files if path.name.endswith(".whl")})
+
+
+def upload_files_for_wheels(wheels: list[Path]) -> list[Path]:
+    """Return sidecar-first upload order for wheel release artifacts."""
+
+    files: list[Path] = []
+    for wheel in sorted(wheels):
+        files.extend(
+            [
+                wheel.with_name(wheel.name + ".build.log"),
+                wheel.with_name(wheel.name + ".build.json"),
+                wheel,
+            ]
+        )
+    return files
 
 
 def _sha256(path: Path) -> str:
@@ -96,8 +118,15 @@ def _check_provenance(wheel: Path, provenance_path: Path, build_log: Path) -> li
         errors.append(f"{provenance_path}: missing fields: {', '.join(missing)}")
     if not isinstance(data.get("git_dirty"), bool):
         errors.append(f"{provenance_path}: git_dirty must be boolean")
-    if not isinstance(data.get("build_env"), dict):
+    build_env = data.get("build_env")
+    if not isinstance(build_env, dict):
         errors.append(f"{provenance_path}: build_env must be an object")
+    else:
+        sensitive_keys = sorted(
+            key for key in build_env if isinstance(key, str) and SENSITIVE_BUILD_ENV_RE.search(key.upper())
+        )
+        if sensitive_keys:
+            errors.append(f"{provenance_path}: build_env contains sensitive-looking keys: {', '.join(sensitive_keys)}")
     errors.extend(_check_file_hash_table(wheel, data.get("wheel"), source=provenance_path, key="wheel"))
     errors.extend(_check_file_hash_table(build_log, data.get("build_log"), source=provenance_path, key="build_log"))
     return errors
@@ -120,9 +149,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("patterns", nargs="+", help="Wheel files or glob patterns.")
     parser.add_argument("--allow-empty", action="store_true", help="Pass when no wheels match.")
+    parser.add_argument(
+        "--print-upload-files",
+        action="store_true",
+        help="Print sidecar-first wheel triplets for a release upload after validation.",
+    )
     args = parser.parse_args()
 
-    wheels = _expand_patterns(args.patterns)
+    files = _expand_patterns(args.patterns)
+    wheels = _wheel_paths(files)
     if not wheels:
         if args.allow_empty:
             print("No wheel artifacts matched.")
@@ -138,8 +173,12 @@ def main() -> int:
             print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    for wheel in wheels:
-        print(wheel)
+    if args.print_upload_files:
+        for path in upload_files_for_wheels(wheels):
+            print(path)
+    else:
+        for wheel in wheels:
+            print(wheel)
     return 0
 
 

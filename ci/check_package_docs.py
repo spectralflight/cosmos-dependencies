@@ -9,7 +9,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from cosmos_dependencies.package_metadata import (
+import tomllib
+
+from pai_deps.package_metadata import (
     DESCRIPTOR_NAME,
     VALID_BACKENDS,
     VALID_GPU_RISKS,
@@ -65,8 +67,17 @@ def _check_descriptor(package: PackageDescriptor) -> list[str]:
         errors.append(f"{source} gpu_risk must be one of {sorted(VALID_GPU_RISKS)}")
     if package.build.backend not in VALID_BACKENDS:
         errors.append(f"{source} build.backend must be one of {sorted(VALID_BACKENDS)}")
-    if not (package.directory / "pyproject.toml").is_file():
+    pyproject_path = package.directory / "pyproject.toml"
+    if not pyproject_path.is_file():
         errors.append(f"{source} missing pyproject.toml in {_display_path(package.directory)}")
+    else:
+        pyproject = tomllib.loads(pyproject_path.read_text())
+        project = pyproject.get("project")
+        pyproject_name = project.get("name") if isinstance(project, dict) else None
+        valid_project_names = {package.name, package.project_name}
+        if pyproject_name not in valid_project_names:
+            expected = " or ".join(repr(name) for name in sorted(valid_project_names))
+            errors.append(f"{_display_path(pyproject_path)} project.name={pyproject_name!r}, expected {expected}")
     if not package.build_script_path.is_file():
         errors.append(f"{source} build script does not exist: {_display_path(package.build_script_path)}")
     if not package.docs_path.is_relative_to(package.directory):

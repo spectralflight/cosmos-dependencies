@@ -14,10 +14,9 @@ from __future__ import annotations
 import argparse
 import subprocess
 from dataclasses import dataclass
-from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 
-from cosmos_dependencies.index_manifest import load_index_manifests
+from pai_deps.index_manifest import load_index_manifests
 
 
 @dataclass(frozen=True)
@@ -74,24 +73,12 @@ def parse_jj_summary(output: str) -> list[ChangedPath]:
     return changes
 
 
-class _LinkParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.links: set[str] = set()
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag != "a":
-            return
-        attrs_dict = dict(attrs)
-        href = attrs_dict.get("href")
-        if href is not None:
-            self.links.add(href)
+def _normalized_html_lines(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.strip()]
 
 
-def _links_from_html(text: str) -> set[str]:
-    parser = _LinkParser()
-    parser.feed(text)
-    return parser.links
+def _is_anchor_line(line: str) -> bool:
+    return line.startswith("<a ") and line.endswith("</a><br>")
 
 
 def _read_index_stabilities(indices_dir: Path = Path("indices")) -> dict[str, str]:
@@ -113,7 +100,13 @@ def _append_only_html_change(
     new_text = new_texts.get(path)
     if old_text is None or new_text is None:
         return False
-    return _links_from_html(old_text) <= _links_from_html(new_text)
+    old_lines = _normalized_html_lines(old_text)
+    new_lines = _normalized_html_lines(new_text)
+    old_line_set = set(old_lines)
+    if not old_line_set <= set(new_lines):
+        return False
+    added_lines = [line for line in new_lines if line not in old_line_set]
+    return all(_is_anchor_line(line) for line in added_lines)
 
 
 def forbidden_index_changes(

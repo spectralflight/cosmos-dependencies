@@ -2,7 +2,7 @@
   "schema_version": 1,
   "index_name": "v1.6.0",
   "stability": "unstable",
-  "default_repo": "spectralflight/cosmos-dependencies",
+  "default_repo": "spectralflight/pai-deps",
   "releases": [
     {
       "tag": "wheels-v1.6.0-batch.20260627.1"

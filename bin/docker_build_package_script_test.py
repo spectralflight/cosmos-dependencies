@@ -91,11 +91,11 @@ def _copy_wrapper_with_fake_docker_run(tmp_path: Path) -> Path:
 
 def _test_env(args_path: Path, *, status: int, docker_as_root: bool = False) -> dict[str, str]:
     env = {
-        "COSMOS_DEPS_BUILD_ATTEMPTS": "1",
+        "PAI_DEPS_BUILD_ATTEMPTS": "1",
         "FAKE_DOCKER_RUN_ARGS": str(args_path),
         "FAKE_DOCKER_RUN_STATUS": str(status),
         "PATH": os.environ["PATH"],
     }
     if docker_as_root:
-        env["COSMOS_DEPS_DOCKER_AS_ROOT"] = "true"
+        env["PAI_DEPS_DOCKER_AS_ROOT"] = "true"
     return env

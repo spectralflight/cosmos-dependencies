@@ -10,7 +10,7 @@ source provenance before any new release.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/flash-attn-3-nv/build.sh`
 
 ## Upstream Sources

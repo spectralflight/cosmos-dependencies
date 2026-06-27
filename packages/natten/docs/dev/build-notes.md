@@ -10,7 +10,7 @@ NATTEN is the primary maintained package in this repository. Prefer it after
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/natten/build.sh`
 - Default recipe: `just build natten`
 
@@ -55,9 +55,9 @@ NATTEN_CUDA_ARCH=9.0
 ```
 
 Widen architecture lists and worker counts only after the small build passes.
-On the local RTX PRO 6000 Blackwell workstation, use `12.0` for single-arch
-smoke builds; the upstream docs' `10.0;10.3` Blackwell examples target server
-parts rather than Blackwell RTX.
+On Blackwell RTX-class hosts, use `12.0` for single-arch smoke builds; the
+upstream docs' `10.0;10.3` Blackwell examples target server parts rather than
+RTX-class cards.
 
 ## Smoke Test
 

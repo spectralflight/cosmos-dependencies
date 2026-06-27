@@ -21,12 +21,12 @@ check_toolchain = _load_check_toolchain()
 
 def test_docker_args_reads_quoted_values():
     args = check_toolchain._docker_args(
-        'ARG COSMOS_DEPS_UV_VERSION="0.11.23"\nARG COSMOS_DEPS_JUST_LINUX_X64_SHA256="abc123"\n'
+        'ARG PAI_DEPS_UV_VERSION="0.11.23"\nARG PAI_DEPS_JUST_LINUX_X64_SHA256="abc123"\n'
     )
 
     assert args == {
-        "COSMOS_DEPS_UV_VERSION": "0.11.23",
-        "COSMOS_DEPS_JUST_LINUX_X64_SHA256": "abc123",
+        "PAI_DEPS_UV_VERSION": "0.11.23",
+        "PAI_DEPS_JUST_LINUX_X64_SHA256": "abc123",
     }
 
 

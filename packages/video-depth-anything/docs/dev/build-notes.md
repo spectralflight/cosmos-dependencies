@@ -11,7 +11,7 @@ this repository.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/video-depth-anything/build.sh`
 - Generic recipe:
   `just build package video-depth-anything <version> <python> <torch> <output>`

@@ -10,7 +10,7 @@ architecture lists as tag-specific.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/sageattention/build.sh`
 
 ## Upstream Sources

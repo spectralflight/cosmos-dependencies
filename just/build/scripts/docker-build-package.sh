@@ -8,9 +8,9 @@ usage() {
 	cat >&2 <<'EOF'
 Usage: just/build/scripts/docker-build-package.sh PACKAGE VERSION PYTHON_VERSION TORCH_VERSION BUILD_DIR [BUILD_ARGS...]
 
-Run a package build inside Docker. Set COSMOS_DEPS_BUILD_ATTEMPTS to retry
+Run a package build inside Docker. Set PAI_DEPS_BUILD_ATTEMPTS to retry
 transient network failures while reusing Docker and uv caches.
-Set COSMOS_DEPS_DOCKER_AS_ROOT=1 for packages whose build scripts must install
+Set PAI_DEPS_DOCKER_AS_ROOT=1 for packages whose build scripts must install
 system packages inside the container.
 EOF
 }
@@ -27,10 +27,10 @@ torch_version="$4"
 build_dir="$5"
 shift 5
 
-attempts="${COSMOS_DEPS_BUILD_ATTEMPTS:-${COSMOS_DEPENDENCIES_BUILD_ATTEMPTS:-1}}"
-retry_delay="${COSMOS_DEPS_BUILD_RETRY_DELAY:-${COSMOS_DEPENDENCIES_BUILD_RETRY_DELAY:-30}}"
-cuda_version="${COSMOS_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPENDENCIES_DOCKER_CUDA_VERSION:-12.8.1}}"
-run_as_root="${COSMOS_DEPS_DOCKER_AS_ROOT:-${COSMOS_DEPENDENCIES_DOCKER_AS_ROOT:-0}}"
+attempts="${PAI_DEPS_BUILD_ATTEMPTS:-${COSMOS_DEPS_BUILD_ATTEMPTS:-1}}"
+retry_delay="${PAI_DEPS_BUILD_RETRY_DELAY:-${COSMOS_DEPS_BUILD_RETRY_DELAY:-30}}"
+cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPS_DOCKER_CUDA_VERSION:-12.8.1}}"
+run_as_root="${PAI_DEPS_DOCKER_AS_ROOT:-${COSMOS_DEPS_DOCKER_AS_ROOT:-0}}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 exit_code=0
 docker_run_args=()
@@ -47,7 +47,7 @@ if [[ "${build_dir}" = /* ]]; then
 fi
 
 if [[ ! "${attempts}" =~ ^[1-9][0-9]*$ ]]; then
-	echo "Error: COSMOS_DEPS_BUILD_ATTEMPTS must be a positive integer." >&2
+	echo "Error: PAI_DEPS_BUILD_ATTEMPTS must be a positive integer." >&2
 	exit 1
 fi
 

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 project-includes = [
-    "cosmos_dependencies/",
+    "pai_deps/",
     "bin/build_script_test.py",
     "bin/create_index.py",
     "bin/create_index_test.py",
@@ -30,7 +30,7 @@ project-includes = [
     "ci/check_toolchain_test.py",
     "ci/check_docs_indices.py",
     "ci/check_docs_indices_test.py",
-    "cosmos_dependencies/package_metadata_test.py",
+    "pai_deps/package_metadata_test.py",
 ]
 
 project-excludes = [

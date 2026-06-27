@@ -13,7 +13,7 @@ GroundingDINO package.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/groundingdino/build.sh`
 
 ## Upstream Sources

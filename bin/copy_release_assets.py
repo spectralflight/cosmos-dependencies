@@ -11,8 +11,11 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
 
 
 @dataclass(frozen=True, order=True)
@@ -34,6 +37,35 @@ def select_assets(
             continue
         selected.append(asset)
     return selected
+
+
+def expand_wheel_triplets(selected_assets: list[ReleaseAsset], all_assets: list[ReleaseAsset]) -> list[ReleaseAsset]:
+    """Ensure selected wheels bring their build-log and provenance sidecars."""
+
+    available = {asset.name: asset for asset in all_assets}
+    expanded = {asset.name: asset for asset in selected_assets}
+    for asset in selected_assets:
+        if not asset.name.endswith(".whl"):
+            continue
+        for suffix in (".build.log", ".build.json"):
+            sidecar_name = asset.name + suffix
+            sidecar = available.get(sidecar_name)
+            if sidecar is None:
+                raise ValueError(f"{asset.name}: missing required release asset sidecar {sidecar_name}")
+            expanded[sidecar_name] = sidecar
+
+    ordered: list[ReleaseAsset] = []
+    used: set[str] = set()
+    for wheel_name in sorted(name for name in expanded if name.endswith(".whl")):
+        for name in (wheel_name + ".build.log", wheel_name + ".build.json", wheel_name):
+            asset = expanded.get(name)
+            if asset is not None:
+                ordered.append(asset)
+                used.add(name)
+    for asset in sorted(expanded.values()):
+        if asset.name not in used:
+            ordered.append(asset)
+    return ordered
 
 
 def _get_release_assets(*, repo: str, tag: str) -> list[ReleaseAsset]:
@@ -113,6 +145,14 @@ def _upload_assets(
         subprocess.check_call(["gh", "release", "upload", "--repo", repo, tag, str(file), *upload_args])
 
 
+def _check_downloaded_artifacts(files: list[Path]) -> None:
+    wheels = [file for file in files if file.name.endswith(".whl")]
+    if not wheels:
+        return
+    subprocess.check_call([sys.executable, str(REPO / "ci/check_release_artifacts.py"), *map(str, wheels)])
+    subprocess.check_call([sys.executable, str(REPO / "ci/scan_release_artifacts.py"), *map(str, files)])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-repo", required=True)
@@ -130,13 +170,18 @@ def main() -> int:
         "--dry-run", action="store_true", help="Print selected assets without downloading or uploading."
     )
     args = parser.parse_args()
-    if args.clobber and os.environ.get("COSMOS_DEPS_ALLOW_CLOBBER") != "1":
-        raise SystemExit("--clobber requires COSMOS_DEPS_ALLOW_CLOBBER=1.")
+    allow_clobber = os.environ.get("PAI_DEPS_ALLOW_CLOBBER") or os.environ.get("COSMOS_DEPS_ALLOW_CLOBBER")
+    if args.clobber and allow_clobber != "1":
+        raise SystemExit("--clobber requires PAI_DEPS_ALLOW_CLOBBER=1.")
 
     assets = _get_release_assets(repo=args.source_repo, tag=args.source_tag)
     selected_assets = select_assets(assets, include=args.include or ["*"], exclude=args.exclude)
     if not selected_assets:
         raise SystemExit("No source release assets matched the requested filters.")
+    try:
+        selected_assets = expand_wheel_triplets(selected_assets, assets)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
 
     for asset in selected_assets:
         print(asset.name)
@@ -148,6 +193,7 @@ def main() -> int:
     title = args.title or args.dest_tag
     copy_dir = args.output_dir / args.source_repo.replace("/", "_") / args.source_tag
     files = _download_assets(repo=args.source_repo, tag=args.source_tag, assets=selected_assets, output_dir=copy_dir)
+    _check_downloaded_artifacts(files)
     _upload_assets(
         repo=args.dest_repo,
         tag=args.dest_tag,

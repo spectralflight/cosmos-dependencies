@@ -63,7 +63,7 @@ def test_forbidden_index_changes_blocks_renames_from_stable_to_unstable():
 def test_forbidden_index_changes_allows_append_only_stable_index_edits():
     change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
     old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
-    new_text = old_text + "<a href='https://example.invalid/natten-2.whl#sha256=def'>new</a><br>"
+    new_text = old_text + "\n<a href='https://example.invalid/natten-2.whl#sha256=def'>new</a><br>\n"
 
     assert (
         forbidden_index_changes(
@@ -80,6 +80,32 @@ def test_forbidden_index_changes_blocks_changed_stable_index_links():
     change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
     old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
     new_text = "<a href='https://example.invalid/natten-1.whl#sha256=changed'>old</a><br>"
+
+    assert forbidden_index_changes(
+        [change],
+        index_stabilities={"cosmos3": "stable"},
+        old_texts={change.path: old_text},
+        new_texts={change.path: new_text},
+    ) == [change]
+
+
+def test_forbidden_index_changes_blocks_changed_stable_index_text():
+    change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
+    old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
+    new_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>changed</a><br>"
+
+    assert forbidden_index_changes(
+        [change],
+        index_stabilities={"cosmos3": "stable"},
+        old_texts={change.path: old_text},
+        new_texts={change.path: new_text},
+    ) == [change]
+
+
+def test_forbidden_index_changes_blocks_non_anchor_stable_index_additions():
+    change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
+    old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
+    new_text = old_text + "<script>alert('no')</script>\n"
 
     assert forbidden_index_changes(
         [change],

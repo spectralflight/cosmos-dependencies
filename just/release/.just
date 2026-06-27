@@ -5,6 +5,7 @@ repo := release_dir + "/../.."
 scripts := release_dir + "/scripts"
 version := `awk -F'"' '/^version = / { print $2; exit }' ../../pyproject.toml`
 tag := "v" + version
+export UV_CACHE_DIR := env_var_or_default("UV_CACHE_DIR", repo + "/tmp/uv-cache")
 
 # Show release recipes.
 default:
@@ -12,11 +13,11 @@ default:
 
 # Generate a temporary package index for an index name.
 create index_name=tag *args:
-    cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json" {{ args }}; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --tag={{ quote(index_name) }} {{ args }}; fi
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }} {{ args }}
 
 # Publish a package index under docs for GitHub Pages.
 publish index_name=tag *args:
-    cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json" {{ args }}; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --tag={{ quote(index_name) }} {{ args }}; fi
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --index-name {{ quote(index_name) }} {{ args }}
 
 # Create a package index from an explicit manifest.
 create-manifest manifest_path output_dir *args:
@@ -56,7 +57,7 @@ serve index_name=tag *args:
 
 # Generate a temporary package index for the current version.
 test-index index_name=tag:
-    cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json"; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --tag={{ quote(index_name) }}; fi
+    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Generate a temporary package index without modifying docs.
 create-dry-run index_name=tag: (create index_name)

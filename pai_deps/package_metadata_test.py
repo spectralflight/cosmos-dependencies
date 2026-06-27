@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from cosmos_dependencies.package_metadata import discover_package_descriptors, load_package_descriptor
+from pai_deps.package_metadata import discover_package_descriptors, load_package_descriptor
 
 
 def test_discovers_repository_packages() -> None:
@@ -11,13 +11,13 @@ def test_discovers_repository_packages() -> None:
 
     assert [package.name for package in packages] == sorted(package.name for package in packages)
     assert {package.name for package in packages} >= {"cosmos-dummy", "natten"}
-    assert all(package.descriptor_path.name == "cosmos-package.toml" for package in packages)
+    assert all(package.descriptor_path.name == "pai-package.toml" for package in packages)
 
 
 def test_loads_descriptor_defaults(tmp_path: Path) -> None:
     package_dir = tmp_path / "sample"
     package_dir.mkdir()
-    descriptor = package_dir / "cosmos-package.toml"
+    descriptor = package_dir / "pai-package.toml"
     descriptor.write_text(
         """
 schema_version = 1

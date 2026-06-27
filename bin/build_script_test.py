@@ -57,10 +57,10 @@ def _run_build_script(
         "USER": "tester",
     }
     if env_file is not None:
-        env_key = "COSMOS_DEPENDENCIES_ENV_FILE" if legacy_env_file else "COSMOS_DEPS_BUILD_ENV_FILE"
+        env_key = "COSMOS_DEPS_BUILD_ENV_FILE" if legacy_env_file else "PAI_DEPS_BUILD_ENV_FILE"
         env[env_key] = str(env_file)
     if inline_env is not None:
-        env["COSMOS_DEPS_BUILD_ENV"] = inline_env
+        env["PAI_DEPS_BUILD_ENV"] = inline_env
     return subprocess.run(
         [
             str(BUILD_SCRIPT),

@@ -35,7 +35,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cosmos-dependencies"
+name = "pai-deps"
 version = "1.6.0"
 source = { editable = "../../" }
 
@@ -765,7 +765,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cmake" },
-    { name = "cosmos-dependencies", extra = ["build"] },
+    { name = "pai-deps", extra = ["build"] },
     { name = "jinja2" },
     { name = "ninja" },
     { name = "packaging" },
@@ -778,7 +778,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cmake", specifier = ">=3.26.1" },
-    { name = "cosmos-dependencies", extras = ["build"], editable = "../../" },
+    { name = "pai-deps", extras = ["build"], editable = "../../" },
     { name = "jinja2" },
     { name = "ninja" },
     { name = "packaging", specifier = ">=24.2" },

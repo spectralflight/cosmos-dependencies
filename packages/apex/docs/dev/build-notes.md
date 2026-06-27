@@ -10,7 +10,7 @@ scripts build against new Torch/CUDA versions without a dedicated test.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/apex/build.sh`
 
 ## Upstream Sources

@@ -11,7 +11,7 @@ checkpoints external.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/sam2/build.sh`
 - Generic recipe: `just build package sam2 <version> <python> <torch> <output>`
 

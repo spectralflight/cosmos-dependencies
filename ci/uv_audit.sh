@@ -11,7 +11,7 @@ if [ "${#args[@]}" -eq 0 ]; then
 	args=(--frozen)
 fi
 
-if [ "${COSMOS_DEPS_AUDIT_STRICT:-${COSMOS_DEPENDENCIES_AUDIT_STRICT:-0}}" = "1" ]; then
+if [ "${PAI_DEPS_AUDIT_STRICT:-${COSMOS_DEPS_AUDIT_STRICT:-0}}" = "1" ]; then
 	args+=(--no-config)
 fi
 

@@ -10,7 +10,7 @@ compatibility is tied closely to Torch.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/torchcodec/build.sh`
 
 ## Upstream Sources

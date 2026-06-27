@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-DEFAULT_REPO = "nvidia-cosmos/cosmos-dependencies"
+DEFAULT_REPO = "spectralflight/pai-deps"
 Stability = Literal["stable", "unstable"]
 
 

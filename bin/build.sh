@@ -114,7 +114,7 @@ _append_build_env_assignment() {
 	value="$(_trim "${BASH_REMATCH[2]}")"
 	value="$(_strip_matching_quotes "${value}")"
 	if _is_reserved_env_name "${key}"; then
-		echo "Error: ${source}: ${key} is controlled by bin/build.sh and cannot be set in COSMOS_DEPS_BUILD_ENV_FILE or COSMOS_DEPS_BUILD_ENV" >&2
+		echo "Error: ${source}: ${key} is controlled by bin/build.sh and cannot be set in PAI_DEPS_BUILD_ENV_FILE or PAI_DEPS_BUILD_ENV" >&2
 		exit 1
 	fi
 	build_env_extra_args+=("${key}=${value}")
@@ -129,7 +129,7 @@ _load_env_file() {
 		return
 	fi
 	if [[ ! -f "${env_file}" ]]; then
-		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
+		echo "Error: PAI_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
 		exit 1
 	fi
 
@@ -161,13 +161,13 @@ _load_inline_env() {
 		if [[ "${inline_token}" == "export" ]]; then
 			continue
 		fi
-		_append_build_env_assignment "COSMOS_DEPS_BUILD_ENV token '${inline_token}'" "${inline_token}"
+		_append_build_env_assignment "PAI_DEPS_BUILD_ENV token '${inline_token}'" "${inline_token}"
 	done
 }
 
 build_env_extra_args=()
-_load_env_file "${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_ENV_FILE:-}}}"
-_load_inline_env "${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}"
+_load_env_file "${PAI_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPS_BUILD_ENV_FILE:-}}"
+_load_inline_env "${PAI_DEPS_BUILD_ENV:-${COSMOS_DEPS_BUILD_ENV:-}}"
 
 _git_commit() {
 	git -c safe.directory=/app rev-parse HEAD 2>/dev/null || git rev-parse HEAD 2>/dev/null || printf "unknown"
@@ -222,7 +222,7 @@ _write_wheel_sidecars() {
 			--output-name "${OUTPUT_NAME}" \
 			--git-commit "$(_git_commit)" \
 			--git-dirty "$(_git_dirty)" \
-			--docker-image "${COSMOS_DEPS_DOCKER_IMAGE:-}" \
+			--docker-image "${PAI_DEPS_DOCKER_IMAGE:-}" \
 			"${provenance_args[@]}"
 	done
 }
@@ -241,7 +241,7 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_BIN_HOME="${XDG_BIN_HOME:-$XDG_DATA_HOME/../bin}"
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$XDG_CACHE_HOME/uv}"
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$XDG_DATA_HOME/cosmos-dependencies/project-venv}"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$XDG_DATA_HOME/pai-deps/project-venv}"
 export CCACHE_DIR="${CCACHE_DIR:-$HOME/.ccache}"
 build_env_args=(
 	PACKAGE_NAME="${PACKAGE_NAME}"

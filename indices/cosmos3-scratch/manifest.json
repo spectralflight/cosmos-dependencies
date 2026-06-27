@@ -2,7 +2,7 @@
   "schema_version": 1,
   "index_name": "cosmos3-scratch",
   "stability": "unstable",
-  "default_repo": "spectralflight/cosmos-dependencies",
+  "default_repo": "spectralflight/pai-deps",
   "releases": [
     {
       "tag": "cosmos3-scratch"

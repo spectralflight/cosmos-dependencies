@@ -11,7 +11,7 @@ import json
 import sys
 from pathlib import Path
 
-from cosmos_dependencies.package_metadata import PackageDescriptor, discover_package_descriptors
+from pai_deps.package_metadata import PackageDescriptor, discover_package_descriptors
 
 REPO = Path(__file__).resolve().parents[1]
 

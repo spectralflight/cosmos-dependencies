@@ -10,7 +10,7 @@ and retest before publishing new wheel batches.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/xformers/build.sh`
 
 ## Upstream Sources

@@ -79,10 +79,10 @@ def test_collect_release_assets_reads_manifest_releases(tmp_path, monkeypatch):
                 "schema_version": 1,
                 "index_name": "cosmos3-scratch",
                 "stability": "unstable",
-                "default_repo": "spectralflight/cosmos-dependencies",
+                "default_repo": "spectralflight/pai-deps",
                 "releases": [
                     {"tag": "cosmos3-scratch"},
-                    {"repo": "nvidia-cosmos/cosmos-dependencies", "tag": "cosmos3-20260727.1"},
+                    {"repo": "spectralflight/pai-deps", "tag": "cosmos3-20260727.1"},
                 ],
             }
         )
@@ -100,8 +100,8 @@ def test_collect_release_assets_reads_manifest_releases(tmp_path, monkeypatch):
     )
 
     assert calls == [
-        ("spectralflight/cosmos-dependencies", "cosmos3-scratch"),
-        ("nvidia-cosmos/cosmos-dependencies", "cosmos3-20260727.1"),
+        ("spectralflight/pai-deps", "cosmos3-scratch"),
+        ("spectralflight/pai-deps", "cosmos3-20260727.1"),
     ]
     assert assets == [
         {"name": "cosmos3-scratch.txt"},
@@ -117,7 +117,7 @@ def test_collect_release_assets_allows_empty_unstable_manifest(tmp_path):
                 "schema_version": 1,
                 "index_name": "cosmos3-scratch",
                 "stability": "unstable",
-                "default_repo": "spectralflight/cosmos-dependencies",
+                "default_repo": "spectralflight/pai-deps",
                 "releases": [],
             }
         )
@@ -133,6 +133,27 @@ def test_collect_release_assets_allows_empty_unstable_manifest(tmp_path):
 def test_collect_release_assets_requires_tag_or_manifest(tmp_path):
     with pytest.raises(ValueError, match="Pass --tag or --manifest"):
         create_index._collect_release_assets(create_index.Args(output_dir=tmp_path / "out"))
+
+
+def test_resolve_index_name_uses_manifest_when_present(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    manifest = tmp_path / "indices" / "cosmos3" / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("{}")
+
+    args = create_index._resolve_index_name(create_index.Args(output_dir=tmp_path / "out", index_name="cosmos3"))
+
+    assert args.manifest == manifest
+    assert args.tag is None
+
+
+def test_resolve_index_name_uses_tag_without_manifest(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    args = create_index._resolve_index_name(create_index.Args(output_dir=tmp_path / "out", index_name="cosmos3"))
+
+    assert args.manifest is None
+    assert args.tag == "cosmos3"
 
 
 def test_collect_release_assets_rejects_tag_and_manifest(tmp_path):

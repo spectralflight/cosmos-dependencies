@@ -18,12 +18,12 @@ ARG BASE_IMAGE="nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu22.04"
 FROM ${BASE_IMAGE}
 
 ARG TARGETARCH
-ARG COSMOS_DEPS_UV_VERSION="0.11.23"
-ARG COSMOS_DEPS_UV_LINUX_ARM64_SHA256="80efb615b78c1e5721e5858135cd3499609b26741220332c843bd58936053bc6"
-ARG COSMOS_DEPS_UV_LINUX_X64_SHA256="6be47081100ff1ce0ac7e85ba2ac12e32f2ffa6f946d78bf7f24ee9ce3a46181"
-ARG COSMOS_DEPS_JUST_VERSION="1.53.0"
-ARG COSMOS_DEPS_JUST_LINUX_ARM64_SHA256="f29d8e72380bc144465f632c7d59da311205eef2923d57511708b05b82f2e64f"
-ARG COSMOS_DEPS_JUST_LINUX_X64_SHA256="7fedeb22c7e14d9ef1551e8b793700866d80f409f9884b0e80ebb65c11d4874d"
+ARG PAI_DEPS_UV_VERSION="0.11.23"
+ARG PAI_DEPS_UV_LINUX_ARM64_SHA256="80efb615b78c1e5721e5858135cd3499609b26741220332c843bd58936053bc6"
+ARG PAI_DEPS_UV_LINUX_X64_SHA256="6be47081100ff1ce0ac7e85ba2ac12e32f2ffa6f946d78bf7f24ee9ce3a46181"
+ARG PAI_DEPS_JUST_VERSION="1.53.0"
+ARG PAI_DEPS_JUST_LINUX_ARM64_SHA256="f29d8e72380bc144465f632c7d59da311205eef2923d57511708b05b82f2e64f"
+ARG PAI_DEPS_JUST_LINUX_X64_SHA256="7fedeb22c7e14d9ef1551e8b793700866d80f409f9884b0e80ebb65c11d4874d"
 
 # Set the DEBIAN_FRONTEND environment variable to avoid interactive prompts during apt operations.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -57,27 +57,27 @@ RUN set -eux; \
     case "${TARGETARCH}" in \
         amd64) \
             uv_arch="x86_64-unknown-linux-musl"; \
-            uv_sha256="${COSMOS_DEPS_UV_LINUX_X64_SHA256}"; \
+            uv_sha256="${PAI_DEPS_UV_LINUX_X64_SHA256}"; \
             just_arch="x86_64-unknown-linux-musl"; \
-            just_sha256="${COSMOS_DEPS_JUST_LINUX_X64_SHA256}"; \
+            just_sha256="${PAI_DEPS_JUST_LINUX_X64_SHA256}"; \
             ;; \
         arm64) \
             uv_arch="aarch64-unknown-linux-musl"; \
-            uv_sha256="${COSMOS_DEPS_UV_LINUX_ARM64_SHA256}"; \
+            uv_sha256="${PAI_DEPS_UV_LINUX_ARM64_SHA256}"; \
             just_arch="aarch64-unknown-linux-musl"; \
-            just_sha256="${COSMOS_DEPS_JUST_LINUX_ARM64_SHA256}"; \
+            just_sha256="${PAI_DEPS_JUST_LINUX_ARM64_SHA256}"; \
             ;; \
         *) \
             echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; \
             exit 1; \
             ;; \
     esac; \
-    curl -fsSLo /tmp/uv.tar.gz "https://github.com/astral-sh/uv/releases/download/${COSMOS_DEPS_UV_VERSION}/uv-${uv_arch}.tar.gz"; \
+    curl -fsSLo /tmp/uv.tar.gz "https://github.com/astral-sh/uv/releases/download/${PAI_DEPS_UV_VERSION}/uv-${uv_arch}.tar.gz"; \
     echo "${uv_sha256}  /tmp/uv.tar.gz" | sha256sum -c -; \
     tar -xzf /tmp/uv.tar.gz -C /tmp; \
     install -m 0755 "/tmp/uv-${uv_arch}/uv" /usr/local/bin/uv; \
     install -m 0755 "/tmp/uv-${uv_arch}/uvx" /usr/local/bin/uvx; \
-    curl -fsSLo /tmp/just.tar.gz "https://github.com/casey/just/releases/download/${COSMOS_DEPS_JUST_VERSION}/just-${COSMOS_DEPS_JUST_VERSION}-${just_arch}.tar.gz"; \
+    curl -fsSLo /tmp/just.tar.gz "https://github.com/casey/just/releases/download/${PAI_DEPS_JUST_VERSION}/just-${PAI_DEPS_JUST_VERSION}-${just_arch}.tar.gz"; \
     echo "${just_sha256}  /tmp/just.tar.gz" | sha256sum -c -; \
     tar -xzf /tmp/just.tar.gz -C /tmp just; \
     install -m 0755 /tmp/just /usr/local/bin/just; \

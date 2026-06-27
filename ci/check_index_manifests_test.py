@@ -17,7 +17,7 @@ def _manifest(
             "schema_version": 1,
             "index_name": index_name,
             "stability": stability,
-            "default_repo": "nvidia-cosmos/cosmos-dependencies",
+            "default_repo": "spectralflight/pai-deps",
             "releases": releases if releases is not None else [{"tag": "cosmos3-20260627.1"}],
         }
     )
@@ -37,7 +37,22 @@ def test_check_manifest_change_blocks_stable_release_removal():
     errors = check_manifest_change("indices/cosmos3/manifest.json", old_text=old_text, new_text=new_text)
 
     assert len(errors) == 1
-    assert "removed release nvidia-cosmos/cosmos-dependencies cosmos3-20260627.1" in errors[0].message
+    assert "removed release spectralflight/pai-deps cosmos3-20260627.1" in errors[0].message
+
+
+def test_check_manifest_change_blocks_stable_default_repo_change():
+    old_text = _manifest(releases=[{"tag": "cosmos3-20260627.1"}])
+    new_manifest = json.loads(old_text)
+    new_manifest["default_repo"] = "example/repo"
+
+    errors = check_manifest_change(
+        "indices/cosmos3/manifest.json", old_text=old_text, new_text=json.dumps(new_manifest)
+    )
+
+    assert [error.message for error in errors] == [
+        "stable manifest default_repo cannot change from spectralflight/pai-deps to example/repo",
+        "stable manifest removed release spectralflight/pai-deps cosmos3-20260627.1",
+    ]
 
 
 def test_check_manifest_change_blocks_stable_to_unstable():

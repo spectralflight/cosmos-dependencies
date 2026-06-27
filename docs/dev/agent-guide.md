@@ -14,9 +14,9 @@ owner explicitly authorizes a new release flow.
 
 ## Build Hosts
 
-Use the local x86_64 workstation for x86_64 wheel experiments. Use the
-designated ARM build host for aarch64 work when explicitly requested. Avoid
-shared service hosts for wheel builds unless the owner asks for them.
+Use an x86_64 CUDA host for x86_64 wheel experiments. Use an aarch64 CUDA host
+for aarch64 work when explicitly requested. Avoid shared or service-critical
+machines for wheel builds unless the owner explicitly authorizes them.
 
 All wheel builds should run inside Docker. Build scripts may install trusted
 system packages as root during image setup or a controlled preflight, but
@@ -49,13 +49,12 @@ committed commands that use `uvx`, `uv tool install`, `uv run --with ...`,
 curl-piped installers, or `eget`.
 
 Builds run under a mostly empty environment. To pass package-specific or
-tool-specific variables, point `COSMOS_DEPS_BUILD_ENV_FILE` at a local file
+tool-specific variables, point `PAI_DEPS_BUILD_ENV_FILE` at a local file
 inside the repository. The file accepts literal `KEY=VALUE` lines, optional
 `export KEY=VALUE` lines, blank lines, and whole-line comments. It does not
 perform shell expansion, and it cannot override core wrapper-controlled
 variables such as `PACKAGE_NAME`, `OUTPUT_DIR`, cache paths, or `PATH`.
-`COSMOS_DEPENDENCIES_ENV_FILE` and `COSMOS_DEPENDENCIES_BUILD_ENV_FILE` remain
-accepted as legacy aliases.
+`COSMOS_DEPS_BUILD_ENV_FILE` remains accepted as a compatibility alias.
 
 Example local env file for a small `natten` smoke build:
 
@@ -67,16 +66,16 @@ TORCH_CUDA_ARCH_LIST=9.0
 NATTEN_CUDA_ARCH=9.0
 ```
 
-For simple values, use `COSMOS_DEPS_BUILD_ENV` instead of a file:
+For simple values, use `PAI_DEPS_BUILD_ENV` instead of a file:
 
 ```bash
-COSMOS_DEPS_BUILD_ENV='MAX_JOBS=1 NATTEN_N_WORKERS=1 TORCH_CUDA_ARCH_LIST=9.0 NATTEN_CUDA_ARCH=9.0' just build natten
+PAI_DEPS_BUILD_ENV='MAX_JOBS=1 NATTEN_N_WORKERS=1 TORCH_CUDA_ARCH_LIST=9.0 NATTEN_CUDA_ARCH=9.0' just build natten
 ```
 
 The inline form is split on whitespace and does not support values containing
 spaces. Use the env file for those.
 
-Use `COSMOS_DEPS_BUILD_ATTEMPTS=3 just build dummy` when testing
+Use `PAI_DEPS_BUILD_ATTEMPTS=3 just build dummy` when testing
 network-heavy paths. Failed attempts keep Docker and uv cache state, so retries
 can often continue after a transient wheel download failure.
 
@@ -84,12 +83,12 @@ For fork-only publication drills:
 
 1. Build a wheel with `just build dummy`.
 2. Upload the wheel and sidecars to an unstable scratch release, for example
-   `just release upload 'tmp/build/*/*.whl*' spectralflight/cosmos-dependencies
+   `just release upload 'tmp/build/*/*.whl' spectralflight/pai-deps
    cosmos3-scratch`.
 3. Generate the scratch index with `just release create cosmos3-scratch`.
 4. Copy selected assets into a stable release with `just release copy-assets
-   spectralflight/cosmos-dependencies cosmos3-scratch
-   spectralflight/cosmos-dependencies cosmos3-20260627.1 'cosmos_dummy*'`.
+   spectralflight/pai-deps cosmos3-scratch
+   spectralflight/pai-deps cosmos3-20260627.1 'cosmos_dummy*'`.
 5. Publish the stable index with `just release publish cosmos3`.
 6. Verify installation with `just release verify-install docs/cosmos3
    cosmos-dummy 0.1.0 cosmos_dummy`.
@@ -115,13 +114,11 @@ clear CVEs, but do not treat a lock update as proof that the package builds.
 `uv audit` allowlists belong in each affected project's `[tool.uv.audit]`
 configuration. Prefer `ignore-until-fixed` for no-fix advisories so newly
 fixable vulnerabilities fail the normal audit. Use `just deps audit-strict` or
-`COSMOS_DEPS_AUDIT_STRICT=1` to bypass uv config and see the raw audit result.
+`PAI_DEPS_AUDIT_STRICT=1` to bypass uv config and see the raw audit result.
 
 ## Release Workflow
 
-Use `spectralflight/pai-deps` for experiments and publication drills after the
-repository is renamed. Until then, `spectralflight/cosmos-dependencies` is the
-only GitHub remote this checkout should use.
+Use `spectralflight/pai-deps` for experiments and publication drills.
 
 Before publishing anything:
 

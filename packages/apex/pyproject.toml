@@ -18,8 +18,8 @@ name = "apex"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "cosmos-dependencies[build]",
+    "pai-deps[build]",
 ]
 
 [tool.uv.sources]
-cosmos-dependencies = { path = "../..", editable = true }
+pai-deps = { path = "../..", editable = true }

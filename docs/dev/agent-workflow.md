@@ -61,7 +61,7 @@ just release artifact-check
 
 ## Package Work
 
-Package inventory is discovered from `packages/*/cosmos-package.toml`.
+Package inventory is discovered from `packages/*/pai-package.toml`.
 
 ```bash
 just package list
@@ -73,8 +73,8 @@ just check package-contracts
 smoke package. Most other package directories are historical and may be stale;
 their docs record known risks instead of promising a current build.
 
-Pass package-specific variables through `COSMOS_DEPS_BUILD_ENV_FILE` or
-`COSMOS_DEPS_BUILD_ENV`. Do not add package-specific variables to global
+Pass package-specific variables through `PAI_DEPS_BUILD_ENV_FILE` or
+`PAI_DEPS_BUILD_ENV`. Do not add package-specific variables to global
 allowlists.
 
 ## Release Dry Runs
@@ -82,8 +82,8 @@ allowlists.
 Use dry runs before GitHub mutations:
 
 ```bash
-just release upload-plan 'tmp/build/**/*.whl*' spectralflight/cosmos-dependencies cosmos3-scratch
-just release copy-plan spectralflight/cosmos-dependencies cosmos3-scratch spectralflight/cosmos-dependencies cosmos3-20260627.1 'cosmos_dummy*'
+just release upload-plan 'tmp/build/**/*.whl' spectralflight/pai-deps cosmos3-scratch
+just release copy-plan spectralflight/pai-deps cosmos3-scratch spectralflight/pai-deps cosmos3-20260627.1 'cosmos_dummy*'
 just release create-dry-run cosmos3
 just release publish cosmos3
 ```

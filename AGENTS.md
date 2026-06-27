@@ -19,15 +19,14 @@ package-index, and release-asset contracts.
 - Use committed lockfiles for tool and Python dependency resolution. Do not add
   committed workflows that use `uvx`, `uv tool install`, `uv run --with ...`,
   curl-piped installers, or `eget`.
-- Use `spectralflight/...` bookmarks for public GitHub fork work and
-  `joallen/...` bookmarks for internal GitLab work.
+- Use `spectralflight/...` bookmarks for public GitHub work.
 
 ## Package Boundary
 
 - Package-specific truth belongs under `packages/<name>`.
-- Each package owns `cosmos-package.toml`, `build.sh`, `pyproject.toml`,
+- Each package owns `pai-package.toml`, `build.sh`, `pyproject.toml`,
   `uv.lock`, and `docs/dev/build-notes.md`.
-- Shared discovery, checks, and harness code belong in `cosmos_dependencies/`,
+- Shared discovery, checks, and harness code belong in `pai_deps/`,
   `ci/`, `bin/`, or `just/`.
 - Prefer shared parametrized tests over per-package boilerplate.
 
@@ -45,6 +44,8 @@ package-index, and release-asset contracts.
 - `just package list` and `just package show <name>`: inspect package-local
   descriptors and agent docs.
 - `just release create-dry-run <index>`: generate a temporary package index.
+- Release uploads scan wheels, build logs, and provenance sidecars for secrets
+  before any GitHub writes.
 
 ## Pointers
 

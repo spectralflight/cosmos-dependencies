@@ -23,8 +23,8 @@ EOF
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
-cuda_version="${COSMOS_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPENDENCIES_DOCKER_CUDA_VERSION:-12.8.1}}"
-cache_volume="${COSMOS_DEPS_DOCKER_CACHE_VOLUME:-${COSMOS_DEPENDENCIES_DOCKER_CACHE_VOLUME:-cosmos-dependencies-cache}}"
+cuda_version="${PAI_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPS_DOCKER_CUDA_VERSION:-12.8.1}}"
+cache_volume="${PAI_DEPS_DOCKER_CACHE_VOLUME:-${COSMOS_DEPS_DOCKER_CACHE_VOLUME:-pai-deps-cache}}"
 tty_mode="auto"
 docker_as_root="0"
 build_args=()
@@ -73,10 +73,10 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-env_file="${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_ENV_FILE:-}}}"
+env_file="${PAI_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPS_BUILD_ENV_FILE:-}}"
 if [[ -n "${env_file}" ]]; then
 	if [[ ! -f "${env_file}" ]]; then
-		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
+		echo "Error: PAI_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
 		exit 1
 	fi
 	env_file_abs="$(realpath "${env_file}")"
@@ -85,7 +85,7 @@ if [[ -n "${env_file}" ]]; then
 		env_file="${env_file_abs#"${repo_root}/"}"
 		;;
 	*)
-		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE must be inside the repository mounted at /app: ${env_file}" >&2
+		echo "Error: PAI_DEPS_BUILD_ENV_FILE must be inside the repository mounted at /app: ${env_file}" >&2
 		exit 1
 		;;
 	esac
@@ -114,19 +114,19 @@ docker run \
 	"${tty_args[@]}" \
 	--rm \
 	--runtime=nvidia \
-	-e COSMOS_BUILD_UID="$(id -u)" \
-	-e COSMOS_BUILD_GID="$(id -g)" \
-	-e COSMOS_BUILD_HOME="/home/cosmos" \
-	-e COSMOS_DOCKER_AS_ROOT="${docker_as_root}" \
+	-e PAI_DEPS_BUILD_UID="$(id -u)" \
+	-e PAI_DEPS_BUILD_GID="$(id -g)" \
+	-e PAI_DEPS_BUILD_HOME="/home/cosmos" \
+	-e PAI_DEPS_DOCKER_AS_ROOT="${docker_as_root}" \
 	-e XDG_CACHE_HOME="/cache/xdg" \
 	-e XDG_DATA_HOME="/home/cosmos/.local/share" \
 	-e XDG_BIN_HOME="/home/cosmos/.local/bin" \
 	-e UV_CACHE_DIR="/cache/uv" \
-	-e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/cosmos-dependencies" \
+	-e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/pai-deps" \
 	-e CCACHE_DIR="/cache/ccache" \
-	-e COSMOS_DEPS_DOCKER_IMAGE="${image_tag}" \
-	-e COSMOS_DEPS_BUILD_ENV_FILE="${env_file}" \
-	-e COSMOS_DEPS_BUILD_ENV="${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}" \
+	-e PAI_DEPS_DOCKER_IMAGE="${image_tag}" \
+	-e PAI_DEPS_BUILD_ENV_FILE="${env_file}" \
+	-e PAI_DEPS_BUILD_ENV="${PAI_DEPS_BUILD_ENV:-${COSMOS_DEPS_BUILD_ENV:-}}" \
 	-v "${repo_root}:/app" \
 	-v "${cache_volume}:/cache" \
 	"${run_args[@]}" \

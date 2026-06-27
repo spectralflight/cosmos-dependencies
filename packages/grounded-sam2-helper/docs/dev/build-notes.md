@@ -11,7 +11,7 @@ modules/config files only and keep model weights external.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/grounded-sam2-helper/build.sh`
 - Generic recipe:
   `just build package grounded-sam2-helper <version> <python> <torch> <output>`

@@ -4,7 +4,7 @@
 from pathlib import Path
 
 from ci.check_package_build_contracts import check_packages
-from cosmos_dependencies.package_metadata import discover_package_descriptors
+from pai_deps.package_metadata import discover_package_descriptors
 
 
 def test_repository_package_contracts_match_build_scripts() -> None:
@@ -14,7 +14,7 @@ def test_repository_package_contracts_match_build_scripts() -> None:
 def test_detects_missing_source_url(tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg"
     package_dir.mkdir()
-    (package_dir / "cosmos-package.toml").write_text(
+    (package_dir / "pai-package.toml").write_text(
         """
 schema_version = 1
 name = "pkg"

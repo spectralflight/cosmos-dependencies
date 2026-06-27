@@ -53,7 +53,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cosmos-dependencies"
+name = "pai-deps"
 version = "1.6.0"
 source = { editable = "." }
 

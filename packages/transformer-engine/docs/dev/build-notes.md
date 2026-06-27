@@ -10,7 +10,7 @@ Torch, CUDA, cuDNN, GCC, FlashAttention, and local header workarounds.
 
 ## Local Build Entry Point
 
-- Package descriptor: `cosmos-package.toml`
+- Package descriptor: `pai-package.toml`
 - Build script: `packages/transformer-engine/build.sh`
 
 ## Upstream Sources

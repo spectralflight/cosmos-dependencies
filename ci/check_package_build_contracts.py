@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sys
 
-from cosmos_dependencies.package_metadata import PackageDescriptor, discover_package_descriptors
+from pai_deps.package_metadata import PackageDescriptor, discover_package_descriptors
 
 COMMON_PIP_WHEEL_TOKENS = [
     "pip wheel",
