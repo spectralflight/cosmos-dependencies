@@ -42,6 +42,105 @@ if [[ ! "${TORCH_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
 	exit 1
 fi
 
+_trim() {
+	local value="$1"
+	value="${value#"${value%%[![:space:]]*}"}"
+	value="${value%"${value##*[![:space:]]}"}"
+	printf "%s" "${value}"
+}
+
+_is_reserved_env_name() {
+	local name="$1"
+	local reserved_name
+	local reserved_env_names=(
+		PACKAGE_NAME
+		PACKAGE_VERSION
+		PYTHON_VERSION
+		TORCH_VERSION
+		LOCAL_VERSION_SUFFIX
+		OUTPUT_NAME
+		OUTPUT_DIR
+		PATH
+		HOME
+		USER
+		XDG_CACHE_HOME
+		XDG_DATA_HOME
+		XDG_BIN_HOME
+		UV_CACHE_DIR
+		UV_PROJECT_ENVIRONMENT
+		CCACHE_DIR
+		CUDA_HOME
+		LD_LIBRARY_PATH
+		CUDA_VERSION
+	)
+	for reserved_name in "${reserved_env_names[@]}"; do
+		if [[ "${name}" == "${reserved_name}" ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+_strip_matching_quotes() {
+	local value="$1"
+	local first_char
+	local last_char
+	if [[ "${#value}" -lt 2 ]]; then
+		printf "%s" "${value}"
+		return
+	fi
+	first_char="${value:0:1}"
+	last_char="${value: -1}"
+	if [[ "${first_char}" == "${last_char}" && ( "${first_char}" == "'" || "${first_char}" == '"' ) ]]; then
+		printf "%s" "${value:1:${#value}-2}"
+		return
+	fi
+	printf "%s" "${value}"
+}
+
+_load_env_file() {
+	local env_file="$1"
+	local env_line
+	local line_no=0
+	local key
+	local value
+
+	if [[ -z "${env_file}" ]]; then
+		return
+	fi
+	if [[ ! -f "${env_file}" ]]; then
+		echo "Error: COSMOS_DEPENDENCIES_ENV_FILE does not exist: ${env_file}" >&2
+		exit 1
+	fi
+
+	while IFS= read -r env_line || [[ -n "${env_line}" ]]; do
+		line_no=$((line_no + 1))
+		env_line="${env_line%$'\r'}"
+		env_line="$(_trim "${env_line}")"
+		if [[ -z "${env_line}" || "${env_line:0:1}" == "#" ]]; then
+			continue
+		fi
+		if [[ "${env_line}" == export[[:space:]]* ]]; then
+			env_line="$(_trim "${env_line#export}")"
+		fi
+		if [[ ! "${env_line}" =~ ^([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=(.*)$ ]]; then
+			echo "Error: ${env_file}:${line_no}: expected KEY=VALUE" >&2
+			exit 1
+		fi
+		key="${BASH_REMATCH[1]}"
+		value="$(_trim "${BASH_REMATCH[2]}")"
+		value="$(_strip_matching_quotes "${value}")"
+		if _is_reserved_env_name "${key}"; then
+			echo "Error: ${env_file}:${line_no}: ${key} is controlled by bin/build.sh and cannot be set in COSMOS_DEPENDENCIES_ENV_FILE" >&2
+			exit 1
+		fi
+		build_env_file_args+=("${key}=${value}")
+	done <"${env_file}"
+}
+
+build_env_file_args=()
+_load_env_file "${COSMOS_DEPENDENCIES_ENV_FILE:-}"
+
 timestamp=$(date +%Y%m%d%H%M%S)
 export OUTPUT_NAME="${timestamp}-${PACKAGE_NAME//-/_}-${PACKAGE_VERSION}-py${PYTHON_VERSION}-cu${CUDA_VERSION}-torch${TORCH_VERSION}"
 OUTPUT_DIR="${BUILD_DIR}/${OUTPUT_NAME}"
@@ -58,27 +157,22 @@ export XDG_BIN_HOME="${XDG_BIN_HOME:-$XDG_DATA_HOME/../bin}"
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$XDG_CACHE_HOME/uv}"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$XDG_DATA_HOME/cosmos-dependencies/project-venv}"
 export CCACHE_DIR="${CCACHE_DIR:-$HOME/.ccache}"
-env -i \
-	PACKAGE_NAME="${PACKAGE_NAME}" \
-	PACKAGE_VERSION="${PACKAGE_VERSION}" \
-	PYTHON_VERSION="${PYTHON_VERSION}" \
-	TORCH_VERSION="${TORCH_VERSION}" \
-	LOCAL_VERSION_SUFFIX="${LOCAL_VERSION_SUFFIX:-}" \
-	OUTPUT_NAME="${OUTPUT_NAME}" \
-	OUTPUT_DIR="${OUTPUT_DIR}" \
-	PATH="${PATH:-}" \
-	HOME="${HOME:-}" \
-	USER="${USER:-}" \
-	XDG_CACHE_HOME="${XDG_CACHE_HOME}" \
-	XDG_DATA_HOME="${XDG_DATA_HOME}" \
-	XDG_BIN_HOME="${XDG_BIN_HOME}" \
-	UV_CACHE_DIR="${UV_CACHE_DIR}" \
-	UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT}" \
-	CCACHE_DIR="${CCACHE_DIR}" \
-	MAX_JOBS="${MAX_JOBS:-}" \
-	NATTEN_N_WORKERS="${NATTEN_N_WORKERS:-}" \
-	NVCC_THREADS="${NVCC_THREADS:-}" \
-	EXT_PARALLEL="${EXT_PARALLEL:-}" \
-	NVCC_APPEND_FLAGS="${NVCC_APPEND_FLAGS:-}" \
-	TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST:-}" \
-	bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
+build_env_args=(
+	PACKAGE_NAME="${PACKAGE_NAME}"
+	PACKAGE_VERSION="${PACKAGE_VERSION}"
+	PYTHON_VERSION="${PYTHON_VERSION}"
+	TORCH_VERSION="${TORCH_VERSION}"
+	LOCAL_VERSION_SUFFIX="${LOCAL_VERSION_SUFFIX:-}"
+	OUTPUT_NAME="${OUTPUT_NAME}"
+	OUTPUT_DIR="${OUTPUT_DIR}"
+	PATH="${PATH:-}"
+	HOME="${HOME:-}"
+	USER="${USER:-}"
+	XDG_CACHE_HOME="${XDG_CACHE_HOME}"
+	XDG_DATA_HOME="${XDG_DATA_HOME}"
+	XDG_BIN_HOME="${XDG_BIN_HOME}"
+	UV_CACHE_DIR="${UV_CACHE_DIR}"
+	UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT}"
+	CCACHE_DIR="${CCACHE_DIR}"
+)
+env -i "${build_env_args[@]}" "${build_env_file_args[@]}" bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"

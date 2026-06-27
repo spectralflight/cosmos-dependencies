@@ -49,6 +49,7 @@ _docker cuda_version build_args='' run_args='':
     -e UV_CACHE_DIR="/cache/uv" \
     -e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/cosmos-dependencies" \
     -e CCACHE_DIR="/cache/ccache" \
+    -e COSMOS_DEPENDENCIES_ENV_FILE="${COSMOS_DEPENDENCIES_ENV_FILE:-}" \
     -v .:/app \
     -v cosmos-dependencies-cache:/cache \
     {{run_args}} $image_tag

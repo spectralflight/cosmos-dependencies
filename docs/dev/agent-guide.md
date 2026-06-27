@@ -36,9 +36,23 @@ Start with the cheapest proof before attempting long package builds:
 5. Increase build scope only after the smaller proof passes.
 
 OOM is a common build failure mode. Start with conservative thread counts and a
-small CUDA architecture list, then widen deliberately. Useful knobs include
-`MAX_JOBS`, `NATTEN_N_WORKERS`, `NVCC_THREADS`, `NVCC_APPEND_FLAGS`, and
-`TORCH_CUDA_ARCH_LIST`.
+small CUDA architecture list, then widen deliberately.
+
+Builds run under a mostly empty environment. To pass package-specific or
+tool-specific variables, point `COSMOS_DEPENDENCIES_ENV_FILE` at a local file
+inside the repository. The file accepts literal `KEY=VALUE` lines, optional
+`export KEY=VALUE` lines, blank lines, and whole-line comments. It does not
+perform shell expansion, and it cannot override core wrapper-controlled
+variables such as `PACKAGE_NAME`, `OUTPUT_DIR`, cache paths, or `PATH`.
+
+Example local env file for a small `natten` smoke build:
+
+```dotenv
+MAX_JOBS=1
+NATTEN_N_WORKERS=1
+NVCC_THREADS=1
+TORCH_CUDA_ARCH_LIST=9.0
+```
 
 ## Package Scope
 
