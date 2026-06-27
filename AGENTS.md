@@ -9,11 +9,11 @@ Those indices are compatibility contracts for downstream lockfiles.
 
 - Do not modify, delete, rewrite, reformat, or regenerate published package
   index files under `docs/**/index.html`.
-- The only editable package index docs are versions whose
-  `indices/<version>/manifest.json` has `status: "unreleased"`.
+- The only freely editable package index docs are indices whose
+  `indices/<index-name>/manifest.json` has `stability: "unstable"`.
 - Do not alter existing GitHub releases or replace existing release assets for
-  released indices.
-- Publish new wheels for released indices only as new batch releases with
+  stable indices.
+- Publish new wheels for stable indices only as new release assets with
   unique filenames and hashes.
 - Keep agent-facing workflow notes in `docs/dev/`; keep the README human-facing.
 - Run wheel builds inside Docker. Use trusted root steps only for image/package
@@ -29,6 +29,8 @@ Those indices are compatibility contracts for downstream lockfiles.
 - `just test`: lint, Pyrefly, unit tests, and package-index smoke checks.
 - `just index-guard upstream/main`: verify existing package indices were not
   changed relative to upstream.
+- `just manifest-guard upstream/main`: verify stable index manifests remain
+  append-only.
 - `just audit`: run `uv audit` for the root project and package build
   environments. Audit allowlists live in each affected project's
   `[tool.uv.audit]` config, not in the wrapper script.

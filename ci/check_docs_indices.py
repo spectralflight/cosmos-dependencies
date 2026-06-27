@@ -2,20 +2,22 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Fail when a published package index under docs/ is changed.
+"""Fail when a stable package index under docs/ is changed unsafely.
 
-New index files and unreleased index versions are allowed. Published index files
-are treated as immutable because downstream lockfiles can rely on their wheel
-URLs and hashes.
+New index files and unstable indices are allowed. Stable package index files
+are append-only because downstream lockfiles can rely on their wheel URLs and
+hashes.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import subprocess
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
+
+from cosmos_dependencies.index_manifest import load_index_manifests
 
 
 @dataclass(frozen=True)
@@ -60,26 +62,58 @@ def parse_name_status(output: str) -> list[ChangedPath]:
     return changes
 
 
-def _read_unreleased_versions(indices_dir: Path = Path("indices")) -> set[str]:
-    versions: set[str] = set()
-    for manifest_path in indices_dir.glob("*/manifest.json"):
-        data = json.loads(manifest_path.read_text())
-        if isinstance(data, dict) and data.get("status") == "unreleased":
-            versions.add(manifest_path.parent.name)
-    return versions
+class _LinkParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.links: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag != "a":
+            return
+        attrs_dict = dict(attrs)
+        href = attrs_dict.get("href")
+        if href is not None:
+            self.links.add(href)
 
 
-def _is_unreleased_index_path(path: str, unreleased_versions: set[str]) -> bool:
+def _links_from_html(text: str) -> set[str]:
+    parser = _LinkParser()
+    parser.feed(text)
+    return parser.links
+
+
+def _read_index_stabilities(indices_dir: Path = Path("indices")) -> dict[str, str]:
+    return {index_name: manifest.stability for index_name, manifest in load_index_manifests(indices_dir).items()}
+
+
+def _is_unstable_index_path(path: str, index_stabilities: dict[str, str]) -> bool:
     version = _index_version(path)
-    return version is not None and version in unreleased_versions
+    return version is not None and index_stabilities.get(version) == "unstable"
+
+
+def _append_only_html_change(
+    path: str,
+    *,
+    old_texts: dict[str, str],
+    new_texts: dict[str, str],
+) -> bool:
+    old_text = old_texts.get(path)
+    new_text = new_texts.get(path)
+    if old_text is None or new_text is None:
+        return False
+    return _links_from_html(old_text) <= _links_from_html(new_text)
 
 
 def forbidden_index_changes(
     changes: list[ChangedPath],
     *,
-    unreleased_versions: set[str] | None = None,
+    index_stabilities: dict[str, str] | None = None,
+    old_texts: dict[str, str] | None = None,
+    new_texts: dict[str, str] | None = None,
 ) -> list[ChangedPath]:
-    unreleased_versions = unreleased_versions or set()
+    index_stabilities = index_stabilities or {}
+    old_texts = old_texts or {}
+    new_texts = new_texts or {}
     forbidden: list[ChangedPath] = []
     for change in changes:
         status = change.status[0]
@@ -91,7 +125,14 @@ def forbidden_index_changes(
         ]
         if not changed_index_paths:
             continue
-        if all(_is_unreleased_index_path(path, unreleased_versions) for path in changed_index_paths):
+        if all(_is_unstable_index_path(path, index_stabilities) for path in changed_index_paths):
+            continue
+        if (
+            status == "M"
+            and change.old_path is None
+            and _is_package_index(change.path)
+            and _append_only_html_change(change.path, old_texts=old_texts, new_texts=new_texts)
+        ):
             continue
         else:
             forbidden.append(change)
@@ -111,24 +152,56 @@ def _git_name_status(base: str) -> str:
     return subprocess.check_output(cmd, text=True)
 
 
+def _git_show(ref: str, path: str) -> str | None:
+    cmd = ["git", "show", f"{ref}:{path}"]
+    result = subprocess.run(cmd, text=True, capture_output=True, check=False)
+    if result.returncode != 0:
+        return None
+    return result.stdout
+
+
+def _read_changed_index_texts(changes: list[ChangedPath], *, base: str) -> tuple[dict[str, str], dict[str, str]]:
+    old_texts: dict[str, str] = {}
+    new_texts: dict[str, str] = {}
+    for change in changes:
+        for path in (change.path, change.old_path):
+            if path is None or not _is_package_index(path):
+                continue
+            if path not in old_texts:
+                old_text = _git_show(base, path)
+                if old_text is not None:
+                    old_texts[path] = old_text
+            if path not in new_texts:
+                new_path = Path(path)
+                if new_path.exists():
+                    new_texts[path] = new_path.read_text()
+    return old_texts, new_texts
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="Git ref to compare against, such as upstream/main.")
     args = parser.parse_args()
 
     changes = parse_name_status(_git_name_status(args.base))
-    forbidden = forbidden_index_changes(changes, unreleased_versions=_read_unreleased_versions())
+    old_texts, new_texts = _read_changed_index_texts(changes, base=args.base)
+    forbidden = forbidden_index_changes(
+        changes,
+        index_stabilities=_read_index_stabilities(),
+        old_texts=old_texts,
+        new_texts=new_texts,
+    )
     if not forbidden:
         return 0
 
-    print("Published package index files are immutable. Forbidden changes:")
+    print("Stable package index files are append-only. Forbidden changes:")
     for change in forbidden:
         if change.old_path is not None:
             print(f"  {change.status}\t{change.old_path}\t{change.path}")
         else:
             print(f"  {change.status}\t{change.path}")
     print()
-    print("Add a new versioned docs directory, or keep the index manifest status as unreleased while editing it.")
+    print("Add links without changing existing links, or use an index manifest with stability 'unstable'.")
     return 1
 
 

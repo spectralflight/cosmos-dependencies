@@ -71,18 +71,18 @@ def test_collect_index_lines_includes_wheels_file_urls(tmp_path):
     assert {line.name for line in all_lines["torch"]} == {"torch-2.10.0+cu130-cp313-cp313-manylinux_2_28_x86_64.whl"}
 
 
-def test_collect_release_assets_reads_manifest_batches(tmp_path, monkeypatch):
+def test_collect_release_assets_reads_manifest_releases(tmp_path, monkeypatch):
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(
         json.dumps(
             {
                 "schema_version": 1,
-                "index_version": "v1.6.0",
-                "status": "unreleased",
+                "index_name": "cosmos3-scratch",
+                "stability": "unstable",
                 "default_repo": "spectralflight/cosmos-dependencies",
-                "batches": [
-                    {"tag": "wheels-v1.6.0-batch.20260627.1"},
-                    {"repo": "nvidia-cosmos/cosmos-dependencies", "tag": "wheels-v1.6.0-batch.20260727.1"},
+                "releases": [
+                    {"tag": "cosmos3-scratch"},
+                    {"repo": "nvidia-cosmos/cosmos-dependencies", "tag": "cosmos3-20260727.1"},
                 ],
             }
         )
@@ -100,25 +100,25 @@ def test_collect_release_assets_reads_manifest_batches(tmp_path, monkeypatch):
     )
 
     assert calls == [
-        ("spectralflight/cosmos-dependencies", "wheels-v1.6.0-batch.20260627.1"),
-        ("nvidia-cosmos/cosmos-dependencies", "wheels-v1.6.0-batch.20260727.1"),
+        ("spectralflight/cosmos-dependencies", "cosmos3-scratch"),
+        ("nvidia-cosmos/cosmos-dependencies", "cosmos3-20260727.1"),
     ]
     assert assets == [
-        {"name": "wheels-v1.6.0-batch.20260627.1.txt"},
-        {"name": "wheels-v1.6.0-batch.20260727.1.txt"},
+        {"name": "cosmos3-scratch.txt"},
+        {"name": "cosmos3-20260727.1.txt"},
     ]
 
 
-def test_collect_release_assets_allows_empty_unreleased_manifest(tmp_path):
+def test_collect_release_assets_allows_empty_unstable_manifest(tmp_path):
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(
         json.dumps(
             {
                 "schema_version": 1,
-                "index_version": "v1.6.0",
-                "status": "unreleased",
+                "index_name": "cosmos3-scratch",
+                "stability": "unstable",
                 "default_repo": "spectralflight/cosmos-dependencies",
-                "batches": [],
+                "releases": [],
             }
         )
     )
@@ -141,9 +141,9 @@ def test_collect_release_assets_rejects_tag_and_manifest(tmp_path):
         json.dumps(
             {
                 "schema_version": 1,
-                "index_version": "v1.6.0",
-                "status": "unreleased",
-                "batches": [],
+                "index_name": "cosmos3-scratch",
+                "stability": "unstable",
+                "releases": [],
             }
         )
     )

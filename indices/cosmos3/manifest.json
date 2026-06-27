@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "index_name": "v1.6.0",
-  "stability": "unstable",
+  "index_name": "cosmos3",
+  "stability": "stable",
   "default_repo": "spectralflight/cosmos-dependencies",
   "releases": [
     {
-      "tag": "wheels-v1.6.0-batch.20260627.1"
+      "tag": "cosmos3-20260627.1"
     }
   ]
 }

@@ -68,13 +68,16 @@ docker-cu130 *args:
 # Check that existing package indices were not modified.
 index-guard base='upstream/main': (check::index-guard base)
 
+# Check that stable index manifests are append-only.
+manifest-guard base='upstream/main': (check::manifest-guard base)
+
 # Audit root and package build dependencies.
 audit *args:
     just deps audit {{ args }}
 
-# Create the package index for the current version.
-index-create *args:
-    just release create {{ args }}
+# Create the package index for an index name, defaulting to the current version tag.
+index-create index_name=tag *args:
+    just release create {{ quote(index_name) }} {{ args }}
 
 # Create a package index for an arbitrary release under a caller-selected path.
 index-create-release repo tag output_dir *args:
@@ -92,6 +95,10 @@ release-upload pattern repo=release_repo release_tag=tag *args:
 release-upload-batch pattern batch_id repo=release_repo index_tag=tag *args:
     just release upload-batch {{ quote(pattern) }} {{ quote(batch_id) }} {{ quote(repo) }} {{ quote(index_tag) }} {{ args }}
 
+# Copy selected assets from one GitHub release to another.
+release-copy-assets source_repo source_tag dest_repo dest_tag include='*':
+    just release copy-assets {{ quote(source_repo) }} {{ quote(source_tag) }} {{ quote(dest_repo) }} {{ quote(dest_tag) }} {{ quote(include) }}
+
 # Legacy release upload alias.
 upload pattern *args:
     just release upload {{ quote(pattern) }} {{ quote(release_repo) }} {{ quote(tag) }} {{ args }}
@@ -101,8 +108,8 @@ index-verify-install index_dir package_name package_version import_name='' pytho
     just release verify-install {{ quote(index_dir) }} {{ quote(package_name) }} {{ quote(package_version) }} {{ quote(import_name) }} {{ quote(python_version) }}
 
 # Locally serve the package index.
-index-serve *args:
-    just release serve {{ args }}
+index-serve index_name=tag *args:
+    just release serve {{ quote(index_name) }} {{ args }}
 
 # Fix file permissions.
 fix-permissions:

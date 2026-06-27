@@ -22,6 +22,7 @@ if [[ $# -lt 5 ]]; then
 	echo "Usage: $0 <package_name> <package_version> <python_version> <torch_version> <build_dir>" >&2
 	exit 1
 fi
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PACKAGE_NAME="${1}"
 shift
 export PACKAGE_VERSION="${1}"
@@ -168,6 +169,61 @@ build_env_extra_args=()
 _load_env_file "${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_ENV_FILE:-}}}"
 _load_inline_env "${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}"
 
+_git_commit() {
+	git rev-parse HEAD 2>/dev/null || printf "unknown"
+}
+
+_git_dirty() {
+	if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+		printf "false"
+	else
+		printf "true"
+	fi
+}
+
+_write_wheel_sidecars() {
+	local build_env_arg
+	local provenance_args=()
+	local provenance_cmd=()
+	local wheel
+	local wheels=()
+
+	for build_env_arg in "${build_env_extra_args[@]}"; do
+		provenance_args+=("--build-env" "${build_env_arg}")
+	done
+
+	shopt -s nullglob
+	wheels=("${OUTPUT_DIR}"/*.whl)
+	shopt -u nullglob
+
+	if command -v python >/dev/null 2>&1; then
+		provenance_cmd=(python)
+	elif command -v python3 >/dev/null 2>&1; then
+		provenance_cmd=(python3)
+	else
+		provenance_cmd=(uv run --frozen python)
+	fi
+
+	for wheel in "${wheels[@]}"; do
+		cp "${log_file}" "${wheel}.build.log"
+		"${provenance_cmd[@]}" "${script_dir}/write_build_provenance.py" \
+			--wheel "${wheel}" \
+			--build-log "${wheel}.build.log" \
+			--output "${wheel}.build.json" \
+			--package-name "${PACKAGE_NAME}" \
+			--package-version "${PACKAGE_VERSION}" \
+			--python-version "${PYTHON_VERSION}" \
+			--torch-version "${TORCH_VERSION}" \
+			--cuda-version "${CUDA_VERSION}" \
+			--local-version-suffix "${LOCAL_VERSION_SUFFIX:-}" \
+			--output-name "${OUTPUT_NAME}" \
+			--git-commit "$(_git_commit)" \
+			--git-dirty "$(_git_dirty)" \
+			--docker-image "${COSMOS_DEPS_DOCKER_IMAGE:-}" \
+			"${provenance_args[@]}"
+	done
+}
+
 timestamp=$(date +%Y%m%d%H%M%S)
 export OUTPUT_NAME="${timestamp}-${PACKAGE_NAME//-/_}-${PACKAGE_VERSION}-py${PYTHON_VERSION}-cu${CUDA_VERSION}-torch${TORCH_VERSION}"
 OUTPUT_DIR="${BUILD_DIR}/${OUTPUT_NAME}"
@@ -203,3 +259,4 @@ build_env_args=(
 	CCACHE_DIR="${CCACHE_DIR}"
 )
 env -i "${build_env_args[@]}" "${build_env_extra_args[@]}" bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
+_write_wheel_sidecars

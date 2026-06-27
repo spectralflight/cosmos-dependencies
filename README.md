@@ -84,10 +84,10 @@ just fix-permissions
 1. Upload wheels
 
 ```shell
-just release-upload-batch "build/**/*.whl" 20260627.1 nvidia-cosmos/cosmos-dependencies v1.6.0
+just release-upload "build/**/*.whl*" nvidia-cosmos/cosmos-dependencies cosmos3-20260627.1
 ```
 
-1. Add the generated batch tag to `indices/v1.6.0/manifest.json`.
+1. Add the release tag to `indices/cosmos3/manifest.json`.
 
 1. Create and locally host the package index
 
@@ -101,7 +101,7 @@ just index-serve
 
 ```shell
 uv version 1.6.0
-mkdir -p indices/v1.6.0
+mkdir -p indices/cosmos3
 just deps lock-all
 ```
 

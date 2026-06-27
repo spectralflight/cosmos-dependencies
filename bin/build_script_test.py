@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import subprocess
 import textwrap
@@ -33,6 +34,7 @@ def _write_fake_build_script(work_dir: Path) -> None:
             set -euo pipefail
             env | sort > "${OUTPUT_DIR}/env.txt"
             printf "%s\\n" "$@" > "${OUTPUT_DIR}/args.txt"
+            printf "fake wheel" > "${OUTPUT_DIR}/cosmos_dummy-0.1.0+cu128.torch29-py3-none-any.whl"
             """
         )
     )
@@ -110,6 +112,21 @@ def test_build_script_loads_explicit_env_file(tmp_path: Path) -> None:
     assert "SPACED_VALUE=hello world\n" in build_env
     assert "HOST_ONLY_VARIABLE=must-not-leak\n" not in build_env
     assert "CUDA_VERSION=12.8\n" not in build_env
+
+
+def test_build_script_writes_wheel_sidecars(tmp_path: Path) -> None:
+    result = _run_build_script(tmp_path, inline_env="MAX_JOBS=1 NATTEN_N_WORKERS=2")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    wheel = next((tmp_path / "build").glob("*/cosmos_dummy-0.1.0+cu128.torch29-py3-none-any.whl"))
+    sidecar = Path(f"{wheel}.build.json")
+    build_log = Path(f"{wheel}.build.log")
+    assert sidecar.exists()
+    assert build_log.exists()
+    provenance = json.loads(sidecar.read_text())
+    assert provenance["package"] == "cosmos-dummy"
+    assert provenance["build_env"] == {"MAX_JOBS": "1", "NATTEN_N_WORKERS": "2"}
+    assert provenance["wheel"]["filename"] == wheel.name
 
 
 def test_build_script_loads_inline_build_env(tmp_path: Path) -> None:

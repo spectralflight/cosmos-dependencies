@@ -121,6 +121,7 @@ docker run \
 	-e UV_CACHE_DIR="/cache/uv" \
 	-e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/cosmos-dependencies" \
 	-e CCACHE_DIR="/cache/ccache" \
+	-e COSMOS_DEPS_DOCKER_IMAGE="${image_tag}" \
 	-e COSMOS_DEPS_BUILD_ENV_FILE="${env_file}" \
 	-e COSMOS_DEPS_BUILD_ENV="${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}" \
 	-v "${repo_root}:/app" \

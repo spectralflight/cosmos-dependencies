@@ -33,17 +33,50 @@ def test_forbidden_index_changes_blocks_existing_index_edits():
     assert forbidden_index_changes(changes) == changes
 
 
-def test_forbidden_index_changes_allows_unreleased_index_edits():
+def test_forbidden_index_changes_allows_unstable_index_edits():
     changes = [
-        ChangedPath(status="M", path="docs/v1.6.0/index.html"),
-        ChangedPath(status="D", path="docs/v1.6.0/natten/index.html"),
-        ChangedPath(status="R100", old_path="docs/v1.6.0/flash-attn/index.html", path="docs/v1.6.0/fa/index.html"),
+        ChangedPath(status="M", path="docs/cosmos3-scratch/index.html"),
+        ChangedPath(status="D", path="docs/cosmos3-scratch/natten/index.html"),
+        ChangedPath(
+            status="R100",
+            old_path="docs/cosmos3-scratch/flash-attn/index.html",
+            path="docs/cosmos3-scratch/fa/index.html",
+        ),
     ]
 
-    assert forbidden_index_changes(changes, unreleased_versions={"v1.6.0"}) == []
+    assert forbidden_index_changes(changes, index_stabilities={"cosmos3-scratch": "unstable"}) == []
 
 
-def test_forbidden_index_changes_blocks_renames_from_published_to_unreleased():
-    change = ChangedPath(status="R100", old_path="docs/v1.5.0/index.html", path="docs/v1.6.0/index.html")
+def test_forbidden_index_changes_blocks_renames_from_stable_to_unstable():
+    change = ChangedPath(status="R100", old_path="docs/v1.5.0/index.html", path="docs/cosmos3-scratch/index.html")
 
-    assert forbidden_index_changes([change], unreleased_versions={"v1.6.0"}) == [change]
+    assert forbidden_index_changes([change], index_stabilities={"cosmos3-scratch": "unstable"}) == [change]
+
+
+def test_forbidden_index_changes_allows_append_only_stable_index_edits():
+    change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
+    old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
+    new_text = old_text + "<a href='https://example.invalid/natten-2.whl#sha256=def'>new</a><br>"
+
+    assert (
+        forbidden_index_changes(
+            [change],
+            index_stabilities={"cosmos3": "stable"},
+            old_texts={change.path: old_text},
+            new_texts={change.path: new_text},
+        )
+        == []
+    )
+
+
+def test_forbidden_index_changes_blocks_changed_stable_index_links():
+    change = ChangedPath(status="M", path="docs/cosmos3/natten/index.html")
+    old_text = "<a href='https://example.invalid/natten-1.whl#sha256=abc'>old</a><br>"
+    new_text = "<a href='https://example.invalid/natten-1.whl#sha256=changed'>old</a><br>"
+
+    assert forbidden_index_changes(
+        [change],
+        index_stabilities={"cosmos3": "stable"},
+        old_texts={change.path: old_text},
+        new_texts={change.path: new_text},
+    ) == [change]

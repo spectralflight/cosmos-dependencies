@@ -3,53 +3,78 @@
 Status: candidate, 2026-06-27.
 
 This repository serves package indices whose entries are consumed by tools that
-record exact wheel hashes. A changed wheel or changed historical index can break
-existing lockfiles.
+record exact wheel hashes. A changed wheel URL or hash can break existing
+lockfiles.
 
-## Index States
+## Index Manifests
 
-Each maintained index version can have a manifest at
-`indices/<version>/manifest.json`.
+Each maintained index has a manifest at `indices/<index-name>/manifest.json`.
+Index names are arbitrary public slugs such as `cosmos3`, `cosmos3-scratch`, or
+`cosmos-eval`.
 
-- `status: "unreleased"` means the index is still staging. Its manifest,
-  generated docs, and staging releases may be edited while testing.
-- `status: "released"` means downstream users may lock against it. Existing
-  wheel links and hash fragments are immutable.
+Manifest shape:
 
-The `v1.6.0` index starts as unreleased. Keep it unreleased until the wheel set
-and generated docs are ready to become a compatibility contract.
+```json
+{
+  "schema_version": 1,
+  "index_name": "cosmos3-scratch",
+  "stability": "unstable",
+  "default_repo": "spectralflight/cosmos-dependencies",
+  "releases": [
+    { "tag": "cosmos3-scratch" }
+  ]
+}
+```
 
-## Immutable Surfaces
+- `stability: "unstable"` means the public index is scratch space for testing.
+  Its manifest, generated docs, and scratch release assets may be regenerated or
+  clobbered intentionally.
+- `stability: "stable"` means downstream users may lock against it. Existing
+  wheel links and hash fragments are append-only.
 
-Treat these as immutable once published:
+## Stable Surfaces
 
-- Existing GitHub release assets in released wheel batches.
-- Existing package index files for released or legacy index versions.
-- Existing wheel URLs and URL fragments in released package indices.
+Treat these as stable compatibility contracts:
+
+- Existing GitHub release assets referenced by stable manifests.
+- Existing wheel links and URL fragments in stable package indices.
+- Existing release references in stable manifests.
 
 Allowed changes:
 
-- New source code, tests, and development docs.
-- Edits to unreleased index versions.
-- New version directories under `docs/`.
-- New wheel batch releases with unique filenames.
+- Edits to unstable indices and scratch releases.
+- New index directories under `docs/`.
+- New release assets with unique filenames.
+- Append-only additions to stable manifests and generated stable index links.
 
-## Wheel Batches
+## Copying Wheels
 
-Prefer one release per additive wheel batch. Use tags like:
+Scratch releases are useful while dialing in wheel build parameters. Once a
+wheel is correct, copy it into a stable release instead of pointing a stable
+index at scratch assets.
 
-```text
-wheels-v1.6.0-batch.20260627.1
+Use:
+
+```shell
+just release-copy-assets spectralflight/cosmos-dependencies cosmos3-scratch \
+  spectralflight/cosmos-dependencies cosmos3-20260627.1 'cosmos_dummy*'
 ```
 
-For released indices, add wheels by creating a new batch release and adding that
-batch to the index manifest. Do not replace files in old batch releases and do
-not use `--clobber` for released batches.
+Source releases are never modified. Destination releases are created when
+needed; existing destination assets are replaced only when `--clobber` is passed
+explicitly.
 
-When release immutability is enabled on GitHub, create the release with all
-assets attached in one `gh release create` call, or create it as a draft, upload
-assets, then publish. The `just release upload-batch ...` helper uses the first
-pattern for new releases.
+## Build Sidecars
+
+Successful builds write sidecars next to each wheel:
+
+- `<wheel>.build.log`: the build log for the wheel.
+- `<wheel>.build.json`: package, Python, torch, CUDA, explicit build env,
+  Docker image, git commit, and wheel/log hashes.
+
+Upload sidecars with the wheel for debugging, but package indices include only
+`.whl` assets. Do not pass secrets through `COSMOS_DEPS_BUILD_ENV_FILE` or
+`COSMOS_DEPS_BUILD_ENV`; explicit build env values are recorded in provenance.
 
 ## Checks
 
@@ -57,11 +82,14 @@ Run this before publishing or opening a release PR:
 
 ```shell
 just index-guard upstream/main
+just manifest-guard upstream/main
 ```
 
-In pull requests, CI should compare the branch to the base branch and fail if an
-existing published package index file is modified, deleted, renamed, or
-type-changed. Index versions whose manifest status is `unreleased` are editable.
+`index-guard` allows arbitrary edits for unstable indices. For stable indices,
+existing links must remain present with the same URL and hash.
+
+`manifest-guard` prevents stable manifests from becoming unstable or removing
+existing release references.
 
 ## Hash Policy
 

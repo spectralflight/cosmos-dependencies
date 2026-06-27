@@ -4,7 +4,6 @@ check_dir := source_directory()
 repo := check_dir + "/../.."
 version := `repo="$(git rev-parse --show-toplevel)" && awk -F'"' '/^version = / { print $2; exit }' "$repo/pyproject.toml"`
 tag := "v" + version
-manifest := "indices/" + tag + "/manifest.json"
 
 # Show check recipes.
 default:
@@ -52,21 +51,25 @@ typecheck:
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py ci/check_docs_indices_test.py bin/create_index_test.py cosmos_dependencies/build_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py bin/create_index_test.py cosmos_dependencies/build_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='upstream/main':
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_docs_indices.py --base {{ quote(base) }}
 
-# Generate a temporary package index for the current version.
-index-smoke:
-    cd "{{ repo }}" && if [[ -f {{ quote(manifest) }} ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote("tmp/docs/" + tag) }} --manifest {{ quote(manifest) }}; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote("tmp/docs/" + tag) }} --tag={{ quote(tag) }}; fi
+# Check that stable index manifests are append-only.
+manifest-guard base='upstream/main':
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_index_manifests.py --base {{ quote(base) }}
+
+# Generate a temporary package index.
+index-smoke index_name=tag:
+    cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json"; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --tag={{ quote(index_name) }}; fi
 
 # Run the standard local test lane.
 test: lint typecheck unit index-smoke
 
 # Run fast local checks without mutating hooks.
-fast: shell shell-format ruff format typecheck unit index-guard
+fast: shell shell-format ruff format typecheck unit index-guard manifest-guard
 
 # Run dependency security checks.
 security:

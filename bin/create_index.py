@@ -24,13 +24,14 @@ import json
 import shutil
 import subprocess
 import urllib.parse
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import tyro
 from wheel_filename import WheelFilename
+
+from cosmos_dependencies.index_manifest import load_index_manifest
 
 _TORCH_BASE_URL = "https://download.pytorch.org"
 _TORCH_PACKAGES = [
@@ -105,23 +106,9 @@ class Args:
     tag: str | None = None
     """Release tag. Required unless --manifest is set."""
     manifest: Path | None = None
-    """Index manifest containing one or more release batches."""
+    """Index manifest containing one or more GitHub releases."""
     wheels_file: Path | None = None
     """Wheels file."""
-
-
-@dataclass(frozen=True)
-class _ReleaseBatch:
-    repo: str
-    tag: str
-
-
-@dataclass(frozen=True)
-class _IndexManifest:
-    index_version: str
-    status: str
-    default_repo: str
-    batches: tuple[_ReleaseBatch, ...]
 
 
 def _get_release_assets(*, repo: str, tag: str) -> list[dict]:
@@ -139,54 +126,6 @@ def _get_release_assets(*, repo: str, tag: str) -> list[dict]:
     return json.loads(subprocess.check_output(cmd, text=True))["assets"]
 
 
-def _require_string(table: Mapping[str, Any], key: str, source: str) -> str:
-    value = table.get(key)
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{source} must contain a non-empty string field: {key}")
-    return value
-
-
-def _load_index_manifest(manifest_path: Path, *, fallback_repo: str) -> _IndexManifest:
-    data = json.loads(manifest_path.read_text())
-    source = str(manifest_path)
-    if not isinstance(data, dict):
-        raise ValueError(f"{source} must contain a JSON object")
-
-    if data.get("schema_version") != 1:
-        raise ValueError(f"{source} must contain schema_version 1")
-
-    index_version = _require_string(data, "index_version", source)
-    status = _require_string(data, "status", source)
-    if status not in {"unreleased", "released"}:
-        raise ValueError(f"{source} status must be 'unreleased' or 'released'")
-
-    default_repo = data.get("default_repo", fallback_repo)
-    if not isinstance(default_repo, str) or not default_repo:
-        raise ValueError(f"{source} default_repo must be a non-empty string when set")
-
-    raw_batches = data.get("batches", [])
-    if not isinstance(raw_batches, list):
-        raise ValueError(f"{source} batches must be a list")
-
-    batches: list[_ReleaseBatch] = []
-    for index, raw_batch in enumerate(raw_batches):
-        batch_source = f"{source} batches[{index}]"
-        if not isinstance(raw_batch, dict):
-            raise ValueError(f"{batch_source} must be a JSON object")
-        tag = _require_string(raw_batch, "tag", batch_source)
-        repo = raw_batch.get("repo", default_repo)
-        if not isinstance(repo, str) or not repo:
-            raise ValueError(f"{batch_source} repo must be a non-empty string when set")
-        batches.append(_ReleaseBatch(repo=repo, tag=tag))
-
-    return _IndexManifest(
-        index_version=index_version,
-        status=status,
-        default_repo=default_repo,
-        batches=tuple(batches),
-    )
-
-
 def _collect_release_assets(args: Args) -> list[dict]:
     if args.manifest is None:
         if args.tag is None:
@@ -196,10 +135,10 @@ def _collect_release_assets(args: Args) -> list[dict]:
     if args.tag is not None:
         raise ValueError("Pass either --tag or --manifest, not both.")
 
-    manifest = _load_index_manifest(args.manifest, fallback_repo=args.repo)
+    manifest = load_index_manifest(args.manifest, fallback_repo=args.repo)
     assets: list[dict] = []
-    for batch in manifest.batches:
-        assets.extend(_get_release_assets(repo=batch.repo, tag=batch.tag))
+    for release in manifest.releases:
+        assets.extend(_get_release_assets(repo=release.repo, tag=release.tag))
     return assets
 
 

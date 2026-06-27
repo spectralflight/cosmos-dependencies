@@ -91,6 +91,7 @@ if [[ ${#patterns[@]} -eq 0 ]]; then
 fi
 
 files=()
+shopt -s globstar
 for pattern in "${patterns[@]}"; do
 	mapfile -t matches < <(compgen -G "${pattern}" | sort)
 	if [[ ${#matches[@]} -eq 0 && -f "${pattern}" ]]; then
