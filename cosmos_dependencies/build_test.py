@@ -31,3 +31,11 @@ def test_build_env():
         "export _GLIBCXX_USE_CXX11_ABI=1",
         "export TORCH_CUDA_ARCH_LIST='8.0;8.6;9.0;10.0;12.0'",
     ]
+
+
+def test_build_env_respects_torch_cuda_arch_list(monkeypatch):
+    monkeypatch.setenv("TORCH_CUDA_ARCH_LIST", "9.0")
+    assert _format_build_env() == [
+        "export _GLIBCXX_USE_CXX11_ABI=1",
+        "export TORCH_CUDA_ARCH_LIST=9.0",
+    ]

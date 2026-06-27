@@ -33,7 +33,6 @@ _docker cuda_version build_args='' run_args='':
   #!/usr/bin/env bash
   set -euxo pipefail
   build_args="--build-arg=CUDA_VERSION={{cuda_version}} {{build_args}}"
-  docker build $build_args .
   image_tag=$(docker build $build_args -q .)
   # Mount cache directories to avoid re-downloading dependencies.
   # Some packages use `torch.cuda.is_available()` which requires a GPU.
@@ -41,23 +40,30 @@ _docker cuda_version build_args='' run_args='':
     -it \
     --rm \
     --runtime=nvidia \
+    -e COSMOS_BUILD_UID="$(id -u)" \
+    -e COSMOS_BUILD_GID="$(id -g)" \
+    -e COSMOS_BUILD_HOME="/home/cosmos" \
+    -e XDG_CACHE_HOME="/cache/xdg" \
+    -e XDG_DATA_HOME="/home/cosmos/.local/share" \
+    -e XDG_BIN_HOME="/home/cosmos/.local/bin" \
+    -e UV_CACHE_DIR="/cache/uv" \
+    -e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/cosmos-dependencies" \
+    -e CCACHE_DIR="/cache/ccache" \
     -v .:/app \
-    -v /app/.venv \
-    -v /root/.cache:/root/.cache \
-    -v /root/.ccache:/root/.ccache \
+    -v cosmos-dependencies-cache:/cache \
     {{run_args}} $image_tag
 
 # Run the CUDA 12.6 docker container.
-docker-cu126 *args: (_docker '12.6.3' args)
+docker-cu126 *args: (_docker '12.6.3' '' args)
 
 # Run the CUDA 12.8 docker container.
-docker-cu128 *args: (_docker '12.8.1' args)
+docker-cu128 *args: (_docker '12.8.1' '' args)
 
 # Run the CUDA 12.9 docker container.
-docker-cu129 *args: (_docker '12.9.1' args)
+docker-cu129 *args: (_docker '12.9.1' '' args)
 
 # Run the CUDA 13.0 docker container.
-docker-cu130 *args: (_docker '13.0.2' args)
+docker-cu130 *args: (_docker '13.0.2' '' args)
 
 # Fix file permissions.
 fix-permissions:
@@ -70,7 +76,7 @@ upload pattern *args:
     gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) $file {{args}} && rm -rfv $file || true
   done
 
-version := `python -c "import pathlib, re; print(re.search(r'^version = \"([^\"]+)\"', pathlib.Path('pyproject.toml').read_text(), re.M).group(1))"`
+version := `awk -F'"' '/^version = / { print $2; exit }' pyproject.toml`
 tag := 'v' + version
 index_dir := 'docs/' + tag
 

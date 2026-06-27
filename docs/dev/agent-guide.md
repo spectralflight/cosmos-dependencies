@@ -20,6 +20,11 @@ system packages as root during image setup or a controlled preflight, but
 third-party package build code should run with the least privilege that still
 lets the package build.
 
+The default Docker entrypoint creates a build user matching the invoking host
+UID/GID and uses a named Docker cache volume instead of bind-mounting host root
+cache directories. Set `COSMOS_DOCKER_AS_ROOT=1` only for an intentional root
+debug shell.
+
 ## Fast Iteration Path
 
 Start with the cheapest proof before attempting long package builds:
@@ -31,7 +36,9 @@ Start with the cheapest proof before attempting long package builds:
 5. Increase build scope only after the smaller proof passes.
 
 OOM is a common build failure mode. Start with conservative thread counts and a
-small CUDA architecture list, then widen deliberately.
+small CUDA architecture list, then widen deliberately. Useful knobs include
+`MAX_JOBS`, `NATTEN_N_WORKERS`, `NVCC_THREADS`, `NVCC_APPEND_FLAGS`, and
+`TORCH_CUDA_ARCH_LIST`.
 
 ## Package Scope
 

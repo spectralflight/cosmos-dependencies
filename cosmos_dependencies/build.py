@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import shlex
+
 import torch
 
 MIN_CUDA_ARCH = (8, 0)  # Ampere
@@ -45,8 +48,10 @@ def _format_build_env() -> list[str]:
     lines: list[str] = []
     _GLIBCXX_USE_CXX11_ABI = 1 if torch.compiled_with_cxx11_abi() else 0
     lines.append(f"export _GLIBCXX_USE_CXX11_ABI={_GLIBCXX_USE_CXX11_ABI}")
-    TORCH_CUDA_ARCH_LIST = ";".join([f"{major}.{minor}" for major, minor in _get_torch_cuda_arch_list()])
-    lines.append(f"export TORCH_CUDA_ARCH_LIST='{TORCH_CUDA_ARCH_LIST}'")
+    torch_cuda_arch_list = os.environ.get("TORCH_CUDA_ARCH_LIST")
+    if not torch_cuda_arch_list:
+        torch_cuda_arch_list = ";".join([f"{major}.{minor}" for major, minor in _get_torch_cuda_arch_list()])
+    lines.append(f"export TORCH_CUDA_ARCH_LIST={shlex.quote(torch_cuda_arch_list)}")
     return lines
 
 

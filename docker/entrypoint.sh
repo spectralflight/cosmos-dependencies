@@ -16,8 +16,52 @@
 
 # Docker entrypoint script.
 
-set -e
+set -euo pipefail
 
-export PATH="${PATH-}:$HOME/.local/bin"
+export HOME="${HOME:-/root}"
+export PATH="${PATH-}:${HOME}/.local/bin"
+
+if [ "$(id -u)" -eq 0 ] && [ "${COSMOS_DOCKER_AS_ROOT:-0}" != "1" ]; then
+	build_uid="${COSMOS_BUILD_UID:-1000}"
+	build_gid="${COSMOS_BUILD_GID:-${build_uid}}"
+	build_home="${COSMOS_BUILD_HOME:-/home/cosmos}"
+
+	if ! getent group "${build_gid}" >/dev/null; then
+		groupadd --gid "${build_gid}" cosmos
+	fi
+	if ! getent passwd "${build_uid}" >/dev/null; then
+		useradd --uid "${build_uid}" --gid "${build_gid}" --home-dir "${build_home}" --create-home --shell /bin/bash cosmos
+	fi
+	build_user="$(getent passwd "${build_uid}" | cut -d: -f1)"
+
+	export HOME="${build_home}"
+	export USER="${build_user}"
+	export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/cache/xdg}"
+	export XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+	export XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME}/.local/bin}"
+	export UV_CACHE_DIR="${UV_CACHE_DIR:-/cache/uv}"
+	export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${HOME}/.venv/cosmos-dependencies}"
+	export CCACHE_DIR="${CCACHE_DIR:-/cache/ccache}"
+	export PATH="${PATH}:${XDG_BIN_HOME}"
+
+	mkdir -p \
+		"${HOME}" \
+		"${XDG_CACHE_HOME}" \
+		"${XDG_DATA_HOME}" \
+		"${XDG_BIN_HOME}" \
+		"${UV_CACHE_DIR}" \
+		"$(dirname "${UV_PROJECT_ENVIRONMENT}")" \
+		"${CCACHE_DIR}"
+	chown -R "${build_uid}:${build_gid}" \
+		"${HOME}" \
+		"${XDG_CACHE_HOME}" \
+		"${XDG_DATA_HOME}" \
+		"${XDG_BIN_HOME}" \
+		"${UV_CACHE_DIR}" \
+		"$(dirname "${UV_PROJECT_ENVIRONMENT}")" \
+		"${CCACHE_DIR}"
+
+	exec gosu "${build_uid}:${build_gid}" "$@"
+fi
 
 exec "$@"

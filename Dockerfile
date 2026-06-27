@@ -28,6 +28,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
         ca-certificates \
         ccache \
         curl \
+        gosu \
         software-properties-common \
         git-lfs \
         tree \
