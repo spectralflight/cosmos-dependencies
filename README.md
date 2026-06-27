@@ -1,7 +1,7 @@
-# Cosmos Dependencies
+# Physical AI Dependencies
 
-Agent-only repository for building Python wheels and publishing package indices
-from GitHub release assets.
+Physical AI Dependencies (PAI Deps) is an agent-only repository for building
+Python wheels and publishing package indices from GitHub release assets.
 
 ## Agent Entry
 
