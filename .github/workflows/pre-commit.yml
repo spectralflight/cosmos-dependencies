@@ -23,7 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
       - uses: astral-sh/setup-uv@v6
+      - name: Check package index immutability
+        if: github.event_name == 'pull_request'
+        run: python ci/check_docs_indices.py --base "origin/${{ github.base_ref }}"
       - run: uvx pre-commit run -c ci/.pre-commit-config-base.yaml --all-files
       - uses: pre-commit/action@v3.0.1

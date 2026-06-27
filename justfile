@@ -70,7 +70,7 @@ upload pattern *args:
     gh release upload --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short) $file {{args}} && rm -rfv $file || true
   done
 
-version := `uv version --short`
+version := `python -c "import pathlib, re; print(re.search(r'^version = \"([^\"]+)\"', pathlib.Path('pyproject.toml').read_text(), re.M).group(1))"`
 tag := 'v' + version
 index_dir := 'docs/' + tag
 
@@ -96,6 +96,14 @@ _pytest *args:
 
 # Run tests
 test: lint _pytest _index-test
+
+# Check that existing package indices were not modified.
+index-guard base='upstream/main':
+  python ci/check_docs_indices.py --base {{base}}
+
+# Audit root and package build dependencies.
+audit *args:
+  ./ci/uv_audit.sh {{args}}
 
 # https://spdx.org/licenses/
 allow_licenses := "MIT BSD-2-CLAUSE BSD-3-CLAUSE APACHE-2.0 ISC"

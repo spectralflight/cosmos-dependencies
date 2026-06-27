@@ -19,6 +19,7 @@ Reference: https://peps.python.org/pep-0503/
 """
 
 import collections
+import html
 import json
 import shutil
 import subprocess
@@ -56,10 +57,11 @@ class _IndexLine:
 
     def __str__(self) -> str:
         if self.url is not None:
-            url = self.url
+            url = html.escape(self.url, quote=True)
         else:
-            url = f"{self.name}/"
-        return f"<a href='{url}'>{self.name}</a><br>"
+            url = html.escape(f"{self.name}/", quote=True)
+        name = html.escape(self.name)
+        return f"<a href='{url}'>{name}</a><br>"
 
 
 def _download_html(url: str, html_path: Path, *, base_url: str) -> None:
@@ -105,22 +107,22 @@ class Args:
     """Wheels file."""
 
 
-def main(args: Args):
-    shutil.rmtree(args.output_dir, ignore_errors=True)
-
-    # Get the assets from the release
+def _get_release_assets(*, repo: str, tag: str) -> list[dict]:
+    """Get release assets from GitHub."""
     cmd = [
         "gh",
         "release",
         "view",
         "--repo",
-        args.repo,
-        f"{args.tag}",
+        repo,
+        tag,
         "--json",
         "assets",
     ]
-    assets = json.loads(subprocess.check_output(cmd, text=True))["assets"]
+    return json.loads(subprocess.check_output(cmd, text=True))["assets"]
 
+
+def _collect_index_lines(*, assets: list[dict], wheels_file: Path | None = None) -> dict[str, set[_IndexLine]]:
     # Group wheels by package name
     all_wheels: dict[str, set[_IndexLine]] = collections.defaultdict(set)
 
@@ -139,9 +141,8 @@ def main(args: Args):
         all_wheels[package_name].add(_IndexLine(filename, url))
 
     # Parse wheel URL files
-    if args.wheels_file is not None:
-        index_name = args.wheels_file.stem
-        urls = args.wheels_file.read_text().splitlines()
+    if wheels_file is not None:
+        urls = wheels_file.read_text().splitlines()
         for url in urls:
             url = url.strip()
             if not url or url.startswith("#"):
@@ -151,21 +152,32 @@ def main(args: Args):
             filename = urllib.parse.unquote(url_parts.path.rsplit("/", 1)[-1])
             pwf = WheelFilename.parse(filename)
             package_name = pwf.project.replace("_", "-")
-            all_wheels[index_name][package_name].add(_IndexLine(filename, url))
+            all_wheels[package_name].add(_IndexLine(filename, url))
 
     all_lines: dict[str, set[_IndexLine]] = collections.defaultdict(set)
     for package_name, package_wheels in all_wheels.items():
         all_lines[package_name].update(package_wheels)
+    return all_lines
+
+
+def _write_index(output_dir: Path, all_lines: dict[str, set[_IndexLine]]) -> None:
+    """Write the global index and package index files."""
 
     # Create global index
-    index_dir = args.output_dir
     index_lines = set(_IndexLine(package_name) for package_name in all_lines)
-    _write_html(index_dir / "index.html", index_lines)
+    _write_html(output_dir / "index.html", index_lines)
     for package_name, package_lines in all_lines.items():
         _write_html(
-            index_dir / package_name / "index.html",
+            output_dir / package_name / "index.html",
             package_lines,
         )
+
+
+def main(args: Args):
+    shutil.rmtree(args.output_dir, ignore_errors=True)
+    assets = _get_release_assets(repo=args.repo, tag=args.tag)
+    all_lines = _collect_index_lines(assets=assets, wheels_file=args.wheels_file)
+    _write_index(args.output_dir, all_lines)
 
 
 if __name__ == "__main__":
