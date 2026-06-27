@@ -27,6 +27,13 @@ class SourceDescriptor:
 
 
 @dataclass(frozen=True, slots=True)
+class LicenseReviewDescriptor:
+    required: bool = False
+    url: str = ""
+    notes: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class BuildDescriptor:
     backend: str
     script: str = "build.sh"
@@ -49,6 +56,7 @@ class PackageDescriptor:
     upstream: str
     gpu_risk: str
     docs: str
+    license_review: LicenseReviewDescriptor
     directory: Path
     descriptor_path: Path
     build: BuildDescriptor
@@ -99,6 +107,9 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
     env_data = build_data.get("env", {})
     if not isinstance(env_data, dict):
         raise ValueError(f"{descriptor_path}: build.env must be a table")
+    license_review_data = data.get("license_review", {})
+    if not isinstance(license_review_data, dict):
+        raise ValueError(f"{descriptor_path}: license_review must be a table")
 
     build = BuildDescriptor(
         backend=_require_string(build_data, "backend", source=descriptor_path),
@@ -124,6 +135,11 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
         upstream=_require_string(data, "upstream", source=descriptor_path),
         gpu_risk=_require_string(data, "gpu_risk", source=descriptor_path),
         docs=str(data.get("docs", "docs/dev/build-notes.md")),
+        license_review=LicenseReviewDescriptor(
+            required=bool(license_review_data.get("required", False)),
+            url=str(license_review_data.get("url", "")),
+            notes=str(license_review_data.get("notes", "")),
+        ),
         directory=descriptor_path.parent,
         descriptor_path=descriptor_path,
         build=build,

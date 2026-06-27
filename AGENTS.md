@@ -46,9 +46,13 @@ package-index, and release-asset contracts.
 - `just release create-dry-run <index>`: generate a temporary package index.
 - Release uploads scan wheels, build logs, and provenance sidecars for secrets
   before any GitHub writes.
+- `just license::audit`: check attribution drift and staged wheel license
+  metadata.
 
 ## Pointers
 
 - `docs/dev/agent-workflow.md`: locked tools, no-GPU checks, package workflow.
 - `docs/dev/agent-guide.md`: Docker build loop and package-build notes.
+- `docs/dev/legal-audit.md`: attribution, wheel-license, and package legal
+  review checks.
 - `docs/dev/release-safety.md`: index and release invariants.

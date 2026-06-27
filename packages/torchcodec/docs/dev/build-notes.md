@@ -30,7 +30,8 @@ Local script installs FFmpeg development packages, sets `pybind11_DIR`, sets
 `I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION=1`, sets `ENABLE_CUDA=1`, and
 builds from `git+https://github.com/meta-pytorch/torchcodec.git`.
 
-Keep the license acknowledgement visible in docs and release review.
+The package descriptor marks this as requiring license review so agents cannot
+silently carry the acknowledgement flag without a visible release-review note.
 
 ## OOM Controls
 

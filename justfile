@@ -16,6 +16,9 @@ mod check "just/check/.just"
 # Lock, upgrade, and audit root/package dependency environments.
 mod deps "just/deps/.just"
 
+# Generate and check license attribution artifacts.
+mod license "just/license/.just"
+
 # Inspect package-local descriptors and agent docs.
 mod package "just/package/.just"
 

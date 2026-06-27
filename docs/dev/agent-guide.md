@@ -4,7 +4,8 @@ Status: candidate, 2026-06-26. This document is for coding agents working on
 the build and publishing harness.
 
 For locked-tool policy, no-GPU checks, package descriptor commands, and release
-dry runs, start with `docs/dev/agent-workflow.md`.
+dry runs, start with `docs/dev/agent-workflow.md`. For attribution and
+wheel-license checks, use `docs/dev/legal-audit.md`.
 
 ## Operating Model
 

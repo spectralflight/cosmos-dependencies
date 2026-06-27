@@ -345,6 +345,7 @@ dev = [
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "torch", specifier = "==2.10.0+cu128", index = "https://download.pytorch.org/whl" },
 ]
+legal = [{ name = "pip-licenses", specifier = ">=5.5.5" }]
 
 [[package]]
 name = "pip"

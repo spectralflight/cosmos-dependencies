@@ -32,11 +32,11 @@ lint: pre-commit
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
 
 # Run Python linting.
 ruff:
@@ -62,6 +62,10 @@ package-contracts:
 release-artifacts:
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_release_artifacts.py --allow-empty 'tmp/build/**/*.whl'
 
+# Check attribution drift and staged wheel license metadata.
+legal:
+    cd "{{ repo }}" && mise exec -- just license::audit
+
 # Type-check maintained Python code.
 typecheck:
     cd "{{ repo }}" && mise exec -- uv run --frozen pyrefly check
@@ -86,7 +90,7 @@ index-smoke index_name=tag:
 test: lint toolchain package-docs package-contracts typecheck unit index-smoke
 
 # Run fast local checks without mutating hooks.
-fast: shell shell-format ruff format toolchain package-docs package-contracts release-artifacts typecheck unit index-guard manifest-guard
+fast: shell shell-format ruff format toolchain package-docs package-contracts release-artifacts legal typecheck unit index-guard manifest-guard
 
 # Scan tracked source files for leaked secrets.
 secrets:

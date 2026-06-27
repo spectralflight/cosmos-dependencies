@@ -22,6 +22,7 @@ COMMON_PIP_WHEEL_HELPER_TOKENS = [
     '"$@"',
 ]
 UV_BUILD_HELPER_TOKENS = ["uv build", "--wheel", "-o", '"$@"']
+LICENSE_CONFIRMATION_ENV_VARS = ("I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION",)
 
 
 def _script_text(package: PackageDescriptor) -> str:
@@ -75,6 +76,17 @@ def _check_package(package: PackageDescriptor) -> list[str]:
         if not (package.directory / script).is_file():
             errors.append(f"{label}: missing prebuild script {script}")
         errors.extend(_check_contains(package.build_script_path.read_text(), script, label=label))
+    if "cat >setup.py" in text:
+        errors.extend(_check_contains(text, "pai_deps_copy_license_files_py", label=label))
+        errors.extend(_check_contains(text, "license_files=", label=label))
+    for env_name in LICENSE_CONFIRMATION_ENV_VARS:
+        if env_name in text:
+            if not package.license_review.required:
+                errors.append(f"{label}: {env_name} requires [license_review].required = true")
+            if not package.license_review.url:
+                errors.append(f"{label}: {env_name} requires license_review.url")
+            if not package.license_review.notes:
+                errors.append(f"{label}: {env_name} requires license_review.notes")
     return errors
 
 

@@ -14,10 +14,12 @@ cd "${temp_dir}/src"
 git fetch --depth 1 origin "${GROUNDED_SAM2_GIT_REF}"
 git checkout --detach FETCH_HEAD
 
+wheel_dir="${temp_dir}/wheel"
 package_dir="${temp_dir}/wheel/grounded_sam2_helper"
 mkdir -p "${package_dir}/sam2_configs" "${package_dir}/utils"
 cp utils/track_utils.py "${package_dir}/utils/track_utils.py"
 cp -R sam2/configs/. "${package_dir}/sam2_configs/"
+license_files_py="$(pai_deps_copy_license_files_py "${PWD}" "${wheel_dir}")"
 touch "${package_dir}/__init__.py" "${package_dir}/utils/__init__.py"
 cat >"${package_dir}/paths.py" <<'EOF'
 from importlib.resources import files
@@ -35,6 +37,7 @@ setup(
     name="grounded-sam2-helper",
     version="${PACKAGE_VERSION}",
     description="Thin helper package for Grounded-SAM-2 TransferBench utilities",
+    license_files=${license_files_py},
     packages=find_packages(),
     include_package_data=True,
     package_data={"grounded_sam2_helper": ["sam2_configs/**/*.yaml"]},

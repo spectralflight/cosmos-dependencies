@@ -12,6 +12,8 @@ import hashlib
 import json
 import re
 import sys
+import zipfile
+from email.parser import Parser
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +37,7 @@ REQUIRED_TOP_LEVEL = {
 SENSITIVE_BUILD_ENV_RE = re.compile(
     r"(?:^|_)(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|CREDENTIAL|API_KEY|ACCESS_KEY|SESSION_TOKEN)(?:_|$)"
 )
+LICENSE_FILE_RE = re.compile(r"^(?:licen[cs]e|copying|notice|authors?)(?:[.-].*)?$", re.IGNORECASE)
 
 
 def _expand_patterns(patterns: list[str]) -> list[Path]:
@@ -132,6 +135,69 @@ def _check_provenance(wheel: Path, provenance_path: Path, build_log: Path) -> li
     return errors
 
 
+def _wheel_license_file_exists(names: set[str], *, dist_info_dir: str, license_file: str) -> bool:
+    normalized = license_file.strip().lstrip("/")
+    candidates = {
+        normalized,
+        f"{dist_info_dir}/{normalized}",
+        f"{dist_info_dir}/licenses/{Path(normalized).name}",
+    }
+    return any(candidate in names for candidate in candidates)
+
+
+def _dist_info_license_files(names: set[str], *, dist_info_dir: str) -> list[str]:
+    prefix = f"{dist_info_dir}/"
+    license_prefix = f"{dist_info_dir}/licenses/"
+    files: list[str] = []
+    for name in sorted(names):
+        if not name.startswith(prefix) or name.endswith("/"):
+            continue
+        relative = name.removeprefix(prefix)
+        if name.startswith(license_prefix) or LICENSE_FILE_RE.fullmatch(Path(relative).name):
+            files.append(name)
+    return files
+
+
+def _check_wheel_license_metadata(wheel: Path) -> list[str]:
+    errors: list[str] = []
+    try:
+        with zipfile.ZipFile(wheel) as archive:
+            names = set(archive.namelist())
+            metadata_paths = sorted(name for name in names if name.endswith(".dist-info/METADATA"))
+            if len(metadata_paths) != 1:
+                return [f"{wheel}: expected exactly one .dist-info/METADATA file, found {len(metadata_paths)}"]
+            metadata_path = metadata_paths[0]
+            dist_info_dir = metadata_path.rsplit("/", 1)[0]
+            metadata = Parser().parsestr(archive.read(metadata_path).decode("utf-8", errors="replace"))
+    except zipfile.BadZipFile:
+        return [f"{wheel}: invalid wheel zip archive"]
+
+    declared_license_files = [value.strip() for value in metadata.get_all("License-File", []) if value.strip()]
+    missing_license_files = [
+        value
+        for value in declared_license_files
+        if not _wheel_license_file_exists(names, dist_info_dir=dist_info_dir, license_file=value)
+    ]
+    for license_file in missing_license_files:
+        errors.append(f"{wheel}: License-File {license_file!r} is declared but not present in the wheel")
+
+    license_expression = (metadata.get("License-Expression") or "").strip()
+    license_field = (metadata.get("License") or "").strip()
+    license_classifiers = [
+        classifier for classifier in metadata.get_all("Classifier", []) if classifier.strip().startswith("License ::")
+    ]
+    dist_info_license_files = _dist_info_license_files(names, dist_info_dir=dist_info_dir)
+    has_license_field = bool(license_field and license_field.upper() != "UNKNOWN")
+    if not any(
+        (license_expression, has_license_field, license_classifiers, declared_license_files, dist_info_license_files)
+    ):
+        errors.append(
+            f"{wheel}: wheel metadata has no license evidence; add License-Expression, license classifiers, "
+            "or license files"
+        )
+    return errors
+
+
 def check_wheel(wheel: Path) -> list[str]:
     errors: list[str] = []
     build_log = wheel.with_name(wheel.name + ".build.log")
@@ -142,6 +208,7 @@ def check_wheel(wheel: Path) -> list[str]:
         errors.append(f"{wheel}: missing provenance sidecar {provenance.name}")
     if build_log.is_file() and provenance.is_file():
         errors.extend(_check_provenance(wheel, provenance, build_log))
+    errors.extend(_check_wheel_license_metadata(wheel))
     return errors
 
 

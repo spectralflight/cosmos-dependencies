@@ -10,6 +10,8 @@ trap 'rm -rf "${temp_dir}"' EXIT
 git clone --depth 1 --branch "v${PACKAGE_VERSION}" https://github.com/DepthAnything/Video-Depth-Anything.git "${temp_dir}/src"
 cd "${temp_dir}/src"
 
+license_files_py="$(pai_deps_copy_license_files_py "${PWD}" "${PWD}")"
+
 touch \
 	video_depth_anything/__init__.py \
 	video_depth_anything/motion_module/__init__.py \
@@ -27,6 +29,7 @@ setup(
     name="video-depth-anything",
     version="${PACKAGE_VERSION}",
     description="Packaged import surface for Video-Depth-Anything",
+    license_files=${license_files_py},
     packages=find_packages(include=["video_depth_anything", "video_depth_anything.*", "utils", "utils.*", "loss", "loss.*", "benchmark", "benchmark.*"]),
     py_modules=["run", "run_streaming"],
     python_requires=">=3.10",

@@ -20,6 +20,11 @@ status = "historical"
 upstream = "https://github.com/meta-pytorch/torchcodec"
 gpu_risk = "medium"
 
+[license_review]
+required = true
+url = "https://github.com/meta-pytorch/torchcodec/blob/main/CONTRIBUTING.md"
+notes = "Build sets I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION=1; review upstream codec and FFmpeg/CUDA distribution terms before publishing wheels."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

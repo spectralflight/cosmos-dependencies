@@ -17,6 +17,7 @@
 name = "pai-deps"
 version = "1.6.0"
 requires-python = ">=3.10"
+license = "Apache-2.0"
 dependencies = [
     "change-wheel-version",
     "tyro",
@@ -41,6 +42,9 @@ dev = [
     "pygments>=2.20.0",
     "pytest>=9.0.3",
     "torch==2.10.0+cu128",
+]
+legal = [
+    "pip-licenses>=5.5.5",
 ]
 
 [tool.uv.sources]

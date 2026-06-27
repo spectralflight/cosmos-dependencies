@@ -27,6 +27,11 @@ def _descriptor_to_dict(package: PackageDescriptor) -> dict[str, object]:
         "docs": package.docs_path.relative_to(REPO).as_posix(),
         "upstream": package.upstream,
         "gpu_risk": package.gpu_risk,
+        "license_review": {
+            "required": package.license_review.required,
+            "url": package.license_review.url,
+            "notes": package.license_review.notes,
+        },
         "build": {
             "backend": package.build.backend,
             "requires_torch": package.build.requires_torch,
@@ -102,6 +107,9 @@ def show_package(name: str, *, json_output: bool) -> int:
     print(f"docs: {package.docs_path.relative_to(REPO).as_posix()}")
     print(f"upstream: {package.upstream}")
     print(f"gpu_risk: {package.gpu_risk}")
+    print(f"license_review_required: {package.license_review.required}")
+    if package.license_review.url:
+        print(f"license_review_url: {package.license_review.url}")
     print(f"build_backend: {package.build.backend}")
     print(f"requires_torch: {package.build.requires_torch}")
     if package.build.source.url:
