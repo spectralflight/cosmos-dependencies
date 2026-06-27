@@ -97,6 +97,11 @@ specifically asks for that package.
 It is acceptable to update dependency locks for documentation-only packages to
 clear CVEs, but do not treat a lock update as proof that the package builds.
 
+`uv audit` allowlists belong in each affected project's `[tool.uv.audit]`
+configuration. Prefer `ignore-until-fixed` for no-fix advisories so newly
+fixable vulnerabilities fail the normal audit. Use `just deps audit-strict` or
+`COSMOS_DEPS_AUDIT_STRICT=1` to bypass uv config and see the raw audit result.
+
 ## Release Workflow
 
 Use the personal fork for experiments and publication drills. The upstream

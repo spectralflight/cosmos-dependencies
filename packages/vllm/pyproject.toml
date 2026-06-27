@@ -33,3 +33,10 @@ dependencies = [
 
 [tool.uv.sources]
 cosmos-dependencies = { path = "../..", editable = true }
+
+[tool.uv.audit]
+# Suppress only no-fix PyTorch advisories. Strict audit runs with --no-config.
+ignore-until-fixed = [
+    "GHSA-rrmf-rvhw-rf47",
+    "PYSEC-2026-139",
+]

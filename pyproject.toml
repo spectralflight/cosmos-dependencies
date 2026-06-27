@@ -46,6 +46,10 @@ dev = [
 change-wheel-version = [{ git = "https://github.com/spectralflight/change_wheel_version.git", rev = "ae6432577b1b0c54af76d52e6328e214287f2db9" }]
 torch = [{ index = "pytorch" }]
 
+[tool.uv.audit]
+# Suppress only no-fix PyTorch advisories. Strict audit runs with --no-config.
+ignore-until-fixed = ["GHSA-rrmf-rvhw-rf47"]
+
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl"

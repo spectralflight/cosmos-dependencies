@@ -27,7 +27,8 @@ Those indices are compatibility contracts for downstream lockfiles.
 - `just index-guard upstream/main`: verify existing package indices were not
   changed relative to upstream.
 - `just audit`: run `uv audit` for the root project and package build
-  environments.
+  environments. Audit allowlists live in each affected project's
+  `[tool.uv.audit]` config, not in the wrapper script.
 - `just build docker-dummy`: quick Docker/build-loop smoke package.
 - `just build docker-natten <version> <python> <torch>`: common maintained
   package path.

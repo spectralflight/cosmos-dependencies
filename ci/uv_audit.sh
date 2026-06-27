@@ -11,53 +11,17 @@ if [ "${#args[@]}" -eq 0 ]; then
 	args=(--frozen)
 fi
 
-_torch_version_from_lock() {
-	local lock_file="$1"
-	awk '
-		/^name = "torch"$/ {
-			in_torch = 1
-			next
-		}
-		in_torch && /^version = / {
-			gsub("\"", "", $3)
-			print $3
-			exit
-		}
-		/^\[\[package\]\]$/ {
-			in_torch = 0
-		}
-	' "${lock_file}"
-}
+if [ "${COSMOS_DEPS_AUDIT_STRICT:-${COSMOS_DEPENDENCIES_AUDIT_STRICT:-0}}" = "1" ]; then
+	args+=(--no-config)
+fi
 
 _audit_project() {
 	local project_dir="$1"
-	local lock_file="${project_dir}/uv.lock"
-	local project_args=("${args[@]}")
-	local torch_version
 
 	if [ "${project_dir}" = "." ]; then
-		lock_file="uv.lock"
-	fi
-
-	if [ "${COSMOS_DEPS_AUDIT_STRICT:-${COSMOS_DEPENDENCIES_AUDIT_STRICT:-0}}" != "1" ] && [ -f "${lock_file}" ]; then
-		torch_version="$(_torch_version_from_lock "${lock_file}")"
-		case "${torch_version}" in
-		2.10.0+*)
-			project_args+=(--ignore-until-fixed GHSA-rrmf-rvhw-rf47)
-			;;
-		2.10.0 | 2.9.0)
-			project_args+=(
-				--ignore-until-fixed GHSA-rrmf-rvhw-rf47
-				--ignore-until-fixed PYSEC-2026-139
-			)
-			;;
-		esac
-	fi
-
-	if [ "${project_dir}" = "." ]; then
-		uv audit "${project_args[@]}"
+		uv audit "${args[@]}"
 	else
-		uv audit --project "${project_dir}" "${project_args[@]}"
+		uv audit --project "${project_dir}" "${args[@]}"
 	fi
 }
 
