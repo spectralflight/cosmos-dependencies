@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -155,7 +154,7 @@ def check_manifests_against_base(base: str) -> list[ManifestError]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", required=True, help="Git ref to compare against, such as upstream/main.")
+    parser.add_argument("--base", required=True, help="Git ref to compare against, such as origin/main.")
     args = parser.parse_args()
 
     errors = check_manifests_against_base(args.base)

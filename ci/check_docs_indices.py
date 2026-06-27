@@ -254,7 +254,7 @@ def _read_changed_index_texts(changes: list[ChangedPath], *, base: str) -> tuple
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", required=True, help="Git ref to compare against, such as upstream/main.")
+    parser.add_argument("--base", required=True, help="Git ref to compare against, such as origin/main.")
     args = parser.parse_args()
 
     changes = _changed_paths(args.base)

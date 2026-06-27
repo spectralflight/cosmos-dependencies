@@ -19,7 +19,7 @@ mkdir -p "${package_dir}/sam2_configs" "${package_dir}/utils"
 cp utils/track_utils.py "${package_dir}/utils/track_utils.py"
 cp -R sam2/configs/. "${package_dir}/sam2_configs/"
 touch "${package_dir}/__init__.py" "${package_dir}/utils/__init__.py"
-cat > "${package_dir}/paths.py" <<'EOF'
+cat >"${package_dir}/paths.py" <<'EOF'
 from importlib.resources import files
 
 
@@ -28,7 +28,7 @@ def sam2_configs_path() -> str:
 EOF
 
 cd "${temp_dir}/wheel"
-cat > setup.py <<EOF
+cat >setup.py <<EOF
 from setuptools import find_packages, setup
 
 setup(

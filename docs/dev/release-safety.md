@@ -89,8 +89,8 @@ Run this before publishing or opening a release PR:
 ```shell
 just release upload-plan 'tmp/build/**/*.whl*' spectralflight/cosmos-dependencies cosmos3-scratch
 just release create-dry-run cosmos3
-just index-guard upstream/main
-just manifest-guard upstream/main
+just index-guard origin/main
+just manifest-guard origin/main
 ```
 
 `index-guard` allows arbitrary edits for unstable indices. For stable indices,

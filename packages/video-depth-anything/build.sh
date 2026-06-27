@@ -20,7 +20,7 @@ touch \
 	benchmark/eval/__init__.py \
 	benchmark/infer/__init__.py
 
-cat > setup.py <<EOF
+cat >setup.py <<EOF
 from setuptools import find_packages, setup
 
 setup(

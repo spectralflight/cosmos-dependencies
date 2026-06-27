@@ -96,7 +96,7 @@ For fork-only publication drills:
 
 Use scratch releases for replaceable testing and stable releases for copied
 assets that should remain immutable. Do not run upload or index commands against
-the upstream repository by accident.
+any repository other than the explicit target fork.
 
 ## Package Scope
 
@@ -119,9 +119,9 @@ fixable vulnerabilities fail the normal audit. Use `just deps audit-strict` or
 
 ## Release Workflow
 
-Use the personal fork for experiments and publication drills. The upstream
-repository is the public compatibility surface; do not push experimental wheels
-or generated indices there.
+Use `spectralflight/pai-deps` for experiments and publication drills after the
+repository is renamed. Until then, `spectralflight/cosmos-dependencies` is the
+only GitHub remote this checkout should use.
 
 Before publishing anything:
 

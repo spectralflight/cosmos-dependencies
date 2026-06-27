@@ -70,11 +70,11 @@ unit:
     cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py cosmos_dependencies/build_test.py cosmos_dependencies/package_metadata_test.py
 
 # Check that existing package indices were not modified.
-index-guard base='upstream/main':
+index-guard base='origin/main':
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_docs_indices.py --base {{ quote(base) }}
 
 # Check that stable index manifests are append-only.
-manifest-guard base='upstream/main':
+manifest-guard base='origin/main':
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_index_manifests.py --base {{ quote(base) }}
 
 # Generate a temporary package index.
