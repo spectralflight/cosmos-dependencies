@@ -1,0 +1,30 @@
+schema_version = 1
+name = "decord"
+project_name = "decord"
+status = "historical"
+upstream = "https://github.com/dmlc/decord"
+gpu_risk = "medium"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+prebuild_scripts = ["build_lib.sh"]
+system_packages = [
+  "build-essential",
+  "make",
+  "cmake",
+  "ffmpeg",
+  "libavcodec-dev",
+  "libavfilter-dev",
+  "libavformat-dev",
+  "libavutil-dev",
+]
+
+[build.source]
+url = "https://github.com/dmlc/decord.git"
+revision = "v{package_version}"
+subdirectory = "python"
+
+[build.env]
+exports = ["DECORD_BUILD_JOBS", "DECORD_CUDA_ARCHITECTURES"]

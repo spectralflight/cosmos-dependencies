@@ -1,0 +1,22 @@
+schema_version = 1
+name = "sageattention"
+project_name = "sageattention"
+status = "historical"
+upstream = "https://github.com/thu-ml/SageAttention"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/thu-ml/SageAttention.git"
+revision = "v{package_version}"
+
+[build.revision_overrides]
+"2.2.0.dev1" = "d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5"
+
+[build.env]
+exports = ["EXT_PARALLEL", "NVCC_APPEND_FLAGS", "MAX_JOBS", "TORCH_CUDA_ARCH_LIST"]
+

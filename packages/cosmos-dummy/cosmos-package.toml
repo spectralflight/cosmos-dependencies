@@ -1,0 +1,12 @@
+schema_version = 1
+name = "cosmos-dummy"
+project_name = "cosmos-dummy"
+status = "smoke"
+upstream = "local"
+gpu_risk = "none"
+
+[build]
+backend = "uv-build"
+script = "build.sh"
+local = true
+

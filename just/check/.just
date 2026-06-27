@@ -2,7 +2,7 @@ set shell := ["bash", "-c"]
 
 check_dir := source_directory()
 repo := check_dir + "/../.."
-version := `repo="$(git rev-parse --show-toplevel)" && awk -F'"' '/^version = / { print $2; exit }' "$repo/pyproject.toml"`
+version := `awk -F'"' '/^version = / { print $2; exit }' ../../pyproject.toml`
 tag := "v" + version
 
 # Show check recipes.
@@ -11,7 +11,7 @@ default:
 
 # Install system tools and the Python version specified in .python-version.
 setup:
-    cd "{{ repo }}" && mise install
+    cd "{{ repo }}" && mise install --locked
     cd "{{ repo }}" && mise exec -- uv python install
 
 # Setup pre-commit hooks.
@@ -45,13 +45,29 @@ ruff:
 format:
     cd "{{ repo }}" && mise exec -- ruff format --check bin ci cosmos_dependencies
 
+# Check locked toolchain policy and Docker tool pins.
+toolchain:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_toolchain.py
+
+# Check package descriptors and package-local agent docs.
+package-docs:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_package_docs.py
+
+# Check package descriptors against package-local build scripts.
+package-contracts:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_package_build_contracts.py
+
+# Check release artifact sidecar schema on any staged wheel artifacts.
+release-artifacts:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_release_artifacts.py --allow-empty 'tmp/build/**/*.whl'
+
 # Type-check maintained Python code.
 typecheck:
     cd "{{ repo }}" && mise exec -- uv run --frozen pyrefly check
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py bin/create_index_test.py cosmos_dependencies/build_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py cosmos_dependencies/build_test.py cosmos_dependencies/package_metadata_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='upstream/main':
@@ -66,10 +82,10 @@ index-smoke index_name=tag:
     cd "{{ repo }}" && if [[ -f "indices/{{ index_name }}/manifest.json" ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --manifest "indices/{{ index_name }}/manifest.json"; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --tag={{ quote(index_name) }}; fi
 
 # Run the standard local test lane.
-test: lint typecheck unit index-smoke
+test: lint toolchain package-docs package-contracts typecheck unit index-smoke
 
 # Run fast local checks without mutating hooks.
-fast: shell shell-format ruff format typecheck unit index-guard manifest-guard
+fast: shell shell-format ruff format toolchain package-docs package-contracts release-artifacts typecheck unit index-guard manifest-guard
 
 # Run dependency security checks.
 security:
@@ -77,3 +93,6 @@ security:
 
 # Run the full local check ladder.
 all: fast security index-smoke
+
+# Run checks that do not start Docker containers, package builds, or GPU work.
+no-gpu: fast security index-smoke

@@ -1,0 +1,22 @@
+schema_version = 1
+name = "apex"
+project_name = "apex"
+status = "historical"
+upstream = "https://github.com/NVIDIA/apex"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/NVIDIA/apex.git"
+revision = "{package_version}"
+
+[build.revision_overrides]
+"0.1.0" = "26bba57d62553d268319b4a20cc3d8aa990249ec"
+
+[build.env]
+exports = ["APEX_CPP_EXT", "APEX_CUDA_EXT", "APEX_PARALLEL_BUILD", "NVCC_APPEND_FLAGS"]
+

@@ -1,0 +1,30 @@
+schema_version = 1
+name = "torchcodec"
+project_name = "torchcodec"
+status = "historical"
+upstream = "https://github.com/meta-pytorch/torchcodec"
+gpu_risk = "medium"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+system_packages = [
+  "libavdevice-dev",
+  "libavfilter-dev",
+  "libavformat-dev",
+  "libavcodec-dev",
+  "libavutil-dev",
+  "libswresample-dev",
+  "libswscale-dev",
+  "pkg-config",
+  "python3-dev",
+]
+
+[build.source]
+url = "https://github.com/meta-pytorch/torchcodec.git"
+revision = "v{package_version}"
+
+[build.env]
+exports = ["pybind11_DIR", "I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION", "ENABLE_CUDA"]
+

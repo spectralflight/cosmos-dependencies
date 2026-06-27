@@ -14,17 +14,19 @@ Options:
   --cuda-version VERSION   CUDA image version to build, default: 12.8.1
   --no-tty                Do not allocate an interactive TTY
   --tty                   Force an interactive TTY
-  --root                  Keep the container command running as root
   --build-arg ARG         Extra docker build argument, e.g. FOO=bar
-  --run-arg ARG           Extra docker run argument token; repeat as needed
+  --root                  Run the command as container root
+  --run-arg ARG           Extra docker run argument
   -h, --help              Show this help
 EOF
 }
 
-repo_root="$(git rev-parse --show-toplevel)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/../../.." && pwd)"
 cuda_version="${COSMOS_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPENDENCIES_DOCKER_CUDA_VERSION:-12.8.1}}"
 cache_volume="${COSMOS_DEPS_DOCKER_CACHE_VOLUME:-${COSMOS_DEPENDENCIES_DOCKER_CACHE_VOLUME:-cosmos-dependencies-cache}}"
 tty_mode="auto"
+docker_as_root="0"
 build_args=()
 run_args=()
 command=()
@@ -43,13 +45,13 @@ while [[ $# -gt 0 ]]; do
 		tty_mode="always"
 		shift
 		;;
-	--root)
-		run_args+=("-e" "COSMOS_DOCKER_AS_ROOT=1")
-		shift
-		;;
 	--build-arg)
 		build_args+=("--build-arg=$2")
 		shift 2
+		;;
+	--root)
+		docker_as_root="1"
+		shift
 		;;
 	--run-arg)
 		run_args+=("$2")
@@ -115,6 +117,7 @@ docker run \
 	-e COSMOS_BUILD_UID="$(id -u)" \
 	-e COSMOS_BUILD_GID="$(id -g)" \
 	-e COSMOS_BUILD_HOME="/home/cosmos" \
+	-e COSMOS_DOCKER_AS_ROOT="${docker_as_root}" \
 	-e XDG_CACHE_HOME="/cache/xdg" \
 	-e XDG_DATA_HOME="/home/cosmos/.local/share" \
 	-e XDG_BIN_HOME="/home/cosmos/.local/bin" \

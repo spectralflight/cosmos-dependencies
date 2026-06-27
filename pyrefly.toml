@@ -18,8 +18,19 @@ project-includes = [
     "bin/build_script_test.py",
     "bin/create_index.py",
     "bin/create_index_test.py",
+    "bin/docker_build_package_script_test.py",
+    "bin/package_info.py",
+    "ci/check_package_build_contracts.py",
+    "ci/check_package_build_contracts_test.py",
+    "ci/check_package_docs.py",
+    "ci/check_package_docs_test.py",
+    "ci/check_release_artifacts.py",
+    "ci/check_release_artifacts_test.py",
+    "ci/check_toolchain.py",
+    "ci/check_toolchain_test.py",
     "ci/check_docs_indices.py",
     "ci/check_docs_indices_test.py",
+    "cosmos_dependencies/package_metadata_test.py",
 ]
 
 project-excludes = [

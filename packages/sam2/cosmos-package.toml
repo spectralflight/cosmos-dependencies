@@ -1,0 +1,19 @@
+schema_version = 1
+name = "sam2"
+project_name = "sam-2"
+status = "maintained"
+upstream = "https://github.com/facebookresearch/sam2"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/facebookresearch/sam2.git"
+revision = "{SAM2_GIT_REF}"
+
+[build.env]
+exports = ["SAM2_GIT_REF", "SAM2_BUILD_CUDA", "SAM2_BUILD_ALLOW_ERRORS"]
+defaults = { SAM2_GIT_REF = "2b90b9f5ceec907a1c18123530e92e794ad901a4", SAM2_BUILD_CUDA = "1", SAM2_BUILD_ALLOW_ERRORS = "0" }

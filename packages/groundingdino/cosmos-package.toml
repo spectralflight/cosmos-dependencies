@@ -1,0 +1,16 @@
+schema_version = 1
+name = "groundingdino"
+project_name = "groundingdino"
+status = "historical"
+upstream = "https://github.com/IDEA-Research/GroundingDINO"
+gpu_risk = "medium"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/IDEA-Research/GroundingDINO.git"
+revision = "v{package_version}"
+

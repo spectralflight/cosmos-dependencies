@@ -13,7 +13,7 @@ local build artifacts. New releases are created with all matched files attached
 in one gh command, so immutable repositories publish only after assets exist.
 
 Options:
-  --repo OWNER/REPO  Release repository, default: COSMOS_DEPS_RELEASE_REPO or upstream
+  --repo OWNER/REPO  Release repository, required unless COSMOS_DEPS_RELEASE_REPO is set
   --tag TAG          Release tag, default: COSMOS_DEPS_RELEASE_TAG or current pyproject tag
   --title TITLE      Release title, default: TAG
   --notes NOTES      Release notes, default: local build artifact upload
@@ -22,16 +22,18 @@ Options:
   --prerelease       Mark a newly created release as a prerelease
   --not-latest       Do not mark a newly created release as latest
   --clobber          Replace existing assets with matching names
+  --dry-run          Print the upload plan and validate sidecars without GitHub writes
   -h, --help         Show this help
 EOF
 }
 
 version="$(awk -F'"' '/^version = / { print $2; exit }' pyproject.toml)"
-repo="${COSMOS_DEPS_RELEASE_REPO:-${COSMOS_DEPENDENCIES_RELEASE_REPO:-nvidia-cosmos/cosmos-dependencies}}"
+repo="${COSMOS_DEPS_RELEASE_REPO:-${COSMOS_DEPENDENCIES_RELEASE_REPO:-}}"
 tag="${COSMOS_DEPS_RELEASE_TAG:-${COSMOS_DEPENDENCIES_RELEASE_TAG:-v${version}}}"
 title=""
 notes="Local build artifact upload."
-target="$(git rev-parse HEAD)"
+target=""
+dry_run=0
 create_args=()
 upload_args=()
 patterns=()
@@ -58,6 +60,10 @@ while [[ $# -gt 0 ]]; do
 		target="$2"
 		shift 2
 		;;
+	--dry-run)
+		dry_run=1
+		shift
+		;;
 	--draft)
 		create_args+=("--draft")
 		shift
@@ -71,6 +77,10 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	--clobber)
+		if [[ "${COSMOS_DEPS_ALLOW_CLOBBER:-0}" != "1" ]]; then
+			echo "Error: --clobber requires COSMOS_DEPS_ALLOW_CLOBBER=1." >&2
+			exit 1
+		fi
 		upload_args+=("--clobber")
 		shift
 		;;
@@ -87,6 +97,10 @@ done
 
 if [[ ${#patterns[@]} -eq 0 ]]; then
 	usage
+	exit 1
+fi
+if [[ -z "${repo}" ]]; then
+	echo "Error: --repo is required for release uploads." >&2
 	exit 1
 fi
 
@@ -106,7 +120,20 @@ if [[ ${#files[@]} -eq 0 ]]; then
 fi
 
 title="${title:-${tag}}"
+python ci/check_release_artifacts.py "${files[@]}"
+if [[ "${dry_run}" -eq 1 ]]; then
+	echo "Release upload plan"
+	echo "  repo: ${repo}"
+	echo "  tag: ${tag}"
+	echo "  title: ${title}"
+	echo "  notes: ${notes}"
+	echo "  files:"
+	printf '    %s\n' "${files[@]}"
+	exit 0
+fi
+
 if ! gh release view --repo "${repo}" "${tag}" >/dev/null 2>&1; then
+	target="${target:-$(git rev-parse HEAD)}"
 	gh release create \
 		--repo "${repo}" \
 		--title "${title}" \

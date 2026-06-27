@@ -62,7 +62,7 @@ just release-copy-assets spectralflight/cosmos-dependencies cosmos3-scratch \
 
 Source releases are never modified. Destination releases are created when
 needed; existing destination assets are replaced only when `--clobber` is passed
-explicitly.
+with `COSMOS_DEPS_ALLOW_CLOBBER=1`.
 
 ## Build Sidecars
 
@@ -76,11 +76,19 @@ Upload sidecars with the wheel for debugging, but package indices include only
 `.whl` assets. Do not pass secrets through `COSMOS_DEPS_BUILD_ENV_FILE` or
 `COSMOS_DEPS_BUILD_ENV`; explicit build env values are recorded in provenance.
 
+Check staged wheel/log/provenance triplets before upload:
+
+```shell
+just release artifact-check 'tmp/build/**/*.whl'
+```
+
 ## Checks
 
 Run this before publishing or opening a release PR:
 
 ```shell
+just release upload-plan 'tmp/build/**/*.whl*' spectralflight/cosmos-dependencies cosmos3-scratch
+just release create-dry-run cosmos3
 just index-guard upstream/main
 just manifest-guard upstream/main
 ```

@@ -1,0 +1,21 @@
+schema_version = 1
+name = "flash-attn-3"
+project_name = "flash-attn-3"
+status = "historical"
+upstream = "https://github.com/Dao-AILab/flash-attention"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/Dao-AILab/flash-attention.git"
+revision = "v{package_version}"
+subdirectory = "hopper"
+
+[build.env]
+exports = ["MAX_JOBS", "FLASH_ATTENTION_FORCE_BUILD"]
+defaults = { MAX_JOBS = "nproc/4" }
+

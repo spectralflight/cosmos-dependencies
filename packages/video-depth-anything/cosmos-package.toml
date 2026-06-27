@@ -1,0 +1,15 @@
+schema_version = 1
+name = "video-depth-anything"
+project_name = "video-depth-anything"
+status = "maintained"
+upstream = "https://github.com/DepthAnything/Video-Depth-Anything"
+gpu_risk = "low"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/DepthAnything/Video-Depth-Anything.git"
+revision = "v{package_version}"

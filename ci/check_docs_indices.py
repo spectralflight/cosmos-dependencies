@@ -62,6 +62,18 @@ def parse_name_status(output: str) -> list[ChangedPath]:
     return changes
 
 
+def parse_jj_summary(output: str) -> list[ChangedPath]:
+    changes: list[ChangedPath] = []
+    for line in output.splitlines():
+        if not line:
+            continue
+        status, path = line.split(maxsplit=1)
+        if status not in {"A", "M", "D"}:
+            raise ValueError(f"Unexpected jj summary line: {line!r}")
+        changes.append(ChangedPath(status=status, path=path))
+    return changes
+
+
 class _LinkParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
@@ -149,7 +161,61 @@ def _git_name_status(base: str) -> str:
         "--",
         "docs",
     ]
-    return subprocess.check_output(cmd, text=True)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=False)
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, cmd, output=result.stdout, stderr=result.stderr)
+    return result.stdout
+
+
+def _jj_rev_candidates(ref: str) -> list[str]:
+    candidates = [ref]
+    if ref.startswith("refs/remotes/"):
+        remote_ref = ref.removeprefix("refs/remotes/")
+        remote, _, branch = remote_ref.partition("/")
+        if remote and branch:
+            candidates.insert(0, f"{branch}@{remote}")
+            candidates.append(branch)
+    elif "/" in ref and "@" not in ref:
+        remote, branch = ref.split("/", 1)
+        candidates.insert(0, f"{branch}@{remote}")
+        candidates.append(branch)
+    return list(dict.fromkeys(candidates))
+
+
+def _jj_run_with_ref(ref: str, command: list[str]) -> str | None:
+    for candidate in _jj_rev_candidates(ref):
+        cmd = [arg if arg != "{rev}" else candidate for arg in command]
+        result = subprocess.run(cmd, text=True, capture_output=True, check=False)
+        if result.returncode == 0:
+            return result.stdout
+    return None
+
+
+def _jj_name_status(base: str) -> str:
+    output = _jj_run_with_ref(
+        base,
+        [
+            "jj",
+            "--no-pager",
+            "diff",
+            "--summary",
+            "--from",
+            "{rev}",
+            "--to",
+            "@",
+            "docs",
+        ],
+    )
+    if output is None:
+        raise subprocess.CalledProcessError(returncode=1, cmd=["jj", "diff", "--summary", "--from", base])
+    return output
+
+
+def _changed_paths(base: str) -> list[ChangedPath]:
+    try:
+        return parse_name_status(_git_name_status(base))
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return parse_jj_summary(_jj_name_status(base))
 
 
 def _git_show(ref: str, path: str) -> str | None:
@@ -160,6 +226,14 @@ def _git_show(ref: str, path: str) -> str | None:
     return result.stdout
 
 
+def _jj_show(ref: str, path: str) -> str | None:
+    return _jj_run_with_ref(ref, ["jj", "--no-pager", "file", "show", "-r", "{rev}", path])
+
+
+def _vcs_show(ref: str, path: str) -> str | None:
+    return _git_show(ref, path) or _jj_show(ref, path)
+
+
 def _read_changed_index_texts(changes: list[ChangedPath], *, base: str) -> tuple[dict[str, str], dict[str, str]]:
     old_texts: dict[str, str] = {}
     new_texts: dict[str, str] = {}
@@ -168,7 +242,7 @@ def _read_changed_index_texts(changes: list[ChangedPath], *, base: str) -> tuple
             if path is None or not _is_package_index(path):
                 continue
             if path not in old_texts:
-                old_text = _git_show(base, path)
+                old_text = _vcs_show(base, path)
                 if old_text is not None:
                     old_texts[path] = old_text
             if path not in new_texts:
@@ -183,7 +257,7 @@ def main() -> int:
     parser.add_argument("--base", required=True, help="Git ref to compare against, such as upstream/main.")
     args = parser.parse_args()
 
-    changes = parse_name_status(_git_name_status(args.base))
+    changes = _changed_paths(args.base)
     old_texts, new_texts = _read_changed_index_texts(changes, base=args.base)
     forbidden = forbidden_index_changes(
         changes,

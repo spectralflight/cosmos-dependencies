@@ -1,0 +1,19 @@
+schema_version = 1
+name = "grounded-sam2-helper"
+project_name = "grounded-sam2-helper"
+status = "maintained"
+upstream = "https://github.com/IDEA-Research/Grounded-SAM-2"
+gpu_risk = "low"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/IDEA-Research/Grounded-SAM-2.git"
+revision = "{GROUNDED_SAM2_GIT_REF}"
+
+[build.env]
+exports = ["GROUNDED_SAM2_GIT_REF"]
+defaults = { GROUNDED_SAM2_GIT_REF = "b7a9c29f196edff0eb54dbe14588d7ae5e3dde28" }

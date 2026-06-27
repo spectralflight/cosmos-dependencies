@@ -1,125 +1,60 @@
-> [!IMPORTANT]
-> ## 🚀 [Cosmos 3 Has Arrived](https://github.com/nvidia/cosmos)
->
-> Cosmos 3 is NVIDIA's next-generation foundation model platform for Physical AI. Compared with Cosmos Dependencies, Cosmos 3 provides the latest home for models, technical reports, tutorials, benchmarks, and ecosystem updates.
->
-> Rather than relying on separate models for reasoning, prediction, transfer, and policy learning, a single Cosmos 3 model can understand the world, reason about physical interactions, predict future outcomes, transform observations across domains, and generate actions for embodied agents. This unified architecture enables stronger performance across a broad range of Physical AI applications, including robotics, autonomous vehicles, and smart spaces.
->
-> This repository is no longer under active development and will receive only limited maintenance updates. Future model releases, features, documentation, and community support will be focused on Cosmos 3.
->
-> 👉 Visit the new Cosmos home: https://github.com/nvidia/cosmos
->
-> There you will find the latest Cosmos 3 models, technical reports, tutorials, benchmarks, and ecosystem updates.
->
-> Thank you for your support of Cosmos Dependencies. We encourage all users to migrate to Cosmos 3 for the latest state-of-the-art Physical AI capabilities.
-
 # Cosmos Dependencies
 
-Repository for building and publishing Cosmos dependencies.
+Agent-only repository for building Python wheels and publishing package indices
+from GitHub release assets.
 
-[Published Index](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.5.0)
+## Agent Entry
 
-## Setup
+Read `AGENTS.md` first. It contains the active repo contract, index safety rules,
+and verification commands.
 
-Install system dependencies:
-
-[uv](https://docs.astral.sh/uv/getting-started/installation/)
-
-```shell
-export XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $XDG_BIN_HOME/env
-```
-
-[just](https://github.com/casey/just?tab=readme-ov-file#installation)
+## Locked Setup
 
 ```shell
-pushd "$XDG_BIN_HOME" && curl https://zyedidia.github.io/eget.sh | sh && popd
-eget casey/just --to="$XDG_BIN_HOME"
+mise install --locked
+mise exec -- just help
 ```
 
-If uploading wheels, [gh](https://github.com/cli/cli?tab=readme-ov-file#installation):
+Do not use unlocked committed workflows such as `uvx`, `uv tool install`,
+`uv run --with ...`, curl-piped installers, or `eget`.
+
+## Package Work
+
+Package-specific truth is colocated under `packages/<name>`:
+
+- `cosmos-package.toml`: package descriptor and build-contract deltas.
+- `build.sh`: package-local build implementation.
+- `docs/dev/build-notes.md`: package-local agent notes.
+- `pyproject.toml` and `uv.lock`: package build environment.
+
+Use shared commands instead of editing central package lists:
 
 ```shell
-eget cli/cli --asset=.tar.gz --to="$XDG_BIN_HOME"
-gh auth login
+just package list
+just package show natten
+just package docs-check
+just check package-contracts
 ```
 
-## Build Wheels
-
-Run the docker container:
+## Safety Checks
 
 ```shell
-just docker-<cuda_version>
+just no-gpu-check
 ```
 
-Optionally, test the environment:
+This lane does not start Docker, build packages, or use a GPU. It runs shell,
+Python, type, package descriptor, package contract, release artifact, index,
+manifest, and audit checks.
 
-```shell
-just build-dummy
-```
+## Package Indices
 
-Build a single package:
+Published `docs/**/index.html` files are compatibility contracts for downstream
+lockfiles. Do not modify old published package indices or existing GitHub
+release assets. Stable index manifests are append-only; scratch work belongs in
+indices marked `stability: "unstable"`.
 
-```shell
-just build <package_name> <package_version> <python_version> <torch_version>
-```
-
-Example:
-
-```shell
-just docker-cu128
-just build-dummy
-just build natten 0.21.1 3.12 2.9
-```
-
-On the host, fix file permissions:
-
-```shell
-just fix-permissions
-```
-
-## Upload Wheels
-
-1. Upload wheels
-
-```shell
-just release-upload "build/**/*.whl*" nvidia-cosmos/cosmos-dependencies cosmos3-20260627.1
-```
-
-1. Add the release tag to `indices/cosmos3/manifest.json`.
-
-1. Create and locally host the package index
-
-```shell
-just index-serve
-```
-
-1. Open a PR and merge to [cosmos-dependencies](https://github.com/nvidia-cosmos/cosmos-dependencies).
-
-## Bump Version
-
-```shell
-uv version 1.6.0
-mkdir -p indices/cosmos3
-just deps lock-all
-```
-
-## Version Constraints
-
-* cuda
-  * [torch](https://pytorch.org/get-started/previous-versions/)
-* gcc
-  * [cuda](/usr/local/cuda/targets/x86_64-linux/include/crt/host_config.h)
-* flash-attn
-  * [transformer-engine `FlashAttentionUtils.max_version`](https://github.com/NVIDIA/TransformerEngine/blob/main/transformer_engine/pytorch/attention/dot_product_attention/utils.py)
-
-## Contributing
-
-We thrive on community collaboration! [NVIDIA-Cosmos](https://github.com/nvidia-cosmos/) wouldn't be where it is without contributions from developers like you. Check out our [Contributing Guide](CONTRIBUTING.md) to get started, and share your feedback through issues.
-
-Big thanks 🙏 to everyone helping us push the boundaries of open-source physical AI!
+Release/index details live in `docs/dev/release-safety.md`.
 
 ## License
 
-This repository is licensed under the [Apache License 2.0](LICENSE).
+Apache License 2.0. See `LICENSE`.

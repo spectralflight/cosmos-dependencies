@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -130,6 +131,8 @@ def main() -> int:
         "--dry-run", action="store_true", help="Print selected assets without downloading or uploading."
     )
     args = parser.parse_args()
+    if args.clobber and os.environ.get("COSMOS_DEPS_ALLOW_CLOBBER") != "1":
+        raise SystemExit("--clobber requires COSMOS_DEPS_ALLOW_CLOBBER=1.")
 
     assets = _get_release_assets(repo=args.source_repo, tag=args.source_tag)
     selected_assets = select_assets(assets, include=args.include or ["*"], exclude=args.exclude)

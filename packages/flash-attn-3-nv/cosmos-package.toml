@@ -1,0 +1,20 @@
+schema_version = 1
+name = "flash-attn-3-nv"
+project_name = "flash-attn-3-nv"
+status = "historical"
+upstream = "https://github.com/alihassanijr/flash_attn_3_nv"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/alihassanijr/flash_attn_3_nv.git"
+revision = "v{package_version}"
+
+[build.env]
+exports = ["MAX_JOBS", "FLASH_ATTENTION_DISABLE_SM80", "FLASH_ATTENTION_FORCE_BUILD"]
+defaults = { MAX_JOBS = "nproc/4" }
+

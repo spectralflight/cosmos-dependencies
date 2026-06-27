@@ -1,0 +1,20 @@
+schema_version = 1
+name = "transformer-engine"
+project_name = "transformer-engine"
+status = "historical"
+upstream = "https://github.com/NVIDIA/TransformerEngine"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+system_packages = ["python3-dev"]
+
+[build.source]
+url = "https://github.com/NVIDIA/TransformerEngine.git"
+revision = "v{package_version}"
+
+[build.env]
+exports = ["NVTE_FRAMEWORK", "NVTE_CUDA_ARCHS"]
+

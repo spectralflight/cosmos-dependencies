@@ -8,23 +8,20 @@ scripts := build_dir + "/scripts"
 default:
     @just --justfile "{{ source_file() }}" --list
 
-# Build a package locally.
-package package_name package_version python_version torch_version output_dir='build' *args:
-    cd "{{ repo }}" && mise exec -- bin/build.sh {{ quote(package_name) }} {{ quote(package_version) }} {{ quote(python_version) }} {{ quote(torch_version) }} {{ quote(output_dir) }} {{ args }}
-
-# Build the dummy package locally.
-dummy: (package "cosmos-dummy" "0.1.0" "3.12" "2.9" "tmp/build")
-
 # Build a package inside Docker without an interactive TTY.
-docker package_name package_version python_version torch_version output_dir='tmp/build' cuda_version='12.8.1' *args:
-    cd "{{ repo }}" && COSMOS_DEPS_DOCKER_CUDA_VERSION={{ quote(cuda_version) }} mise exec -- "{{ scripts }}/docker-build-package.sh" {{ quote(package_name) }} {{ quote(package_version) }} {{ quote(python_version) }} {{ quote(torch_version) }} {{ quote(output_dir) }} {{ args }}
+package package_name package_version python_version torch_version output_dir='tmp/build' *args:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/docker-build-package.sh" {{ quote(package_name) }} {{ quote(package_version) }} {{ quote(python_version) }} {{ quote(torch_version) }} {{ quote(output_dir) }} {{ args }}
 
 # Build the dummy package inside Docker.
-docker-dummy cuda_version='12.8.1': (docker "cosmos-dummy" "0.1.0" "3.12" "2.9" "tmp/build" cuda_version)
+dummy: (package "cosmos-dummy" "0.1.0" "3.12" "2.9" "tmp/build")
 
 # Build natten inside Docker.
-docker-natten package_version='0.21.6.dev6' python_version='3.12' torch_version='2.9' cuda_version='12.8.1' *args:
-    cd "{{ repo }}" && COSMOS_DEPS_DOCKER_CUDA_VERSION={{ quote(cuda_version) }} mise exec -- "{{ scripts }}/docker-build-package.sh" natten {{ quote(package_version) }} {{ quote(python_version) }} {{ quote(torch_version) }} tmp/build {{ args }}
+natten package_version='0.21.6.dev6' python_version='3.12' torch_version='2.9' *args:
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/docker-build-package.sh" natten {{ quote(package_version) }} {{ quote(python_version) }} {{ quote(torch_version) }} tmp/build {{ args }}
+
+# Check Docker tool pins against mise.lock.
+tool-versions-check:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_toolchain.py --docker-only
 
 # Run the docker container for a CUDA version.
 docker-shell cuda_version='12.8.1' *args:

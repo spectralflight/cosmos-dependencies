@@ -1,0 +1,20 @@
+schema_version = 1
+name = "vllm"
+project_name = "vllm"
+status = "historical"
+upstream = "https://github.com/vllm-project/vllm"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/vllm-project/vllm.git"
+revision = "v{package_version}"
+
+[build.env]
+exports = ["VLLM_TARGET_DEVICE", "VLLM_MAIN_CUDA_VERSION", "CMAKE_BUILD_TYPE", "MAX_JOBS", "NVCC_THREADS"]
+defaults = { MAX_JOBS = "nproc", NVCC_THREADS = "2" }
+

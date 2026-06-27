@@ -1,0 +1,19 @@
+schema_version = 1
+name = "xformers"
+project_name = "xformers"
+status = "historical"
+upstream = "https://github.com/facebookresearch/xformers"
+gpu_risk = "high"
+
+[build]
+backend = "pip-wheel-git"
+script = "build.sh"
+common_pip_flags = true
+
+[build.source]
+url = "https://github.com/facebookresearch/xformers.git"
+revision = "v{package_version}"
+
+[build.env]
+exports = ["XFORMERS_BUILD_TYPE"]
+

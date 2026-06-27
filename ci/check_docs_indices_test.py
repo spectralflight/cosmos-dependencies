@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from ci.check_docs_indices import ChangedPath, forbidden_index_changes, parse_name_status
+from ci.check_docs_indices import ChangedPath, forbidden_index_changes, parse_jj_summary, parse_name_status
 
 
 def test_parse_name_status():
@@ -10,6 +10,13 @@ def test_parse_name_status():
     ) == [
         ChangedPath(status="M", path="docs/v1.5.0/index.html"),
         ChangedPath(status="R100", old_path="docs/simple/index.html", path="docs/simple-old/index.html"),
+    ]
+
+
+def test_parse_jj_summary():
+    assert parse_jj_summary("M docs/v1.5.0/index.html\nA docs/dev/agent-workflow.md\n") == [
+        ChangedPath(status="M", path="docs/v1.5.0/index.html"),
+        ChangedPath(status="A", path="docs/dev/agent-workflow.md"),
     ]
 
 

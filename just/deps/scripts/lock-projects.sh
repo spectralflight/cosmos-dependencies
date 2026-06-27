@@ -43,7 +43,8 @@ if ((check && upgrade)); then
 	exit 1
 fi
 
-repo_root="$(git rev-parse --show-toplevel)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/../../.." && pwd)"
 cd "${repo_root}"
 
 if [[ ${#projects[@]} -eq 0 ]]; then
