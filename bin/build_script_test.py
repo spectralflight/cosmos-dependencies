@@ -69,6 +69,7 @@ def test_build_script_loads_explicit_env_file(tmp_path: Path) -> None:
             MAX_JOBS=1
             export NATTEN_N_WORKERS="2"
             TORCH_CUDA_ARCH_LIST='9.0'
+            NATTEN_CUDA_ARCH=9.0
             SPACED_VALUE="hello world"
             """
         )
@@ -82,6 +83,7 @@ def test_build_script_loads_explicit_env_file(tmp_path: Path) -> None:
     assert "NATTEN_N_WORKERS=2\n" in build_env
     assert "NATTEN_N_WORKERS=99\n" not in build_env
     assert "TORCH_CUDA_ARCH_LIST=9.0\n" in build_env
+    assert "NATTEN_CUDA_ARCH=9.0\n" in build_env
     assert "SPACED_VALUE=hello world\n" in build_env
     assert "HOST_ONLY_VARIABLE=must-not-leak\n" not in build_env
     assert "CUDA_VERSION=12.8\n" not in build_env

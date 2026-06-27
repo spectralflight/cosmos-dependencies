@@ -28,7 +28,8 @@ export NATTEN_VERBOSE=1
 # Append sm_103 (Blackwell Ultra / GB300): not in PyTorch's prebuilt arch list,
 # so TORCH_CUDA_ARCH_LIST omits it and NATTEN's Blackwell kernels fall back to
 # "no kernel image" on GB300. NATTEN maps 10.3 -> sm_103a automatically.
-export NATTEN_CUDA_ARCH="${TORCH_CUDA_ARCH_LIST};10.3"
+: "${NATTEN_CUDA_ARCH:=${TORCH_CUDA_ARCH_LIST};10.3}"
+export NATTEN_CUDA_ARCH
 
 pip wheel \
 	-v \

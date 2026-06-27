@@ -30,7 +30,7 @@ debug shell.
 Start with the cheapest proof before attempting long package builds:
 
 1. Run unit tests for changed Python code.
-2. Run `just build-dummy` for a dummy wheel smoke test.
+2. Run `just docker-build-dummy` for a Docker dummy wheel smoke test.
 3. Use `natten` for maintained non-trivial package testing.
 4. Limit CUDA architectures and build threads during experiments.
 5. Increase build scope only after the smaller proof passes.
@@ -52,7 +52,26 @@ MAX_JOBS=1
 NATTEN_N_WORKERS=1
 NVCC_THREADS=1
 TORCH_CUDA_ARCH_LIST=9.0
+NATTEN_CUDA_ARCH=9.0
 ```
+
+Use `COSMOS_DEPENDENCIES_BUILD_ATTEMPTS=3 just docker-build-dummy` when testing
+network-heavy paths. Failed attempts keep Docker and uv cache state, so retries
+can often continue after a transient wheel download failure.
+
+For fork-only publication drills:
+
+1. Build a wheel with `just docker-build-dummy`.
+2. Upload it with `just release-upload 'tmp/build/*/*.whl'
+   spectralflight/cosmos-dependencies <new-test-tag>`.
+3. Generate a temporary index with `just index-create-release
+   spectralflight/cosmos-dependencies <new-test-tag> tmp/index/<new-test-tag>`.
+4. Verify installation with `just index-verify-install tmp/index/<new-test-tag>
+   cosmos-dummy 0.1.0 cosmos_dummy`.
+
+Use a new test release tag for each drill unless the owner explicitly asks to
+replace assets on the fork. Do not run upload or index commands against the
+upstream repository by accident.
 
 ## Package Scope
 
