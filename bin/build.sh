@@ -170,11 +170,14 @@ _load_env_file "${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FI
 _load_inline_env "${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}"
 
 _git_commit() {
-	git rev-parse HEAD 2>/dev/null || printf "unknown"
+	git -c safe.directory=/app rev-parse HEAD 2>/dev/null || git rev-parse HEAD 2>/dev/null || printf "unknown"
 }
 
 _git_dirty() {
-	if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+	if git -c safe.directory=/app diff --quiet 2>/dev/null &&
+		git -c safe.directory=/app diff --cached --quiet 2>/dev/null; then
+		printf "false"
+	elif git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
 		printf "false"
 	else
 		printf "true"

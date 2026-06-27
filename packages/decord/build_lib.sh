@@ -41,6 +41,14 @@ sed -i "s/avcodec\.h>/avcodec\.h>\n#include <libavcodec\/bsf\.h>/" src/video/ffm
 
 mkdir build
 cd build
-cmake .. -DUSE_CUDA=ON -DCMAKE_BUILD_TYPE=Release
-make -j "$(nproc)"
+cmake_args=(
+	..
+	-DUSE_CUDA=ON
+	-DCMAKE_BUILD_TYPE=Release
+)
+if [[ -n "${DECORD_CUDA_ARCHITECTURES:-}" ]]; then
+	cmake_args+=("-DCMAKE_CUDA_ARCHITECTURES=${DECORD_CUDA_ARCHITECTURES}")
+fi
+cmake "${cmake_args[@]}"
+make -j "${DECORD_BUILD_JOBS:-$(nproc)}"
 make install
