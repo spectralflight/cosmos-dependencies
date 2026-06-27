@@ -6,7 +6,7 @@ set -euo pipefail
 
 usage() {
 	cat >&2 <<'EOF'
-Usage: bin/docker_run.sh [OPTIONS] [-- COMMAND...]
+Usage: just/build/scripts/docker-run.sh [OPTIONS] [-- COMMAND...]
 
 Build the CUDA Docker image and run it with the repository mounted at /app.
 
@@ -22,8 +22,8 @@ EOF
 }
 
 repo_root="$(git rev-parse --show-toplevel)"
-cuda_version="${COSMOS_DEPENDENCIES_DOCKER_CUDA_VERSION:-12.8.1}"
-cache_volume="${COSMOS_DEPENDENCIES_DOCKER_CACHE_VOLUME:-cosmos-dependencies-cache}"
+cuda_version="${COSMOS_DEPS_DOCKER_CUDA_VERSION:-${COSMOS_DEPENDENCIES_DOCKER_CUDA_VERSION:-12.8.1}}"
+cache_volume="${COSMOS_DEPS_DOCKER_CACHE_VOLUME:-${COSMOS_DEPENDENCIES_DOCKER_CACHE_VOLUME:-cosmos-dependencies-cache}}"
 tty_mode="auto"
 build_args=()
 run_args=()
@@ -71,10 +71,10 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-env_file="${COSMOS_DEPENDENCIES_ENV_FILE:-}"
+env_file="${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_ENV_FILE:-}}}"
 if [[ -n "${env_file}" ]]; then
 	if [[ ! -f "${env_file}" ]]; then
-		echo "Error: COSMOS_DEPENDENCIES_ENV_FILE does not exist: ${env_file}" >&2
+		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
 		exit 1
 	fi
 	env_file_abs="$(realpath "${env_file}")"
@@ -83,7 +83,7 @@ if [[ -n "${env_file}" ]]; then
 		env_file="${env_file_abs#"${repo_root}/"}"
 		;;
 	*)
-		echo "Error: COSMOS_DEPENDENCIES_ENV_FILE must be inside the repository mounted at /app: ${env_file}" >&2
+		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE must be inside the repository mounted at /app: ${env_file}" >&2
 		exit 1
 		;;
 	esac
@@ -99,8 +99,7 @@ auto)
 		tty_args=(-it)
 	fi
 	;;
-never)
-	;;
+never) ;;
 *)
 	echo "Error: invalid tty mode: ${tty_mode}" >&2
 	exit 1
@@ -122,7 +121,8 @@ docker run \
 	-e UV_CACHE_DIR="/cache/uv" \
 	-e UV_PROJECT_ENVIRONMENT="/home/cosmos/.venv/cosmos-dependencies" \
 	-e CCACHE_DIR="/cache/ccache" \
-	-e COSMOS_DEPENDENCIES_ENV_FILE="${env_file}" \
+	-e COSMOS_DEPS_BUILD_ENV_FILE="${env_file}" \
+	-e COSMOS_DEPS_BUILD_ENV="${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}" \
 	-v "${repo_root}:/app" \
 	-v "${cache_volume}:/cache" \
 	"${run_args[@]}" \

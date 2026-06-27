@@ -1,0 +1,18 @@
+project-includes = [
+    "cosmos_dependencies/",
+    "bin/build_script_test.py",
+    "bin/create_index.py",
+    "bin/create_index_test.py",
+    "ci/check_docs_indices.py",
+    "ci/check_docs_indices_test.py",
+]
+
+project-excludes = [
+    ".venv/",
+    "build/",
+    "docs/",
+    "packages/",
+    "tmp/",
+]
+
+infer-with-first-use = false

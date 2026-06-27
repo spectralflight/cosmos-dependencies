@@ -39,7 +39,7 @@ _audit_project() {
 		lock_file="uv.lock"
 	fi
 
-	if [ "${COSMOS_DEPENDENCIES_AUDIT_STRICT:-0}" != "1" ] && [ -f "${lock_file}" ]; then
+	if [ "${COSMOS_DEPS_AUDIT_STRICT:-${COSMOS_DEPENDENCIES_AUDIT_STRICT:-0}}" != "1" ] && [ -f "${lock_file}" ]; then
 		torch_version="$(_torch_version_from_lock "${lock_file}")"
 		case "${torch_version}" in
 		2.10.0+*)

@@ -30,7 +30,7 @@ debug shell.
 Start with the cheapest proof before attempting long package builds:
 
 1. Run unit tests for changed Python code.
-2. Run `just docker-build-dummy` for a Docker dummy wheel smoke test.
+2. Run `just build docker-dummy` for a Docker dummy wheel smoke test.
 3. Use `natten` for maintained non-trivial package testing.
 4. Limit CUDA architectures and build threads during experiments.
 5. Increase build scope only after the smaller proof passes.
@@ -38,12 +38,17 @@ Start with the cheapest proof before attempting long package builds:
 OOM is a common build failure mode. Start with conservative thread counts and a
 small CUDA architecture list, then widen deliberately.
 
+Run `mise install` to converge standalone command-line tools. Use `uv` for
+project-coupled Python tools such as Pyrefly.
+
 Builds run under a mostly empty environment. To pass package-specific or
-tool-specific variables, point `COSMOS_DEPENDENCIES_ENV_FILE` at a local file
+tool-specific variables, point `COSMOS_DEPS_BUILD_ENV_FILE` at a local file
 inside the repository. The file accepts literal `KEY=VALUE` lines, optional
 `export KEY=VALUE` lines, blank lines, and whole-line comments. It does not
 perform shell expansion, and it cannot override core wrapper-controlled
 variables such as `PACKAGE_NAME`, `OUTPUT_DIR`, cache paths, or `PATH`.
+`COSMOS_DEPENDENCIES_ENV_FILE` and `COSMOS_DEPENDENCIES_BUILD_ENV_FILE` remain
+accepted as legacy aliases.
 
 Example local env file for a small `natten` smoke build:
 
@@ -55,18 +60,27 @@ TORCH_CUDA_ARCH_LIST=9.0
 NATTEN_CUDA_ARCH=9.0
 ```
 
-Use `COSMOS_DEPENDENCIES_BUILD_ATTEMPTS=3 just docker-build-dummy` when testing
+For simple values, use `COSMOS_DEPS_BUILD_ENV` instead of a file:
+
+```bash
+COSMOS_DEPS_BUILD_ENV='MAX_JOBS=1 NATTEN_N_WORKERS=1 TORCH_CUDA_ARCH_LIST=9.0 NATTEN_CUDA_ARCH=9.0' just build docker-natten
+```
+
+The inline form is split on whitespace and does not support values containing
+spaces. Use the env file for those.
+
+Use `COSMOS_DEPS_BUILD_ATTEMPTS=3 just build docker-dummy` when testing
 network-heavy paths. Failed attempts keep Docker and uv cache state, so retries
 can often continue after a transient wheel download failure.
 
 For fork-only publication drills:
 
-1. Build a wheel with `just docker-build-dummy`.
-2. Upload it with `just release-upload 'tmp/build/*/*.whl'
+1. Build a wheel with `just build docker-dummy`.
+2. Upload it with `just release upload 'tmp/build/*/*.whl'
    spectralflight/cosmos-dependencies <new-test-tag>`.
-3. Generate a temporary index with `just index-create-release
+3. Generate a temporary index with `just release create-release
    spectralflight/cosmos-dependencies <new-test-tag> tmp/index/<new-test-tag>`.
-4. Verify installation with `just index-verify-install tmp/index/<new-test-tag>
+4. Verify installation with `just release verify-install tmp/index/<new-test-tag>
    cosmos-dummy 0.1.0 cosmos_dummy`.
 
 Use a new test release tag for each drill unless the owner explicitly asks to

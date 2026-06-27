@@ -6,7 +6,7 @@ set -euo pipefail
 
 usage() {
 	cat >&2 <<'EOF'
-Usage: bin/verify_index_install.sh INDEX_DIR PACKAGE VERSION [IMPORT_NAME]
+Usage: just/release/scripts/verify-index-install.sh INDEX_DIR PACKAGE VERSION [IMPORT_NAME]
 
 Create a temporary uv environment and verify that PACKAGE==VERSION can be
 installed from a local PEP 503 index. Installs with --no-deps so package-index

@@ -6,14 +6,14 @@ set -euo pipefail
 
 usage() {
 	cat >&2 <<'EOF'
-Usage: bin/release_upload.sh [OPTIONS] FILE_OR_GLOB...
+Usage: just/release/scripts/release-upload.sh [OPTIONS] FILE_OR_GLOB...
 
 Create a GitHub release when needed and upload wheel assets without deleting
 local build artifacts.
 
 Options:
-  --repo OWNER/REPO  Release repository, default: COSMOS_DEPENDENCIES_RELEASE_REPO or upstream
-  --tag TAG          Release tag, default: COSMOS_DEPENDENCIES_RELEASE_TAG or current pyproject tag
+  --repo OWNER/REPO  Release repository, default: COSMOS_DEPS_RELEASE_REPO or upstream
+  --tag TAG          Release tag, default: COSMOS_DEPS_RELEASE_TAG or current pyproject tag
   --title TITLE      Release title, default: TAG
   --notes NOTES      Release notes, default: local build artifact upload
   --target TARGET    Git commitish for a new release, default: HEAD
@@ -23,8 +23,8 @@ EOF
 }
 
 version="$(awk -F'"' '/^version = / { print $2; exit }' pyproject.toml)"
-repo="${COSMOS_DEPENDENCIES_RELEASE_REPO:-nvidia-cosmos/cosmos-dependencies}"
-tag="${COSMOS_DEPENDENCIES_RELEASE_TAG:-v${version}}"
+repo="${COSMOS_DEPS_RELEASE_REPO:-${COSMOS_DEPENDENCIES_RELEASE_REPO:-nvidia-cosmos/cosmos-dependencies}}"
+tag="${COSMOS_DEPS_RELEASE_TAG:-${COSMOS_DEPENDENCIES_RELEASE_TAG:-v${version}}}"
 title=""
 notes="Local build artifact upload."
 target="$(git rev-parse HEAD)"

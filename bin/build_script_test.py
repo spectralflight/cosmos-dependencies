@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import subprocess
 import textwrap
@@ -24,7 +39,12 @@ def _write_fake_build_script(work_dir: Path) -> None:
     fake_build.chmod(0o755)
 
 
-def _run_build_script(work_dir: Path, env_file: Path | None = None) -> subprocess.CompletedProcess[str]:
+def _run_build_script(
+    work_dir: Path,
+    env_file: Path | None = None,
+    inline_env: str | None = None,
+    legacy_env_file: bool = False,
+) -> subprocess.CompletedProcess[str]:
     _write_fake_build_script(work_dir)
     env = {
         "CUDA_VERSION": "12.8",
@@ -35,7 +55,10 @@ def _run_build_script(work_dir: Path, env_file: Path | None = None) -> subproces
         "USER": "tester",
     }
     if env_file is not None:
-        env["COSMOS_DEPENDENCIES_ENV_FILE"] = str(env_file)
+        env_key = "COSMOS_DEPENDENCIES_ENV_FILE" if legacy_env_file else "COSMOS_DEPS_BUILD_ENV_FILE"
+        env[env_key] = str(env_file)
+    if inline_env is not None:
+        env["COSMOS_DEPS_BUILD_ENV"] = inline_env
     return subprocess.run(
         [
             str(BUILD_SCRIPT),
@@ -89,11 +112,44 @@ def test_build_script_loads_explicit_env_file(tmp_path: Path) -> None:
     assert "CUDA_VERSION=12.8\n" not in build_env
 
 
+def test_build_script_loads_inline_build_env(tmp_path: Path) -> None:
+    result = _run_build_script(
+        tmp_path,
+        inline_env='MAX_JOBS=1 NATTEN_N_WORKERS="2" TORCH_CUDA_ARCH_LIST=9.0',
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    build_env = _read_build_env(tmp_path)
+    assert "MAX_JOBS=1\n" in build_env
+    assert "NATTEN_N_WORKERS=2\n" in build_env
+    assert "TORCH_CUDA_ARCH_LIST=9.0\n" in build_env
+    assert "NATTEN_N_WORKERS=99\n" not in build_env
+
+
+def test_build_script_keeps_legacy_env_file_alias(tmp_path: Path) -> None:
+    env_file = tmp_path / "legacy.env"
+    env_file.write_text("NATTEN_N_WORKERS=2\n")
+
+    result = _run_build_script(tmp_path, env_file, legacy_env_file=True)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    build_env = _read_build_env(tmp_path)
+    assert "NATTEN_N_WORKERS=2\n" in build_env
+
+
 def test_build_script_rejects_reserved_env_file_variables(tmp_path: Path) -> None:
     env_file = tmp_path / "bad.env"
     env_file.write_text("PACKAGE_NAME=other\n")
 
     result = _run_build_script(tmp_path, env_file)
+
+    assert result.returncode != 0
+    assert "PACKAGE_NAME is controlled by bin/build.sh" in result.stderr
+    assert not (tmp_path / "build").exists()
+
+
+def test_build_script_rejects_reserved_inline_env_variables(tmp_path: Path) -> None:
+    result = _run_build_script(tmp_path, inline_env="PACKAGE_NAME=other")
 
     assert result.returncode != 0
     assert "PACKAGE_NAME is controlled by bin/build.sh" in result.stderr

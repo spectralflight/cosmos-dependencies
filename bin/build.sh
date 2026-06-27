@@ -91,25 +91,44 @@ _strip_matching_quotes() {
 	fi
 	first_char="${value:0:1}"
 	last_char="${value: -1}"
-	if [[ "${first_char}" == "${last_char}" && ( "${first_char}" == "'" || "${first_char}" == '"' ) ]]; then
+	if [[ "${first_char}" == "${last_char}" && ("${first_char}" == "'" || "${first_char}" == '"') ]]; then
 		printf "%s" "${value:1:${#value}-2}"
 		return
 	fi
 	printf "%s" "${value}"
 }
 
+_append_build_env_assignment() {
+	local source="$1"
+	local assignment="$2"
+	local key
+	local value
+
+	assignment="$(_trim "${assignment}")"
+	if [[ ! "${assignment}" =~ ^([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=(.*)$ ]]; then
+		echo "Error: ${source}: expected KEY=VALUE" >&2
+		exit 1
+	fi
+	key="${BASH_REMATCH[1]}"
+	value="$(_trim "${BASH_REMATCH[2]}")"
+	value="$(_strip_matching_quotes "${value}")"
+	if _is_reserved_env_name "${key}"; then
+		echo "Error: ${source}: ${key} is controlled by bin/build.sh and cannot be set in COSMOS_DEPS_BUILD_ENV_FILE or COSMOS_DEPS_BUILD_ENV" >&2
+		exit 1
+	fi
+	build_env_extra_args+=("${key}=${value}")
+}
+
 _load_env_file() {
 	local env_file="$1"
 	local env_line
 	local line_no=0
-	local key
-	local value
 
 	if [[ -z "${env_file}" ]]; then
 		return
 	fi
 	if [[ ! -f "${env_file}" ]]; then
-		echo "Error: COSMOS_DEPENDENCIES_ENV_FILE does not exist: ${env_file}" >&2
+		echo "Error: COSMOS_DEPS_BUILD_ENV_FILE does not exist: ${env_file}" >&2
 		exit 1
 	fi
 
@@ -123,23 +142,31 @@ _load_env_file() {
 		if [[ "${env_line}" == export[[:space:]]* ]]; then
 			env_line="$(_trim "${env_line#export}")"
 		fi
-		if [[ ! "${env_line}" =~ ^([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=(.*)$ ]]; then
-			echo "Error: ${env_file}:${line_no}: expected KEY=VALUE" >&2
-			exit 1
-		fi
-		key="${BASH_REMATCH[1]}"
-		value="$(_trim "${BASH_REMATCH[2]}")"
-		value="$(_strip_matching_quotes "${value}")"
-		if _is_reserved_env_name "${key}"; then
-			echo "Error: ${env_file}:${line_no}: ${key} is controlled by bin/build.sh and cannot be set in COSMOS_DEPENDENCIES_ENV_FILE" >&2
-			exit 1
-		fi
-		build_env_file_args+=("${key}=${value}")
+		_append_build_env_assignment "${env_file}:${line_no}" "${env_line}"
 	done <"${env_file}"
 }
 
-build_env_file_args=()
-_load_env_file "${COSMOS_DEPENDENCIES_ENV_FILE:-}"
+_load_inline_env() {
+	local inline_env="$1"
+	local inline_token
+	local inline_tokens=()
+
+	if [[ -z "${inline_env}" ]]; then
+		return
+	fi
+
+	read -r -a inline_tokens <<<"${inline_env}"
+	for inline_token in "${inline_tokens[@]}"; do
+		if [[ "${inline_token}" == "export" ]]; then
+			continue
+		fi
+		_append_build_env_assignment "COSMOS_DEPS_BUILD_ENV token '${inline_token}'" "${inline_token}"
+	done
+}
+
+build_env_extra_args=()
+_load_env_file "${COSMOS_DEPS_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_BUILD_ENV_FILE:-${COSMOS_DEPENDENCIES_ENV_FILE:-}}}"
+_load_inline_env "${COSMOS_DEPS_BUILD_ENV:-${COSMOS_DEPENDENCIES_BUILD_ENV:-}}"
 
 timestamp=$(date +%Y%m%d%H%M%S)
 export OUTPUT_NAME="${timestamp}-${PACKAGE_NAME//-/_}-${PACKAGE_VERSION}-py${PYTHON_VERSION}-cu${CUDA_VERSION}-torch${TORCH_VERSION}"
@@ -175,4 +202,4 @@ build_env_args=(
 	UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT}"
 	CCACHE_DIR="${CCACHE_DIR}"
 )
-env -i "${build_env_args[@]}" "${build_env_file_args[@]}" bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
+env -i "${build_env_args[@]}" "${build_env_extra_args[@]}" bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"

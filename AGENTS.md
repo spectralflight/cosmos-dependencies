@@ -19,13 +19,20 @@ Those indices are compatibility contracts for downstream lockfiles.
 
 ## Useful Commands
 
-- `just test`: lint, unit tests, and package-index smoke checks.
+- `mise install`: install pinned standalone tools such as `just`, `uv`, `ruff`,
+  `shellcheck`, `shfmt`, `gh`, `gitleaks`, `actionlint`, and `pre-commit`.
+- `just help`: list root and module recipes.
+- `just check fast`: shell, ruff, Pyrefly, unit, and index-guard checks.
+- `just test`: lint, Pyrefly, unit tests, and package-index smoke checks.
 - `just index-guard upstream/main`: verify existing package indices were not
   changed relative to upstream.
 - `just audit`: run `uv audit` for the root project and package build
   environments.
-- `just build-dummy`: quick Docker/build-loop smoke package.
-- `just build natten <version> <python> <torch>`: common maintained package path.
+- `just build docker-dummy`: quick Docker/build-loop smoke package.
+- `just build docker-natten <version> <python> <torch>`: common maintained
+  package path.
+- `just deps lock-all` and `just deps upgrade-all`: refresh root and package
+  lockfiles.
 
 ## Pointers
 

@@ -1,0 +1,16 @@
+[settings]
+lockfile = true
+minimum_release_age = "7d"
+disable_backends = ["asdf", "ubi"]
+disable_default_registry = true
+
+[tools]
+uv = "latest"
+just = "latest"
+gh = "latest"
+ruff = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+"aqua:gitleaks/gitleaks" = "latest"
+"aqua:rhysd/actionlint" = "latest"
+"pipx:pre-commit" = "latest"
