@@ -25,16 +25,17 @@ build = [
     "ninja",
     "numpy",
     "packaging",
-    "pip",
+    "pip>=26.1.2",
     "setuptools",
-    "wheel",
+    "wheel>=0.46.2",
 ]
 
 [dependency-groups]
 dev = [
     "change-wheel-version",
     "numpy",
-    "pytest",
+    "pygments>=2.20.0",
+    "pytest>=9.0.3",
     "torch==2.10.0+cu128",
     "tyro",
     "wheel-filename",
