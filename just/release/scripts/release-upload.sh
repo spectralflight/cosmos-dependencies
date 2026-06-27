@@ -9,7 +9,8 @@ usage() {
 Usage: just/release/scripts/release-upload.sh [OPTIONS] FILE_OR_GLOB...
 
 Create a GitHub release when needed and upload wheel assets without deleting
-local build artifacts.
+local build artifacts. New releases are created with all matched files attached
+in one gh command, so immutable repositories publish only after assets exist.
 
 Options:
   --repo OWNER/REPO  Release repository, default: COSMOS_DEPS_RELEASE_REPO or upstream
@@ -17,6 +18,9 @@ Options:
   --title TITLE      Release title, default: TAG
   --notes NOTES      Release notes, default: local build artifact upload
   --target TARGET    Git commitish for a new release, default: HEAD
+  --draft            Create a draft release when the release does not exist
+  --prerelease       Mark a newly created release as a prerelease
+  --not-latest       Do not mark a newly created release as latest
   --clobber          Replace existing assets with matching names
   -h, --help         Show this help
 EOF
@@ -28,6 +32,7 @@ tag="${COSMOS_DEPS_RELEASE_TAG:-${COSMOS_DEPENDENCIES_RELEASE_TAG:-v${version}}}
 title=""
 notes="Local build artifact upload."
 target="$(git rev-parse HEAD)"
+create_args=()
 upload_args=()
 patterns=()
 
@@ -52,6 +57,18 @@ while [[ $# -gt 0 ]]; do
 	--target)
 		target="$2"
 		shift 2
+		;;
+	--draft)
+		create_args+=("--draft")
+		shift
+		;;
+	--prerelease)
+		create_args+=("--prerelease")
+		shift
+		;;
+	--not-latest)
+		create_args+=("--latest=false")
+		shift
 		;;
 	--clobber)
 		upload_args+=("--clobber")
@@ -94,7 +111,10 @@ if ! gh release view --repo "${repo}" "${tag}" >/dev/null 2>&1; then
 		--title "${title}" \
 		--notes "${notes}" \
 		--target "${target}" \
-		"${tag}"
+		"${create_args[@]}" \
+		"${tag}" \
+		"${files[@]}"
+	exit 0
 fi
 
 for file in "${files[@]}"; do

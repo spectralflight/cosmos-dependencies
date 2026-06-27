@@ -76,16 +76,17 @@ can often continue after a transient wheel download failure.
 For fork-only publication drills:
 
 1. Build a wheel with `just build docker-dummy`.
-2. Upload it with `just release upload 'tmp/build/*/*.whl'
-   spectralflight/cosmos-dependencies <new-test-tag>`.
-3. Generate a temporary index with `just release create-release
-   spectralflight/cosmos-dependencies <new-test-tag> tmp/index/<new-test-tag>`.
-4. Verify installation with `just release verify-install tmp/index/<new-test-tag>
+2. Upload it with `just release upload-batch 'tmp/build/*/*.whl'
+   20260627.1 spectralflight/cosmos-dependencies v1.6.0`.
+3. Add the generated batch tag to `indices/v1.6.0/manifest.json`.
+4. Generate a temporary index with `just release create-manifest
+   indices/v1.6.0/manifest.json tmp/index/v1.6.0`.
+5. Verify installation with `just release verify-install tmp/index/v1.6.0
    cosmos-dummy 0.1.0 cosmos_dummy`.
 
-Use a new test release tag for each drill unless the owner explicitly asks to
-replace assets on the fork. Do not run upload or index commands against the
-upstream repository by accident.
+Use a new batch id for each drill unless the owner explicitly asks to replace
+assets on the fork. Do not run upload or index commands against the upstream
+repository by accident.
 
 ## Package Scope
 
@@ -111,7 +112,8 @@ or generated indices there.
 Before publishing anything:
 
 - Confirm the target repository.
-- Confirm the release tag.
-- Confirm every wheel filename is unique for that release.
-- Generate a new index snapshot; do not edit an existing snapshot.
+- Confirm the logical index version and batch tag.
+- Confirm every wheel filename is unique for that batch.
+- Keep unreleased indices editable; treat released indices as append-only.
+- Generate the index from the manifest.
 - Run the package-index guard.

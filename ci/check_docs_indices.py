@@ -2,9 +2,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Fail when an existing package index under docs/ is changed.
+"""Fail when a published package index under docs/ is changed.
 
-New index files are allowed for future release snapshots. Existing index files
+New index files and unreleased index versions are allowed. Published index files
 are treated as immutable because downstream lockfiles can rely on their wheel
 URLs and hashes.
 """
@@ -12,9 +12,10 @@ URLs and hashes.
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 from dataclasses import dataclass
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,13 @@ def _is_package_index(path: str) -> bool:
         and posix_path.parts[1] != "dev"
         and posix_path.name == "index.html"
     )
+
+
+def _index_version(path: str) -> str | None:
+    posix_path = PurePosixPath(path)
+    if not _is_package_index(path):
+        return None
+    return posix_path.parts[1]
 
 
 def parse_name_status(output: str) -> list[ChangedPath]:
@@ -52,13 +60,40 @@ def parse_name_status(output: str) -> list[ChangedPath]:
     return changes
 
 
-def forbidden_index_changes(changes: list[ChangedPath]) -> list[ChangedPath]:
+def _read_unreleased_versions(indices_dir: Path = Path("indices")) -> set[str]:
+    versions: set[str] = set()
+    for manifest_path in indices_dir.glob("*/manifest.json"):
+        data = json.loads(manifest_path.read_text())
+        if isinstance(data, dict) and data.get("status") == "unreleased":
+            versions.add(manifest_path.parent.name)
+    return versions
+
+
+def _is_unreleased_index_path(path: str, unreleased_versions: set[str]) -> bool:
+    version = _index_version(path)
+    return version is not None and version in unreleased_versions
+
+
+def forbidden_index_changes(
+    changes: list[ChangedPath],
+    *,
+    unreleased_versions: set[str] | None = None,
+) -> list[ChangedPath]:
+    unreleased_versions = unreleased_versions or set()
     forbidden: list[ChangedPath] = []
     for change in changes:
         status = change.status[0]
         if status == "A":
             continue
-        if _is_package_index(change.path) or (change.old_path is not None and _is_package_index(change.old_path)):
+
+        changed_index_paths = [
+            path for path in (change.path, change.old_path) if path is not None and _is_package_index(path)
+        ]
+        if not changed_index_paths:
+            continue
+        if all(_is_unreleased_index_path(path, unreleased_versions) for path in changed_index_paths):
+            continue
+        else:
             forbidden.append(change)
     return forbidden
 
@@ -82,18 +117,18 @@ def main() -> int:
     args = parser.parse_args()
 
     changes = parse_name_status(_git_name_status(args.base))
-    forbidden = forbidden_index_changes(changes)
+    forbidden = forbidden_index_changes(changes, unreleased_versions=_read_unreleased_versions())
     if not forbidden:
         return 0
 
-    print("Existing package index files are immutable. Forbidden changes:")
+    print("Published package index files are immutable. Forbidden changes:")
     for change in forbidden:
         if change.old_path is not None:
             print(f"  {change.status}\t{change.old_path}\t{change.path}")
         else:
             print(f"  {change.status}\t{change.path}")
     print()
-    print("Add a new versioned docs directory instead of editing an existing index.")
+    print("Add a new versioned docs directory, or keep the index manifest status as unreleased while editing it.")
     return 1
 
 

@@ -31,3 +31,19 @@ def test_forbidden_index_changes_blocks_existing_index_edits():
     ]
 
     assert forbidden_index_changes(changes) == changes
+
+
+def test_forbidden_index_changes_allows_unreleased_index_edits():
+    changes = [
+        ChangedPath(status="M", path="docs/v1.6.0/index.html"),
+        ChangedPath(status="D", path="docs/v1.6.0/natten/index.html"),
+        ChangedPath(status="R100", old_path="docs/v1.6.0/flash-attn/index.html", path="docs/v1.6.0/fa/index.html"),
+    ]
+
+    assert forbidden_index_changes(changes, unreleased_versions={"v1.6.0"}) == []
+
+
+def test_forbidden_index_changes_blocks_renames_from_published_to_unreleased():
+    change = ChangedPath(status="R100", old_path="docs/v1.5.0/index.html", path="docs/v1.6.0/index.html")
+
+    assert forbidden_index_changes([change], unreleased_versions={"v1.6.0"}) == [change]

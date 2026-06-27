@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import importlib.util
+import json
 from pathlib import Path
+
+import pytest
 
 
 def _load_create_index():
@@ -66,6 +69,89 @@ def test_collect_index_lines_includes_wheels_file_urls(tmp_path):
 
     assert set(all_lines) == {"torch", "torchvision"}
     assert {line.name for line in all_lines["torch"]} == {"torch-2.10.0+cu130-cp313-cp313-manylinux_2_28_x86_64.whl"}
+
+
+def test_collect_release_assets_reads_manifest_batches(tmp_path, monkeypatch):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "index_version": "v1.6.0",
+                "status": "unreleased",
+                "default_repo": "spectralflight/cosmos-dependencies",
+                "batches": [
+                    {"tag": "wheels-v1.6.0-batch.20260627.1"},
+                    {"repo": "nvidia-cosmos/cosmos-dependencies", "tag": "wheels-v1.6.0-batch.20260727.1"},
+                ],
+            }
+        )
+    )
+    calls: list[tuple[str, str]] = []
+
+    def fake_get_release_assets(*, repo, tag):
+        calls.append((repo, tag))
+        return [{"name": f"{tag}.txt"}]
+
+    monkeypatch.setattr(create_index, "_get_release_assets", fake_get_release_assets)
+
+    assets = create_index._collect_release_assets(
+        create_index.Args(output_dir=tmp_path / "out", manifest=manifest_path)
+    )
+
+    assert calls == [
+        ("spectralflight/cosmos-dependencies", "wheels-v1.6.0-batch.20260627.1"),
+        ("nvidia-cosmos/cosmos-dependencies", "wheels-v1.6.0-batch.20260727.1"),
+    ]
+    assert assets == [
+        {"name": "wheels-v1.6.0-batch.20260627.1.txt"},
+        {"name": "wheels-v1.6.0-batch.20260727.1.txt"},
+    ]
+
+
+def test_collect_release_assets_allows_empty_unreleased_manifest(tmp_path):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "index_version": "v1.6.0",
+                "status": "unreleased",
+                "default_repo": "spectralflight/cosmos-dependencies",
+                "batches": [],
+            }
+        )
+    )
+
+    assets = create_index._collect_release_assets(
+        create_index.Args(output_dir=tmp_path / "out", manifest=manifest_path)
+    )
+
+    assert assets == []
+
+
+def test_collect_release_assets_requires_tag_or_manifest(tmp_path):
+    with pytest.raises(ValueError, match="Pass --tag or --manifest"):
+        create_index._collect_release_assets(create_index.Args(output_dir=tmp_path / "out"))
+
+
+def test_collect_release_assets_rejects_tag_and_manifest(tmp_path):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "index_version": "v1.6.0",
+                "status": "unreleased",
+                "batches": [],
+            }
+        )
+    )
+
+    with pytest.raises(ValueError, match="either --tag or --manifest"):
+        create_index._collect_release_assets(
+            create_index.Args(output_dir=tmp_path / "out", tag="v1.6.0", manifest=manifest_path)
+        )
 
 
 def test_write_index_writes_global_and_package_indices(tmp_path):

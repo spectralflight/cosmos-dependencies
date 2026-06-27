@@ -17,7 +17,7 @@
 
 Repository for building and publishing Cosmos dependencies.
 
-[Index](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.5.0)
+[Published Index](https://nvidia-cosmos.github.io/cosmos-dependencies/v1.5.0)
 
 ## Setup
 
@@ -84,8 +84,10 @@ just fix-permissions
 1. Upload wheels
 
 ```shell
-just upload "build/**/*.whl"
+just release-upload-batch "build/**/*.whl" 20260627.1 nvidia-cosmos/cosmos-dependencies v1.6.0
 ```
+
+1. Add the generated batch tag to `indices/v1.6.0/manifest.json`.
 
 1. Create and locally host the package index
 
@@ -98,8 +100,9 @@ just index-serve
 ## Bump Version
 
 ```shell
-uv version --bump=minor
-gh release create --repo nvidia-cosmos/cosmos-dependencies v$(uv version --short)
+uv version 1.6.0
+mkdir -p indices/v1.6.0
+just deps lock-all
 ```
 
 ## Version Constraints

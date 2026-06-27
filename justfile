@@ -80,9 +80,17 @@ index-create *args:
 index-create-release repo tag output_dir *args:
     just release create-release {{ quote(repo) }} {{ quote(tag) }} {{ quote(output_dir) }} {{ args }}
 
+# Create a package index from an explicit manifest.
+index-create-manifest manifest output_dir *args:
+    just release create-manifest {{ quote(manifest) }} {{ quote(output_dir) }} {{ args }}
+
 # Upload wheels to a GitHub release without deleting local artifacts.
 release-upload pattern repo=release_repo release_tag=tag *args:
     just release upload {{ quote(pattern) }} {{ quote(repo) }} {{ quote(release_tag) }} {{ args }}
+
+# Upload wheels to a dated batch release for a logical package index.
+release-upload-batch pattern batch_id repo=release_repo index_tag=tag *args:
+    just release upload-batch {{ quote(pattern) }} {{ quote(batch_id) }} {{ quote(repo) }} {{ quote(index_tag) }} {{ args }}
 
 # Legacy release upload alias.
 upload pattern *args:

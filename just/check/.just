@@ -4,6 +4,7 @@ check_dir := source_directory()
 repo := check_dir + "/../.."
 version := `repo="$(git rev-parse --show-toplevel)" && awk -F'"' '/^version = / { print $2; exit }' "$repo/pyproject.toml"`
 tag := "v" + version
+manifest := "indices/" + tag + "/manifest.json"
 
 # Show check recipes.
 default:
@@ -59,7 +60,7 @@ index-guard base='upstream/main':
 
 # Generate a temporary package index for the current version.
 index-smoke:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote("tmp/docs/" + tag) }} --tag={{ quote(tag) }}
+    cd "{{ repo }}" && if [[ -f {{ quote(manifest) }} ]]; then mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote("tmp/docs/" + tag) }} --manifest {{ quote(manifest) }}; else mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote("tmp/docs/" + tag) }} --tag={{ quote(tag) }}; fi
 
 # Run the standard local test lane.
 test: lint typecheck unit index-smoke
