@@ -15,6 +15,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from pai_deps.release_artifacts import WHEEL_SIDECAR_SUFFIXES, wheel_upload_names
+
 REPO = Path(__file__).resolve().parents[1]
 
 
@@ -40,14 +42,14 @@ def select_assets(
 
 
 def expand_wheel_triplets(selected_assets: list[ReleaseAsset], all_assets: list[ReleaseAsset]) -> list[ReleaseAsset]:
-    """Ensure selected wheels bring their build-log and provenance sidecars."""
+    """Ensure selected wheels bring their required release sidecars."""
 
     available = {asset.name: asset for asset in all_assets}
     expanded = {asset.name: asset for asset in selected_assets}
     for asset in selected_assets:
         if not asset.name.endswith(".whl"):
             continue
-        for suffix in (".build.log", ".build.json"):
+        for suffix in WHEEL_SIDECAR_SUFFIXES:
             sidecar_name = asset.name + suffix
             sidecar = available.get(sidecar_name)
             if sidecar is None:
@@ -57,7 +59,7 @@ def expand_wheel_triplets(selected_assets: list[ReleaseAsset], all_assets: list[
     ordered: list[ReleaseAsset] = []
     used: set[str] = set()
     for wheel_name in sorted(name for name in expanded if name.endswith(".whl")):
-        for name in (wheel_name + ".build.log", wheel_name + ".build.json", wheel_name):
+        for name in wheel_upload_names(wheel_name):
             asset = expanded.get(name)
             if asset is not None:
                 ordered.append(asset)

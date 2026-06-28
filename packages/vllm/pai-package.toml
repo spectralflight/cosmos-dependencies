@@ -20,6 +20,12 @@ status = "historical"
 upstream = "https://github.com/vllm-project/vllm"
 gpu_risk = "high"
 
+[license]
+expression = "Apache-2.0"
+files = ["LICENSE"]
+confidence = "high"
+notes = "Vendored third-party native code should be scanned before publishing a new major wheel batch."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

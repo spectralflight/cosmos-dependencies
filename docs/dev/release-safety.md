@@ -64,23 +64,33 @@ Source releases are never modified. Destination releases are created when
 needed; existing destination assets are replaced only when `--clobber` is passed
 with `PAI_DEPS_ALLOW_CLOBBER=1`.
 
-## Build Sidecars
+## Release Artifacts
 
-Successful builds write sidecars next to each wheel:
+Successful builds and upload planning keep a small artifact set next to each
+wheel:
 
 - `<wheel>.build.log`: the build log for the wheel.
 - `<wheel>.build.json`: package, Python, torch, CUDA, explicit build env,
   Docker image, git commit, and wheel/log hashes.
+- `<wheel>.licenses.json`: normalized wheel license evidence.
+- `<wheel>.attributions.md`: wheel attribution text and bundled license files.
+- `<wheel>.sbom.cdx.json`: minimal CycloneDX SBOM for the wheel component.
 
-Upload and copy commands expand matched wheels to include their sidecars and
-scan wheels, logs, and provenance before GitHub writes. Package indices include
-only `.whl` assets. Do not pass secrets through `PAI_DEPS_BUILD_ENV_FILE` or
+Upload and copy commands expand matched wheels to include their full artifact
+set. Upload planning also writes a release ledger and `.sha256` digest under
+`tmp/release-ledgers/`, then scans wheels, sidecars, logs, provenance, ledger,
+and digest before GitHub writes. Package indices keep the wheel link as the
+primary installer anchor and add legal artifact links when those release assets
+exist.
+
+Do not pass secrets through `PAI_DEPS_BUILD_ENV_FILE` or
 `PAI_DEPS_BUILD_ENV`; explicit build env values are recorded in provenance.
 
-Check staged wheel/log/provenance triplets before upload:
+Check staged wheel artifact sets before upload:
 
 ```shell
 just release artifact-check 'tmp/build/**/*.whl'
+just release ledger 'tmp/build/**/*.whl' tmp/release-ledger.json spectralflight/pai-deps cosmos3-scratch
 ```
 
 ## Checks

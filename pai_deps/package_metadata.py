@@ -17,6 +17,7 @@ DESCRIPTOR_NAME = "pai-package.toml"
 VALID_BACKENDS = {"pip-wheel-git", "uv-build"}
 VALID_STATUSES = {"maintained", "smoke", "historical", "unknown"}
 VALID_GPU_RISKS = {"none", "low", "medium", "high"}
+VALID_LICENSE_CONFIDENCES = {"high", "medium", "low", "unknown"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +31,14 @@ class SourceDescriptor:
 class LicenseReviewDescriptor:
     required: bool = False
     url: str = ""
+    notes: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class LicenseDescriptor:
+    expression: str = "NOASSERTION"
+    files: tuple[str, ...] = ()
+    confidence: str = "unknown"
     notes: str = ""
 
 
@@ -56,6 +65,7 @@ class PackageDescriptor:
     upstream: str
     gpu_risk: str
     docs: str
+    license: LicenseDescriptor
     license_review: LicenseReviewDescriptor
     directory: Path
     descriptor_path: Path
@@ -110,6 +120,9 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
     license_review_data = data.get("license_review", {})
     if not isinstance(license_review_data, dict):
         raise ValueError(f"{descriptor_path}: license_review must be a table")
+    license_data = data.get("license", {})
+    if not isinstance(license_data, dict):
+        raise ValueError(f"{descriptor_path}: license must be a table")
 
     build = BuildDescriptor(
         backend=_require_string(build_data, "backend", source=descriptor_path),
@@ -135,6 +148,12 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
         upstream=_require_string(data, "upstream", source=descriptor_path),
         gpu_risk=_require_string(data, "gpu_risk", source=descriptor_path),
         docs=str(data.get("docs", "docs/dev/build-notes.md")),
+        license=LicenseDescriptor(
+            expression=str(license_data.get("expression", "NOASSERTION")),
+            files=_string_tuple(license_data, "files"),
+            confidence=str(license_data.get("confidence", "unknown")),
+            notes=str(license_data.get("notes", "")),
+        ),
         license_review=LicenseReviewDescriptor(
             required=bool(license_review_data.get("required", False)),
             url=str(license_review_data.get("url", "")),

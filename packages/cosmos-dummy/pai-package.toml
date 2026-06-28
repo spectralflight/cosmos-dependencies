@@ -20,6 +20,11 @@ status = "smoke"
 upstream = "local"
 gpu_risk = "none"
 
+[license]
+expression = "Apache-2.0"
+confidence = "high"
+notes = "Synthetic local smoke package covered by the repository license."
+
 [build]
 backend = "uv-build"
 script = "build.sh"

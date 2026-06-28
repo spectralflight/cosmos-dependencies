@@ -20,6 +20,12 @@ status = "historical"
 upstream = "https://github.com/meta-pytorch/torchcodec"
 gpu_risk = "medium"
 
+[license]
+expression = "BSD-3-Clause"
+files = ["LICENSE"]
+confidence = "high"
+notes = "FFmpeg and codec distribution terms still require release review."
+
 [license_review]
 required = true
 url = "https://github.com/meta-pytorch/torchcodec/blob/main/CONTRIBUTING.md"

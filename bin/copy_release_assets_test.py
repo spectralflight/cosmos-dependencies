@@ -57,6 +57,9 @@ def test_expand_wheel_triplets_adds_required_sidecars():
         copy_release_assets.ReleaseAsset("pkg-1.0.0.whl"),
         copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.json"),
         copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.build.log"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.licenses.json"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.attributions.md"),
+        copy_release_assets.ReleaseAsset("pkg-1.0.0.whl.sbom.cdx.json"),
         copy_release_assets.ReleaseAsset("README.txt"),
     ]
 
@@ -65,6 +68,9 @@ def test_expand_wheel_triplets_adds_required_sidecars():
     assert [asset.name for asset in expanded] == [
         "pkg-1.0.0.whl.build.log",
         "pkg-1.0.0.whl.build.json",
+        "pkg-1.0.0.whl.licenses.json",
+        "pkg-1.0.0.whl.attributions.md",
+        "pkg-1.0.0.whl.sbom.cdx.json",
         "pkg-1.0.0.whl",
     ]
 

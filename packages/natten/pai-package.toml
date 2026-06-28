@@ -20,6 +20,11 @@ status = "maintained"
 upstream = "https://github.com/SHI-Labs/NATTEN"
 gpu_risk = "high"
 
+[license]
+expression = "MIT"
+files = ["LICENSE"]
+confidence = "high"
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

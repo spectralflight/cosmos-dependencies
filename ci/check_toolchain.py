@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -53,6 +54,14 @@ FORBIDDEN_PUBLIC_ARTIFACT_PATTERNS = {
     "packages/**/libnvcuvid.so": "do not vendor NVIDIA Video Codec binary link stubs in the public repo",
     "packages/**/libnvidia-encode.so": "do not vendor NVIDIA Video Codec binary link stubs in the public repo",
 }
+FORBIDDEN_TRACKED_ARTIFACT_RE = re.compile(
+    r"(?i)\.(?:"
+    r"whl|deb|rpm|dmg|pkg|appimage|"
+    r"so|dylib|dll|a|"
+    r"zip|7z|tar|tar\.gz|tgz|tar\.xz|txz|tar\.bz2|tbz2|xz|"
+    r"bin|run"
+    r")$"
+)
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
@@ -215,7 +224,25 @@ def check_forbidden_public_artifacts(repo: Path = REPO) -> list[str]:
             if path.exists():
                 relative = path.relative_to(repo).as_posix()
                 errors.append(f"{relative}: {message}")
+    for relative in _tracked_files(repo):
+        if FORBIDDEN_TRACKED_ARTIFACT_RE.search(relative):
+            errors.append(f"{relative}: do not commit built binary/archive artifacts to the public repo")
     return errors
+
+
+def _tracked_files(repo: Path) -> list[str]:
+    if not (repo / ".git").exists():
+        return []
+    result = subprocess.run(
+        ["git", "ls-files"],
+        cwd=repo,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    return result.stdout.splitlines()
 
 
 def main() -> int:

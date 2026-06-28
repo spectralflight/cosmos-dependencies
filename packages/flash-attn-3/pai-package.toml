@@ -20,6 +20,12 @@ status = "historical"
 upstream = "https://github.com/Dao-AILab/flash-attention"
 gpu_risk = "high"
 
+[license]
+expression = "BSD-3-Clause"
+files = ["LICENSE", "AUTHORS"]
+confidence = "medium"
+notes = "Root project is BSD-3-Clause; hopper package metadata has differed historically, so review wheel metadata before publishing."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

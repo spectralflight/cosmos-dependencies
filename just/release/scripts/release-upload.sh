@@ -124,7 +124,17 @@ fi
 title="${title:-${tag}}"
 expanded_files="$(mktemp)"
 trap 'rm -f "${expanded_files}"' EXIT
+uv run --frozen python ci/write_wheel_legal_sidecars.py "${files[@]}"
 uv run --frozen python ci/check_release_artifacts.py --print-upload-files "${files[@]}" >"${expanded_files}"
+mapfile -t files <"${expanded_files}"
+safe_tag="${tag//[^A-Za-z0-9._-]/_}"
+ledger_path="tmp/release-ledgers/${safe_tag}.release-ledger.json"
+uv run --frozen python just/release/scripts/write_release_ledger.py \
+	--repo "${repo}" \
+	--release-tag "${tag}" \
+	--output "${ledger_path}" \
+	"${files[@]}" >/dev/null
+printf '%s\n' "${ledger_path}" "${ledger_path}.sha256" >>"${expanded_files}"
 mapfile -t files <"${expanded_files}"
 uv run --frozen python ci/scan_release_artifacts.py "${files[@]}"
 if [[ "${dry_run}" -eq 1 ]]; then

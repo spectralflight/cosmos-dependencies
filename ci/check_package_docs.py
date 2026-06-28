@@ -15,6 +15,7 @@ from pai_deps.package_metadata import (
     DESCRIPTOR_NAME,
     VALID_BACKENDS,
     VALID_GPU_RISKS,
+    VALID_LICENSE_CONFIDENCES,
     VALID_STATUSES,
     PackageDescriptor,
     discover_package_descriptors,
@@ -67,6 +68,12 @@ def _check_descriptor(package: PackageDescriptor) -> list[str]:
         errors.append(f"{source} gpu_risk must be one of {sorted(VALID_GPU_RISKS)}")
     if package.build.backend not in VALID_BACKENDS:
         errors.append(f"{source} build.backend must be one of {sorted(VALID_BACKENDS)}")
+    if package.license.confidence not in VALID_LICENSE_CONFIDENCES:
+        errors.append(f"{source} license.confidence must be one of {sorted(VALID_LICENSE_CONFIDENCES)}")
+    if package.license.expression == "NOASSERTION" and not package.license_review.required:
+        errors.append(f"{source} license.expression must be set, or license_review.required must be true")
+    if package.upstream != "local" and not package.license.files:
+        errors.append(f"{source} license.files must list expected upstream license or notice files")
     pyproject_path = package.directory / "pyproject.toml"
     if not pyproject_path.is_file():
         errors.append(f"{source} missing pyproject.toml in {_display_path(package.directory)}")

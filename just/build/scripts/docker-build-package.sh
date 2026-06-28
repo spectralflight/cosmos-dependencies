@@ -45,6 +45,9 @@ if [[ "${build_dir}" = /* ]]; then
 	build_dir="/cosmos-output"
 	docker_run_args+=("--run-arg" "-v" "--run-arg" "${host_build_dir}:${build_dir}")
 fi
+if [[ "${run_as_root}" == "1" || "${run_as_root}" == "true" ]]; then
+	docker_run_args+=("--run-arg" "-e" "--run-arg" "PAI_DEPS_CHOWN_PATHS=${build_dir}")
+fi
 
 if [[ ! "${attempts}" =~ ^[1-9][0-9]*$ ]]; then
 	echo "Error: PAI_DEPS_BUILD_ATTEMPTS must be a positive integer." >&2

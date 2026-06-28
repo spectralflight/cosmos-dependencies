@@ -35,6 +35,10 @@ upload pattern repo_name release_tag=tag:
 upload-plan pattern repo_name release_tag=tag:
     cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --dry-run --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }} {{ quote(pattern) }}
 
+# Write a deterministic release ledger and SHA256 digest for wheel artifacts.
+ledger pattern output='tmp/release-ledger.json' repo_name='' release_tag=tag:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python "{{ scripts }}/write_release_ledger.py" --repo {{ quote(repo_name) }} --release-tag {{ quote(release_tag) }} --output {{ quote(output) }} {{ quote(pattern) }}
+
 # Upload wheels to a dated batch release for a logical package index.
 upload-batch pattern batch_id repo_name index_tag=tag:
     cd "{{ repo }}" && mise exec -- "{{ scripts }}/release-upload.sh" --repo {{ quote(repo_name) }} --tag {{ quote("wheels-" + index_tag + "-batch." + batch_id) }} --title {{ quote("Wheel batch " + index_tag + " " + batch_id) }} --notes {{ quote("Wheel batch for " + index_tag + ".") }} --not-latest {{ quote(pattern) }}
@@ -62,6 +66,7 @@ test-index index_name=tag:
 # Generate a temporary package index without modifying docs.
 create-dry-run index_name=tag: (create index_name)
 
-# Validate wheel/log/provenance triplets for staged release artifacts.
+# Validate wheel, build, legal, attribution, and SBOM sidecars for staged release artifacts.
 artifact-check pattern='tmp/build/**/*.whl':
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/write_wheel_legal_sidecars.py --allow-empty {{ quote(pattern) }}
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_release_artifacts.py --allow-empty {{ quote(pattern) }}

@@ -44,8 +44,8 @@ package-index, and release-asset contracts.
 - `just package list` and `just package show <name>`: inspect package-local
   descriptors and agent docs.
 - `just release create-dry-run <index>`: generate a temporary package index.
-- Release uploads scan wheels, build logs, and provenance sidecars for secrets
-  before any GitHub writes.
+- Release uploads generate legal/SBOM sidecars, write a release ledger, and scan
+  wheels plus all sidecars for secrets before any GitHub writes.
 - `just license::audit`: check attribution drift and staged wheel license
   metadata.
 

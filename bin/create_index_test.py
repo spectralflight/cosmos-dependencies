@@ -29,6 +29,16 @@ def test_collect_index_lines_groups_release_assets_by_project():
             "digest": "sha256:abc123",
         },
         {
+            "name": "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl.attributions.md",
+            "url": "https://github.com/example/releases/download/v1.0.0/natten.whl.attributions.md",
+            "digest": "sha256:attr123",
+        },
+        {
+            "name": "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl.sbom.cdx.json",
+            "url": "https://github.com/example/releases/download/v1.0.0/natten.whl.sbom.cdx.json",
+            "digest": "sha256:sbom123",
+        },
+        {
             "name": "flash_attn-2.7.4.post1+cu130.torch29-cp313-cp313-linux_x86_64.whl",
             "url": "https://github.com/example/releases/download/v1.0.0/flash_attn.whl",
             "digest": "sha256:def456",
@@ -46,6 +56,8 @@ def test_collect_index_lines_groups_release_assets_by_project():
     assert {line.name for line in all_lines["natten"]} == {
         "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl"
     }
+    natten_line = next(iter(all_lines["natten"]))
+    assert [sidecar.label for sidecar in natten_line.sidecars] == ["attributions", "SBOM"]
     assert {line.url for line in all_lines["flash-attn"]} == {
         "https://github.com/example/releases/download/v1.0.0/flash_attn.whl#sha256=def456"
     }
@@ -206,3 +218,32 @@ def test_write_index_writes_global_and_package_indices(tmp_path):
     )
     assert "sha256=abc" in (tmp_path / "natten" / "index.html").read_text()
     assert "download=1&amp;asset=wheel" in (tmp_path / "xformers" / "index.html").read_text()
+
+
+def test_write_index_includes_release_artifact_links(tmp_path):
+    all_lines = {
+        "natten": {
+            create_index._IndexLine(
+                "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl",
+                "https://github.com/example/releases/download/v1.0.0/natten.whl#sha256=abc",
+                (
+                    create_index._SidecarLink(
+                        "attributions",
+                        "https://github.com/example/releases/download/v1.0.0/natten.whl.attributions.md#sha256=def",
+                    ),
+                    create_index._SidecarLink(
+                        "SBOM",
+                        "https://github.com/example/releases/download/v1.0.0/natten.whl.sbom.cdx.json#sha256=123",
+                    ),
+                ),
+            )
+        }
+    }
+
+    create_index._write_index(tmp_path, all_lines)
+
+    text = (tmp_path / "natten" / "index.html").read_text()
+    assert ">natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl</a>" in text
+    assert "data-pai-artifact='true'" in text
+    assert ">attributions</a>" in text
+    assert ">SBOM</a>" in text

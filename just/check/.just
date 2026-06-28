@@ -40,11 +40,11 @@ shell-format:
 
 # Run Python linting.
 ruff:
-    cd "{{ repo }}" && mise exec -- ruff check bin ci pai_deps
+    cd "{{ repo }}" && mise exec -- ruff check bin ci just pai_deps
 
 # Check Python formatting.
 format:
-    cd "{{ repo }}" && mise exec -- ruff format --check bin ci pai_deps
+    cd "{{ repo }}" && mise exec -- ruff format --check bin ci just pai_deps
 
 # Check locked toolchain policy and Docker tool pins.
 toolchain:
@@ -60,6 +60,7 @@ package-contracts:
 
 # Check release artifact sidecar schema on any staged wheel artifacts.
 release-artifacts:
+    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/write_wheel_legal_sidecars.py --allow-empty 'tmp/build/**/*.whl'
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_release_artifacts.py --allow-empty 'tmp/build/**/*.whl'
 
 # Check attribution drift and staged wheel license metadata.
@@ -72,7 +73,7 @@ typecheck:
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python -m pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/scan_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen python -m pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py ci/check_docs_indices_test.py ci/check_index_manifests_test.py ci/check_package_build_contracts_test.py ci/check_package_docs_test.py ci/check_release_artifacts_test.py ci/write_wheel_legal_sidecars_test.py ci/scan_release_artifacts_test.py ci/check_toolchain_test.py bin/create_index_test.py just/release/scripts/write_release_ledger_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='origin/main':

@@ -20,6 +20,12 @@ status = "historical"
 upstream = "https://github.com/facebookresearch/xformers"
 gpu_risk = "high"
 
+[license]
+expression = "BSD-3-Clause"
+files = ["LICENSE"]
+confidence = "high"
+notes = "If CUTLASS or other submodules are bundled into a wheel, preserve their license notices too."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

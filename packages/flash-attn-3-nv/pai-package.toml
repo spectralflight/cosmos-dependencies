@@ -20,6 +20,17 @@ status = "historical"
 upstream = "https://github.com/alihassanijr/flash_attn_3_nv"
 gpu_risk = "high"
 
+[license]
+expression = "NOASSERTION"
+files = ["LICENSE", "AUTHORS"]
+confidence = "low"
+notes = "Fork provenance and retained upstream license files must be verified before publishing new wheels."
+
+[license_review]
+required = true
+url = "https://github.com/alihassanijr/flash_attn_3_nv"
+notes = "Review exact source revision and license files before any release."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

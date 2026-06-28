@@ -75,3 +75,13 @@ def test_check_forbidden_public_artifacts_rejects_video_codec_sdk_bundle(tmp_pat
     assert errors == [
         "packages/decord/Video_Codec_SDK_13.0.19: do not vendor full NVIDIA Video Codec SDK bundles in the public repo"
     ]
+
+
+def test_check_forbidden_public_artifacts_rejects_tracked_wheels(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(check_toolchain, "_tracked_files", lambda repo: ["dist/pkg-1.0.0-py3-none-any.whl"])
+
+    errors = check_toolchain.check_forbidden_public_artifacts(tmp_path)
+
+    assert errors == [
+        "dist/pkg-1.0.0-py3-none-any.whl: do not commit built binary/archive artifacts to the public repo"
+    ]

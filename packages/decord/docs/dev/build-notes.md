@@ -26,7 +26,8 @@ Torch extension; the Torch suffix is this repo's index convention.
 
 Local package environment requires Python `>=3.10`. Upstream PyPI wheels are
 CPU-only; GPU/NVDEC support requires source builds with FFmpeg and CUDA/Video
-Codec SDK pieces.
+Codec SDK pieces. `pai-package.toml` sets `requires_torch = false`; the Torch
+version argument is retained only for this repo's wheel local-version naming.
 
 ## Build Environment
 
@@ -72,7 +73,7 @@ python - <<'PY'
 from decord import VideoReader, cpu
 vr = VideoReader("tiny.mp4", ctx=cpu(0))
 assert len(vr)
-assert vr[0].shape[-1] == 3
+assert vr[0].asnumpy().ndim == 3
 PY
 ```
 
@@ -98,10 +99,16 @@ Use GPU/NVDEC smoke only on a host with driver/video decode support.
 
 ## Research Notes
 
-Imported from upstream docs/source and package research on 2026-06-27. NVIDIA's
-public Video Codec SDK page provides a separate gated download for the full SDK
-and a separate interface header download. The local SDK license permits only
-limited SDK distribution as incorporated object code and prohibits distributing
-the SDK as a stand-alone product, so this package keeps only the header files
-whose file-local notices permit redistribution. No decord Docker build was run
-during the license cleanup.
+Imported from upstream docs/source and package research on 2026-06-27. A
+Docker smoke on 2026-06-28 used
+`PAI_DEPS_DOCKER_AS_ROOT=1 PAI_DEPS_BUILD_ENV='DECORD_BUILD_JOBS=1 DECORD_CUDA_ARCHITECTURES=120'`
+and built `decord==0.6.0` for Python 3.12/CUDA 12.8/Torch-name 2.9 in about a
+minute after skipping an unnecessary Torch install. The CPU decode smoke read a
+two-frame 16x16 MP4 and returned a nonempty `uint8` frame with shape
+`(16, 16, 6)`.
+
+NVIDIA's public Video Codec SDK page provides a separate gated download for the
+full SDK and a separate interface header download. The local SDK license permits
+only limited SDK distribution as incorporated object code and prohibits
+distributing the SDK as a stand-alone product, so this package keeps only the
+header files whose file-local notices permit redistribution.

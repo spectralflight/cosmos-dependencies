@@ -4,6 +4,7 @@
 import hashlib
 import importlib.util
 import json
+import sys
 import zipfile
 from pathlib import Path
 
@@ -14,11 +15,26 @@ def _load_check_release_artifacts():
     assert spec is not None
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
 
 check_release_artifacts = _load_check_release_artifacts()
+
+
+def _load_write_wheel_legal_sidecars():
+    module_path = Path(__file__).with_name("write_wheel_legal_sidecars.py")
+    spec = importlib.util.spec_from_file_location("write_wheel_legal_sidecars", module_path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+write_wheel_legal_sidecars = _load_write_wheel_legal_sidecars()
 
 
 def _sha256(data: bytes) -> str:
@@ -43,7 +59,11 @@ License-Expression: MIT
 
 
 def _write_valid_sidecars(
-    wheel: Path, *, wheel_bytes: bytes | None = None, build_env: dict[str, str] | None = None
+    wheel: Path,
+    *,
+    wheel_bytes: bytes | None = None,
+    build_env: dict[str, str] | None = None,
+    legal: bool = True,
 ) -> None:
     log = wheel.with_name(wheel.name + ".build.log")
     provenance = wheel.with_name(wheel.name + ".build.json")
@@ -71,6 +91,8 @@ def _write_valid_sidecars(
             }
         )
     )
+    if legal:
+        write_wheel_legal_sidecars.write_sidecars(wheel)
 
 
 def test_check_wheel_requires_sidecars(tmp_path):
@@ -177,7 +199,7 @@ Version: 1.0.0
 License-File: LICENSE
 """,
     )
-    _write_valid_sidecars(wheel, wheel_bytes=wheel_bytes)
+    _write_valid_sidecars(wheel, wheel_bytes=wheel_bytes, legal=False)
 
     errors = check_release_artifacts.check_wheel(wheel)
 
@@ -190,5 +212,8 @@ def test_upload_files_for_wheels_orders_sidecars_before_wheel(tmp_path):
     assert check_release_artifacts.upload_files_for_wheels([wheel]) == [
         tmp_path / "pkg-1.0.0-py3-none-any.whl.build.log",
         tmp_path / "pkg-1.0.0-py3-none-any.whl.build.json",
+        tmp_path / "pkg-1.0.0-py3-none-any.whl.licenses.json",
+        tmp_path / "pkg-1.0.0-py3-none-any.whl.attributions.md",
+        tmp_path / "pkg-1.0.0-py3-none-any.whl.sbom.cdx.json",
         wheel,
     ]

@@ -20,6 +20,12 @@ status = "maintained"
 upstream = "https://github.com/DepthAnything/Video-Depth-Anything"
 gpu_risk = "low"
 
+[license]
+expression = "Apache-2.0"
+files = ["LICENSE"]
+confidence = "high"
+notes = "Do not publish model checkpoints here; upstream checkpoint terms vary by model size."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

@@ -32,6 +32,7 @@ import tyro
 from wheel_filename import WheelFilename
 
 from pai_deps.index_manifest import load_index_manifest
+from pai_deps.release_artifacts import WHEEL_LEGAL_SIDECAR_SUFFIXES, WHEEL_SIDECAR_LABELS
 
 _TORCH_BASE_URL = "https://download.pytorch.org"
 _TORCH_PACKAGES = [
@@ -51,11 +52,23 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 @dataclass(frozen=True, order=True)
+class _SidecarLink:
+    label: str
+    url: str
+
+    def __str__(self) -> str:
+        url = html.escape(self.url, quote=True)
+        label = html.escape(self.label)
+        return f"<a data-pai-artifact='true' href='{url}'>{label}</a>"
+
+
+@dataclass(frozen=True, order=True)
 class _IndexLine:
     """Index line."""
 
     name: str
     url: str | None = None
+    sidecars: tuple[_SidecarLink, ...] = ()
 
     def __str__(self) -> str:
         if self.url is not None:
@@ -63,7 +76,10 @@ class _IndexLine:
         else:
             url = html.escape(f"{self.name}/", quote=True)
         name = html.escape(self.name)
-        return f"<a href='{url}'>{name}</a><br>"
+        line = f"<a href='{url}'>{name}</a>"
+        if self.sidecars:
+            line += " " + " ".join(map(str, self.sidecars))
+        return f"{line}<br>"
 
 
 def _download_html(url: str, html_path: Path, *, base_url: str) -> None:
@@ -155,9 +171,21 @@ def _resolve_index_name(args: Args) -> Args:
     return replace(args, tag=args.index_name)
 
 
+def _asset_url_with_digest(asset: dict) -> str:
+    url = str(asset["url"])
+    digest = str(asset.get("digest", ""))
+    if ":" not in digest:
+        return url
+    hash_name, hash_value = digest.split(":", 1)
+    if not hash_name or not hash_value:
+        return url
+    return f"{url}#{hash_name}={hash_value}"
+
+
 def _collect_index_lines(*, assets: list[dict], wheels_file: Path | None = None) -> dict[str, set[_IndexLine]]:
     # Group wheels by package name
     all_wheels: dict[str, set[_IndexLine]] = collections.defaultdict(set)
+    assets_by_name = {str(asset["name"]): asset for asset in assets}
 
     # Get wheels from release assets
     for asset in assets:
@@ -165,13 +193,16 @@ def _collect_index_lines(*, assets: list[dict], wheels_file: Path | None = None)
         if not filename.endswith(".whl"):
             continue
 
-        url: str = asset["url"]
-        hash_name, hash_value = asset["digest"].split(":")
-        url += f"#{hash_name}={hash_value}"
+        url = _asset_url_with_digest(asset)
+        sidecars = tuple(
+            _SidecarLink(WHEEL_SIDECAR_LABELS[suffix], _asset_url_with_digest(sidecar_asset))
+            for suffix in WHEEL_LEGAL_SIDECAR_SUFFIXES
+            if (sidecar_asset := assets_by_name.get(filename + suffix)) is not None
+        )
         pwf = WheelFilename.parse(filename)
         package_name = pwf.project.replace("_", "-")
 
-        all_wheels[package_name].add(_IndexLine(filename, url))
+        all_wheels[package_name].add(_IndexLine(filename, url, sidecars))
 
     # Parse wheel URL files
     if wheels_file is not None:

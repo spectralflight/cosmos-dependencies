@@ -17,11 +17,12 @@ fi
 
 _audit_project() {
 	local project_dir="$1"
+	local audit_args=(--preview-features audit-command "${args[@]}")
 
 	if [ "${project_dir}" = "." ]; then
-		uv audit "${args[@]}"
+		uv audit "${audit_args[@]}"
 	else
-		uv audit --project "${project_dir}" "${args[@]}"
+		uv audit --project "${project_dir}" "${audit_args[@]}"
 	fi
 }
 

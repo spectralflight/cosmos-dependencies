@@ -50,6 +50,9 @@ def test_scans_wheel_and_existing_sidecars(tmp_path: Path) -> None:
     _write_wheel(wheel)
     (tmp_path / f"{wheel.name}.build.log").write_text("safe log\n")
     (tmp_path / f"{wheel.name}.build.json").write_text('{"safe": true}\n')
+    (tmp_path / f"{wheel.name}.licenses.json").write_text('{"safe": true}\n')
+    (tmp_path / f"{wheel.name}.attributions.md").write_text("# safe\n")
+    (tmp_path / f"{wheel.name}.sbom.cdx.json").write_text('{"safe": true}\n')
 
     result = subprocess.run(
         [sys.executable, str(SCAN_SCRIPT), str(wheel)],
@@ -60,7 +63,7 @@ def test_scans_wheel_and_existing_sidecars(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert len(calls.read_text().splitlines()) == 3
+    assert len(calls.read_text().splitlines()) == 6
 
 
 def test_fails_when_extracted_wheel_triggers_gitleaks(tmp_path: Path) -> None:

@@ -20,6 +20,12 @@ status = "maintained"
 upstream = "https://github.com/IDEA-Research/Grounded-SAM-2"
 gpu_risk = "low"
 
+[license]
+expression = "Apache-2.0"
+files = ["LICENSE"]
+confidence = "high"
+notes = "Generated helper wheels must copy the upstream license with selected source files."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

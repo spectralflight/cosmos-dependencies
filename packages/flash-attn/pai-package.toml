@@ -20,6 +20,11 @@ status = "historical"
 upstream = "https://github.com/Dao-AILab/flash-attention"
 gpu_risk = "high"
 
+[license]
+expression = "BSD-3-Clause"
+files = ["LICENSE", "AUTHORS"]
+confidence = "high"
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

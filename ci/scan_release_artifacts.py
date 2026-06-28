@@ -15,6 +15,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from pai_deps.release_artifacts import WHEEL_SIDECAR_SUFFIXES
+
 
 def _expand_patterns(patterns: list[str]) -> list[Path]:
     files: list[Path] = []
@@ -32,7 +34,7 @@ def _add_existing_sidecars(files: list[Path]) -> list[Path]:
     for wheel in files:
         if not wheel.name.endswith(".whl"):
             continue
-        for suffix in (".build.log", ".build.json"):
+        for suffix in WHEEL_SIDECAR_SUFFIXES:
             sidecar = wheel.with_name(wheel.name + suffix)
             if sidecar.is_file():
                 expanded.add(sidecar)

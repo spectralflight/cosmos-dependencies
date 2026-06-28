@@ -20,6 +20,12 @@ status = "maintained"
 upstream = "https://github.com/facebookresearch/sam2"
 gpu_risk = "high"
 
+[license]
+expression = "Apache-2.0"
+files = ["LICENSE"]
+confidence = "high"
+notes = "Code license does not cover model checkpoint assets."
+
 [build]
 backend = "pip-wheel-git"
 script = "build.sh"

@@ -17,6 +17,8 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any
 
+from pai_deps.release_artifacts import WHEEL_LEGAL_SIDECAR_SUFFIXES, wheel_upload_names
+
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 REQUIRED_TOP_LEVEL = {
     "schema_version",
@@ -60,13 +62,7 @@ def upload_files_for_wheels(wheels: list[Path]) -> list[Path]:
 
     files: list[Path] = []
     for wheel in sorted(wheels):
-        files.extend(
-            [
-                wheel.with_name(wheel.name + ".build.log"),
-                wheel.with_name(wheel.name + ".build.json"),
-                wheel,
-            ]
-        )
+        files.extend(wheel.with_name(name) for name in wheel_upload_names(wheel.name))
     return files
 
 
@@ -198,6 +194,73 @@ def _check_wheel_license_metadata(wheel: Path) -> list[str]:
     return errors
 
 
+def _check_license_json(wheel: Path, path: Path) -> list[str]:
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as error:
+        return [f"{path}: invalid JSON: {error}"]
+    if not isinstance(data, dict):
+        return [f"{path}: license sidecar must be a JSON object"]
+    errors: list[str] = []
+    if data.get("schema_version") != 1:
+        errors.append(f"{path}: schema_version must be 1")
+    errors.extend(_check_file_hash_table(wheel, data.get("wheel"), source=path, key="wheel"))
+    metadata = data.get("metadata")
+    if not isinstance(metadata, dict):
+        errors.append(f"{path}: metadata must be an object")
+    return errors
+
+
+def _check_attribution_markdown(wheel: Path, path: Path) -> list[str]:
+    text = path.read_text(errors="replace")
+    if wheel.name not in text:
+        return [f"{path}: attribution markdown must reference {wheel.name}"]
+    if "Attributions" not in text:
+        return [f"{path}: attribution markdown must include an Attributions heading"]
+    return []
+
+
+def _check_sbom_json(wheel: Path, path: Path) -> list[str]:
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as error:
+        return [f"{path}: invalid JSON: {error}"]
+    if not isinstance(data, dict):
+        return [f"{path}: SBOM sidecar must be a JSON object"]
+    errors: list[str] = []
+    if data.get("bomFormat") != "CycloneDX":
+        errors.append(f"{path}: bomFormat must be CycloneDX")
+    if data.get("specVersion") != "1.6":
+        errors.append(f"{path}: specVersion must be 1.6")
+    components = data.get("components")
+    if not isinstance(components, list) or not components:
+        errors.append(f"{path}: components must be a non-empty list")
+        return errors
+    wheel_sha256 = _sha256(wheel)
+    hashes = components[0].get("hashes") if isinstance(components[0], dict) else None
+    if not isinstance(hashes, list) or {"alg": "SHA-256", "content": wheel_sha256} not in hashes:
+        errors.append(f"{path}: first component must include the wheel SHA-256 hash")
+    return errors
+
+
+def _check_legal_sidecars(wheel: Path) -> list[str]:
+    errors: list[str] = []
+    for suffix in WHEEL_LEGAL_SIDECAR_SUFFIXES:
+        path = wheel.with_name(wheel.name + suffix)
+        if not path.is_file():
+            errors.append(f"{wheel}: missing legal sidecar {path.name}")
+    licenses_json = wheel.with_name(wheel.name + ".licenses.json")
+    if licenses_json.is_file():
+        errors.extend(_check_license_json(wheel, licenses_json))
+    attributions_md = wheel.with_name(wheel.name + ".attributions.md")
+    if attributions_md.is_file():
+        errors.extend(_check_attribution_markdown(wheel, attributions_md))
+    sbom_json = wheel.with_name(wheel.name + ".sbom.cdx.json")
+    if sbom_json.is_file():
+        errors.extend(_check_sbom_json(wheel, sbom_json))
+    return errors
+
+
 def check_wheel(wheel: Path) -> list[str]:
     errors: list[str] = []
     build_log = wheel.with_name(wheel.name + ".build.log")
@@ -209,6 +272,7 @@ def check_wheel(wheel: Path) -> list[str]:
     if build_log.is_file() and provenance.is_file():
         errors.extend(_check_provenance(wheel, provenance, build_log))
     errors.extend(_check_wheel_license_metadata(wheel))
+    errors.extend(_check_legal_sidecars(wheel))
     return errors
 
 
