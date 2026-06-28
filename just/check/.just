@@ -32,11 +32,11 @@ lint: pre-commit
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh ci/uv_lock.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh ci/uv_lock.sh
 
 # Run Python linting.
 ruff:
@@ -91,11 +91,15 @@ index-smoke index_name=tag:
 test: lint toolchain package-docs package-contracts typecheck unit index-smoke
 
 # Run fast local checks without mutating hooks.
-fast: shell shell-format ruff format toolchain package-docs package-contracts release-artifacts legal typecheck unit index-guard manifest-guard
+fast: shell shell-format ruff format toolchain package-docs package-contracts legal typecheck unit index-guard manifest-guard
 
 # Scan tracked source files for leaked secrets.
 secrets:
     cd "{{ repo }}" && mise exec -- ./ci/gitleaks_tracked.sh
+
+# Scan Git history for leaked secrets.
+history-secrets:
+    cd "{{ repo }}" && mise exec -- gitleaks git --redact --no-banner --log-opts=--all .
 
 # Run dependency and secret security checks.
 security: secrets

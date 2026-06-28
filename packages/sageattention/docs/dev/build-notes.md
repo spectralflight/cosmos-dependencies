@@ -59,13 +59,10 @@ PY
 
 ## Known Risks
 
-- `packages/sageattention/pyproject.toml` currently declares
-  `name = "flash-attn"`; this looks copy-paste stale.
 - The build script hard-codes Hopper arch and has a Blackwell TODO.
 
 ## Future Fixes
 
-- Fix the pyproject project name after checking lockfile impacts.
 - Make arch selection explicit through package docs or env defaults before
   future builds.
 

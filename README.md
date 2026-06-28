@@ -58,3 +58,6 @@ Release/index details live in `docs/dev/release-safety.md`.
 ## License
 
 Apache License 2.0. See `LICENSE`.
+
+Package-local third-party source notices live next to the relevant package, for
+example `packages/decord/THIRD_PARTY.md`.

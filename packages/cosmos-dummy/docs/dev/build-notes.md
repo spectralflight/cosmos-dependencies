@@ -48,7 +48,7 @@ wrapper, Docker image, or host resource state rather than package compilation.
 After index generation:
 
 ```bash
-just release verify-install docs/cosmos3 cosmos-dummy 0.1.0 cosmos_dummy
+just release verify-install docs/v1.6.0 cosmos-dummy 0.1.0 cosmos_dummy
 ```
 
 For a direct import smoke:

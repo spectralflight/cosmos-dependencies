@@ -59,13 +59,6 @@ verify-install index_dir package_name package_version import_name='' python_vers
 serve index_name=tag:
     cd "{{ repo }}" && mise exec -- uv run --frozen -m http.server -d {{ quote("docs/" + index_name) }}
 
-# Generate a temporary package index for the current version.
-test-index index_name=tag:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
-
-# Generate a temporary package index without modifying docs.
-create-dry-run index_name=tag: (create index_name)
-
 # Validate wheel, build, legal, attribution, and SBOM sidecars for staged release artifacts.
 artifact-check pattern='tmp/build/**/*.whl':
     cd "{{ repo }}" && mise exec -- uv run --frozen python ci/write_wheel_legal_sidecars.py --allow-empty {{ quote(pattern) }}

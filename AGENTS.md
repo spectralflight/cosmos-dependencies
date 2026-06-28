@@ -43,7 +43,9 @@ package-index, and release-asset contracts.
   lockfiles.
 - `just package list` and `just package show <name>`: inspect package-local
   descriptors and agent docs.
-- `just release create-dry-run <index>`: generate a temporary package index.
+- `just release create <index>`: generate a temporary package index.
+- `just check history-secrets`: scan Git history before publishing a public
+  cleanup branch.
 - Release uploads generate legal/SBOM sidecars, write a release ledger, and scan
   wheels plus all sidecars for secrets before any GitHub writes.
 - `just license::audit`: check attribution drift and staged wheel license

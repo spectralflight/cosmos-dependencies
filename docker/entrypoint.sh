@@ -37,13 +37,13 @@ if [ "$(id -u)" -eq 0 ] && [ "${PAI_DEPS_DOCKER_AS_ROOT:-0}" = "1" ]; then
 fi
 
 if [ "$(id -u)" -eq 0 ]; then
-	build_home="${PAI_DEPS_BUILD_HOME:-/home/cosmos}"
+	build_home="${PAI_DEPS_BUILD_HOME:-/home/paideps}"
 
 	if ! getent group "${build_gid}" >/dev/null; then
-		groupadd --gid "${build_gid}" cosmos
+		groupadd --gid "${build_gid}" paideps
 	fi
 	if ! getent passwd "${build_uid}" >/dev/null; then
-		useradd --uid "${build_uid}" --gid "${build_gid}" --home-dir "${build_home}" --create-home --shell /bin/bash cosmos
+		useradd --uid "${build_uid}" --gid "${build_gid}" --home-dir "${build_home}" --create-home --shell /bin/bash paideps
 	fi
 	build_user="$(getent passwd "${build_uid}" | cut -d: -f1)"
 

@@ -31,13 +31,40 @@ if grep -Eq '^[[:space:]]*requires_torch[[:space:]]*=[[:space:]]*false' "${packa
 	requires_torch=0
 fi
 
+_print_build_environment() {
+	local name
+	local names=(
+		PACKAGE_NAME
+		PACKAGE_VERSION
+		PYTHON_VERSION
+		TORCH_VERSION
+		LOCAL_VERSION_SUFFIX
+		OUTPUT_NAME
+		OUTPUT_DIR
+		CUDA_HOME
+		CUDA_VERSION
+		XDG_CACHE_HOME
+		XDG_DATA_HOME
+		XDG_BIN_HOME
+		UV_CACHE_DIR
+		UV_PROJECT_ENVIRONMENT
+		CCACHE_DIR
+	)
+
+	for name in "${names[@]}"; do
+		if [[ -v "${name}" ]]; then
+			printf "%s=%q\n" "${name}" "${!name}"
+		fi
+	done
+}
+
 # Print system information.
 date
 uname -a
 cat /etc/os-release
 ldd --version
 gcc --version
-printenv
+_print_build_environment
 
 # Set CUDA environment variables
 export CUDA_HOME="/usr/local/cuda"

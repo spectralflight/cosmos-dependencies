@@ -35,6 +35,8 @@ SCAN_PATHS = [
     "README.md",
     "Dockerfile",
     "justfile",
+    "docs/dev",
+    "packages",
     "bin",
     "ci",
     "docker",

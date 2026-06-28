@@ -82,10 +82,9 @@ allowlists.
 Use dry runs before GitHub mutations:
 
 ```bash
-just release upload-plan 'tmp/build/**/*.whl' spectralflight/pai-deps cosmos3-scratch
-just release copy-plan spectralflight/pai-deps cosmos3-scratch spectralflight/pai-deps cosmos3-20260627.1 'cosmos_dummy*'
-just release create-dry-run cosmos3
-just release publish cosmos3
+just release upload-plan 'tmp/build/**/*.whl' spectralflight/pai-deps wheels-v1.6.0-batch.20260627.1
+just release create v1.6.0
+just release publish v1.6.0
 ```
 
 Release uploads should include wheel, `.build.log`, and `.build.json` sidecars.

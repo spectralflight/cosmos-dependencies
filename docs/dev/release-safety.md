@@ -9,7 +9,7 @@ lockfiles.
 ## Index Manifests
 
 Each maintained index has a manifest at `indices/<index-name>/manifest.json`.
-Index names are arbitrary public slugs such as `cosmos3`, `cosmos3-scratch`, or
+Index names are arbitrary public slugs such as `v1.6.0`, `cosmos3-scratch`, or
 `cosmos-eval`.
 
 Manifest shape:
@@ -56,13 +56,18 @@ index at scratch assets.
 Use:
 
 ```shell
-just release copy-assets spectralflight/pai-deps cosmos3-scratch \
-  spectralflight/pai-deps cosmos3-20260627.1 'cosmos_dummy*'
+just release copy-assets spectralflight/pai-deps <scratch-tag> \
+  spectralflight/pai-deps <stable-batch-tag> '<package_glob>*'
 ```
 
 Source releases are never modified. Destination releases are created when
 needed; existing destination assets are replaced only when `--clobber` is passed
 with `PAI_DEPS_ALLOW_CLOBBER=1`.
+
+Do not use legacy stable manifests such as `cosmos3` as current examples; they
+may intentionally preserve old `default_repo` values. For new stable manifests,
+use `spectralflight/pai-deps` as the default repository, or add explicit `repo`
+fields on newly appended release references.
 
 ## Release Artifacts
 
@@ -90,7 +95,7 @@ Check staged wheel artifact sets before upload:
 
 ```shell
 just release artifact-check 'tmp/build/**/*.whl'
-just release ledger 'tmp/build/**/*.whl' tmp/release-ledger.json spectralflight/pai-deps cosmos3-scratch
+just release ledger 'tmp/build/**/*.whl' tmp/release-ledger.json spectralflight/pai-deps wheels-v1.6.0-batch.20260627.1
 ```
 
 ## Checks
@@ -98,8 +103,8 @@ just release ledger 'tmp/build/**/*.whl' tmp/release-ledger.json spectralflight/
 Run this before publishing or opening a release PR:
 
 ```shell
-just release upload-plan 'tmp/build/**/*.whl' spectralflight/pai-deps cosmos3-scratch
-just release create-dry-run cosmos3
+just release upload-plan 'tmp/build/**/*.whl' spectralflight/pai-deps wheels-v1.6.0-batch.20260627.1
+just release create v1.6.0
 just check index-guard origin/main
 just check manifest-guard origin/main
 ```

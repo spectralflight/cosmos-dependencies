@@ -12,11 +12,16 @@ hashes.
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
+import urllib.parse
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 
 from pai_deps.index_manifest import load_index_manifests
+
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -81,6 +86,98 @@ def _is_anchor_line(line: str) -> bool:
     return line.startswith("<a ") and line.endswith("</a><br>")
 
 
+@dataclass(frozen=True)
+class Anchor:
+    attrs: dict[str, str]
+    text: str
+
+
+class AnchorParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.anchors: list[Anchor] = []
+        self._current_attrs: dict[str, str] | None = None
+        self._current_text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag != "a":
+            return
+        self._current_attrs = {name: value or "" for name, value in attrs}
+        self._current_text = []
+
+    def handle_data(self, data: str) -> None:
+        if self._current_attrs is not None:
+            self._current_text.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag != "a" or self._current_attrs is None:
+            return
+        self.anchors.append(Anchor(attrs=self._current_attrs, text="".join(self._current_text)))
+        self._current_attrs = None
+        self._current_text = []
+
+
+def _anchors(line: str) -> list[Anchor]:
+    parser = AnchorParser()
+    parser.feed(line)
+    parser.close()
+    return parser.anchors
+
+
+def _has_sha256_fragment(url: str) -> bool:
+    fragment = urllib.parse.urlparse(url).fragment
+    fragments = urllib.parse.parse_qs(fragment, keep_blank_values=True)
+    return any(SHA256_RE.fullmatch(value) for value in fragments.get("sha256", []))
+
+
+def _is_github_release_url(url: str) -> bool:
+    parsed = urllib.parse.urlparse(url)
+    return parsed.scheme == "https" and parsed.netloc == "github.com" and "/releases/download/" in parsed.path
+
+
+def _line_is_root_package_link(path: str, anchors: list[Anchor]) -> bool:
+    posix_path = PurePosixPath(path)
+    if len(posix_path.parts) != 3 or len(anchors) != 1:
+        return False
+    href = anchors[0].attrs.get("href", "")
+    parsed = urllib.parse.urlparse(href)
+    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
+        return False
+    if not href.endswith("/") or "/" in href.rstrip("/"):
+        return False
+    return anchors[0].text == href.rstrip("/")
+
+
+def _line_is_package_wheel_link(path: str, anchors: list[Anchor]) -> bool:
+    posix_path = PurePosixPath(path)
+    if len(posix_path.parts) < 4 or not anchors:
+        return False
+
+    primary_href = anchors[0].attrs.get("href", "")
+    primary_filename = urllib.parse.unquote(urllib.parse.urlparse(primary_href).path.rsplit("/", 1)[-1])
+    if not primary_filename.endswith(".whl"):
+        return False
+    if anchors[0].text != primary_filename:
+        return False
+    if not _is_github_release_url(primary_href) or not _has_sha256_fragment(primary_href):
+        return False
+
+    for sidecar in anchors[1:]:
+        sidecar_href = sidecar.attrs.get("href", "")
+        if sidecar.attrs.get("data-pai-artifact") != "true":
+            return False
+        if not _is_github_release_url(sidecar_href) or not _has_sha256_fragment(sidecar_href):
+            return False
+    return True
+
+
+def _is_allowed_stable_addition(path: str, line: str) -> bool:
+    if not _is_anchor_line(line):
+        return False
+    anchors = _anchors(line)
+    return _line_is_root_package_link(path, anchors) or _line_is_package_wheel_link(path, anchors)
+
+
 def _read_index_stabilities(indices_dir: Path = Path("indices")) -> dict[str, str]:
     return {index_name: manifest.stability for index_name, manifest in load_index_manifests(indices_dir).items()}
 
@@ -106,7 +203,7 @@ def _append_only_html_change(
     if not old_line_set <= set(new_lines):
         return False
     added_lines = [line for line in new_lines if line not in old_line_set]
-    return all(_is_anchor_line(line) for line in added_lines)
+    return all(_is_allowed_stable_addition(path, line) for line in added_lines)
 
 
 def forbidden_index_changes(

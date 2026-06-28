@@ -182,10 +182,24 @@ def _asset_url_with_digest(asset: dict) -> str:
     return f"{url}#{hash_name}={hash_value}"
 
 
+def _assets_by_unique_name(assets: list[dict]) -> dict[str, dict]:
+    assets_by_name: dict[str, dict] = {}
+    duplicate_names: set[str] = set()
+    for asset in assets:
+        name = str(asset["name"])
+        if name in assets_by_name:
+            duplicate_names.add(name)
+        assets_by_name[name] = asset
+    if duplicate_names:
+        names = ", ".join(sorted(duplicate_names))
+        raise ValueError(f"Duplicate release asset names across index releases: {names}")
+    return assets_by_name
+
+
 def _collect_index_lines(*, assets: list[dict], wheels_file: Path | None = None) -> dict[str, set[_IndexLine]]:
     # Group wheels by package name
     all_wheels: dict[str, set[_IndexLine]] = collections.defaultdict(set)
-    assets_by_name = {str(asset["name"]): asset for asset in assets}
+    assets_by_name = _assets_by_unique_name(assets)
 
     # Get wheels from release assets
     for asset in assets:

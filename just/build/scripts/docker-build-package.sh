@@ -42,7 +42,7 @@ fi
 if [[ "${build_dir}" = /* ]]; then
 	mkdir -p "${build_dir}"
 	host_build_dir="$(cd "${build_dir}" && pwd)"
-	build_dir="/cosmos-output"
+	build_dir="/pai-deps-output"
 	docker_run_args+=("--run-arg" "-v" "--run-arg" "${host_build_dir}:${build_dir}")
 fi
 if [[ "${run_as_root}" == "1" || "${run_as_root}" == "true" ]]; then

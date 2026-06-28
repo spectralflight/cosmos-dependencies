@@ -13,10 +13,13 @@
 
 set -euo pipefail
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/.." && pwd)"
+projects=()
+
 for file in "$@"; do
 	project_dir="$(dirname "$file")"
-	if ! uv lock --check --project "$project_dir" &>/dev/null; then
-		echo "Updating lock file for '$project_dir'" >&2
-		uv lock --project "$project_dir"
-	fi
+	projects+=("${project_dir}")
 done
+
+"${repo_root}/just/deps/scripts/lock-projects.sh" "${projects[@]}"

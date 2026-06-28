@@ -116,7 +116,7 @@ docker run \
 	--runtime=nvidia \
 	-e PAI_DEPS_BUILD_UID="$(id -u)" \
 	-e PAI_DEPS_BUILD_GID="$(id -g)" \
-	-e PAI_DEPS_BUILD_HOME="/home/cosmos" \
+	-e PAI_DEPS_BUILD_HOME="/home/paideps" \
 	-e PAI_DEPS_DOCKER_AS_ROOT="${docker_as_root}" \
 	-e XDG_CACHE_HOME="/cache/xdg" \
 	-e XDG_DATA_HOME="/home/cosmos/.local/share" \

@@ -83,6 +83,24 @@ def test_collect_index_lines_includes_wheels_file_urls(tmp_path):
     assert {line.name for line in all_lines["torch"]} == {"torch-2.10.0+cu130-cp313-cp313-manylinux_2_28_x86_64.whl"}
 
 
+def test_collect_index_lines_rejects_duplicate_release_asset_names():
+    assets = [
+        {
+            "name": "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl",
+            "url": "https://github.com/example/releases/download/a/natten.whl",
+            "digest": "sha256:abc123",
+        },
+        {
+            "name": "natten-0.21.6.dev5+cu130.torch210-cp313-cp313-linux_x86_64.whl",
+            "url": "https://github.com/example/releases/download/b/natten.whl",
+            "digest": "sha256:def456",
+        },
+    ]
+
+    with pytest.raises(ValueError, match="Duplicate release asset names"):
+        create_index._collect_index_lines(assets=assets)
+
+
 def test_collect_release_assets_reads_manifest_releases(tmp_path, monkeypatch):
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(

@@ -82,15 +82,14 @@ can often continue after a transient wheel download failure.
 For fork-only publication drills:
 
 1. Build a wheel with `just build dummy`.
-2. Upload the wheel and sidecars to an unstable scratch release, for example
-   `just release upload 'tmp/build/*/*.whl' spectralflight/pai-deps
-   cosmos3-scratch`.
-3. Generate the scratch index with `just release create cosmos3-scratch`.
-4. Copy selected assets into a stable release with `just release copy-assets
-   spectralflight/pai-deps cosmos3-scratch
-   spectralflight/pai-deps cosmos3-20260627.1 'cosmos_dummy*'`.
-5. Publish the stable index with `just release publish cosmos3`.
-6. Verify installation with `just release verify-install docs/cosmos3
+2. Upload the wheel and sidecars to a dated batch release, for example
+   `just release upload-batch 'tmp/build/*/*.whl' 20260627.2
+   spectralflight/pai-deps v1.6.0`.
+3. Add the batch release to `indices/v1.6.0/manifest.json` when the index
+   should include it.
+4. Generate the index with `just release create v1.6.0`.
+5. Publish the index with `just release publish v1.6.0`.
+6. Verify installation with `just release verify-install docs/v1.6.0
    cosmos-dummy 0.1.0 cosmos_dummy`.
 
 Use scratch releases for replaceable testing and stable releases for copied
