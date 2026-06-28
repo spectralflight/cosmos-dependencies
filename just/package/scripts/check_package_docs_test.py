@@ -41,8 +41,8 @@ def test_check_doc_accepts_template(tmp_path):
 
 def test_check_descriptor_requires_matching_pyproject_name(tmp_path):
     package_dir = tmp_path / "pkg"
-    docs_dir = package_dir / "docs" / "dev"
-    docs_dir.mkdir(parents=True)
+    agents_dir = package_dir / "agents"
+    agents_dir.mkdir(parents=True)
     (package_dir / "build.sh").write_text("#!/usr/bin/env bash\n")
     (package_dir / "pyproject.toml").write_text('[project]\nname = "other"\nversion = "0.1.0"\n')
     (package_dir / "pai-package.toml").write_text(
@@ -58,7 +58,7 @@ def test_check_descriptor_requires_matching_pyproject_name(tmp_path):
             ]
         )
     )
-    (docs_dir / "build-notes.md").write_text(
+    (agents_dir / "build-notes.md").write_text(
         "Status: maintained.\n"
         "Research date: 2026-06-27.\n" + "\n".join(f"## {heading}" for heading in check_package_docs.REQUIRED_HEADINGS)
     )

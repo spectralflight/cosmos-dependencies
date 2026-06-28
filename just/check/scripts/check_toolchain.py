@@ -30,17 +30,25 @@ FORBIDDEN_PATTERNS = {
     r"just\.systems/install\.sh": "install just from mise.lock, not the installer script",
     COMMAND_PREFIX + r"eget\b": "install standalone tools through mise, not eget",
     r"\bCOSMOS_DEPS_": "use PAI_DEPS_* environment variables; COSMOS_DEPS_* aliases are retired",
+    r"\bdocs/(?:agents|dev)/": "use agents/ for agent-only docs; docs/ is the published package index root",
+    r"\bdocs/subsystems/": "use docs/design/ for human architecture docs",
+    r"(?<![\w./-])tasks/(?!\{task_id\})(?=[^\s`'\")]+)": ("root tasks/ is legacy for command code; use just/*/scripts"),
     r"(?m)^\s*-\s*repo:\s+(?!local\b).+": "pre-commit hooks must be local; run pinned tools through mise or uv",
 }
 SCAN_PATHS = [
+    "AGENTS.md",
     ".pre-commit-config.yaml",
+    ".mise.toml",
+    ".ruff.toml",
     "README.md",
     "Dockerfile",
     "justfile",
-    "docs/agents",
+    "agents",
     "packages",
     "docker",
     "just",
+    "pyproject.toml",
+    "pyrefly.toml",
     ".github",
 ]
 SCAN_SKIP = {
@@ -68,6 +76,13 @@ WORKFLOW_RUN_RE = re.compile(r"(?m)^\s*(?:-\s*)?run:\s*(.+?)\s*$")
 WORKFLOW_JUST_RE = re.compile(r"(?:^|\s)(?:mise\s+exec\s+--\s+)?just(?:\s|$)")
 WORKFLOW_PRE_COMMIT_RE = re.compile(r"(?:^|\s)(?:mise\s+exec\s+--\s+)?pre-commit\s+run(?:\s|$)")
 CI_IMPLEMENTATION_SUFFIXES = {".py", ".sh", ".bash", ".zsh"}
+LEGACY_LAYOUT_PATHS = {
+    ("docs", "agents"): "use agents/ for agent-only docs; docs/ is the published package index root",
+    ("docs", "dev"): "use agents/ for agent-only docs; docs/dev is legacy",
+    ("docs", "subsystems"): "use docs/design/ for human architecture docs",
+    ("tasks",): "root tasks/ is legacy for command code; use just/*/scripts",
+    ("bin",): "root bin/ is legacy for command code; use importable modules or just/*/scripts",
+}
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
@@ -247,6 +262,19 @@ def check_ci_directory_is_config_only(repo: Path = REPO) -> list[str]:
     return errors
 
 
+def check_legacy_layout_paths(repo: Path = REPO) -> list[str]:
+    errors: list[str] = []
+    for relative in _tracked_files(repo):
+        path = PurePosixPath(relative)
+        for prefix, message in LEGACY_LAYOUT_PATHS.items():
+            if path.parts[: len(prefix)] == prefix:
+                errors.append(f"{relative}: {message}")
+        if len(path.parts) >= 4 and path.parts[0] == "packages" and path.parts[2] == "docs":
+            if path.parts[3] in {"agents", "dev"}:
+                errors.append(f"{relative}: use packages/<name>/agents/ for package-local agent notes")
+    return errors
+
+
 def check_workflow_command_surface(workflow_paths: list[Path] | None = None) -> list[str]:
     if workflow_paths is None:
         workflow_dir = REPO / ".github/workflows"
@@ -271,7 +299,7 @@ def _tracked_files(repo: Path) -> list[str]:
     if not (repo / ".git").exists():
         return []
     result = subprocess.run(
-        ["git", "ls-files"],
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
         cwd=repo,
         text=True,
         capture_output=True,
@@ -279,7 +307,7 @@ def _tracked_files(repo: Path) -> list[str]:
     )
     if result.returncode != 0:
         return []
-    return result.stdout.splitlines()
+    return [relative for relative in result.stdout.splitlines() if (repo / relative).exists()]
 
 
 def main() -> int:
@@ -294,6 +322,7 @@ def main() -> int:
         errors.extend(check_just_argument_forwarding())
         errors.extend(check_forbidden_public_artifacts())
         errors.extend(check_ci_directory_is_config_only())
+        errors.extend(check_legacy_layout_paths())
         errors.extend(check_workflow_command_surface())
     if errors:
         for error in errors:

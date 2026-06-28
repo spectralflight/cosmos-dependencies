@@ -24,15 +24,19 @@ pre-commit:
     cd "{{ repo }}" && mise exec -- pre-commit run -a
 
 # Run linting and formatting hooks.
-lint: shell shell-format ruff format
+lint: docs shell shell-format ruff format
+
+# Lint agent Markdown docs.
+docs:
+    cd "{{ repo }}" && mise exec -- just docs::lint
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
+    cd "{{ repo }}" && mise exec -- shellcheck just/build/scripts/*.sh just/check/scripts/*.sh just/docs/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d just/build/scripts/*.sh just/check/scripts/*.sh just/docs/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
 
 # Run Python linting.
 ruff:

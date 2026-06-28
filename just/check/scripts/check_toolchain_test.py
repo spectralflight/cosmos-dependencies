@@ -58,6 +58,15 @@ def test_forbidden_patterns_catch_remote_pre_commit_hooks():
     assert not re.search(repo_pattern, "  - repo: local\n")
 
 
+def test_forbidden_patterns_catch_legacy_agent_doc_references():
+    docs_pattern = next(pattern for pattern in check_toolchain.FORBIDDEN_PATTERNS if "docs/(?:agents|dev)" in pattern)
+    tasks_pattern = next(pattern for pattern in check_toolchain.FORBIDDEN_PATTERNS if "tasks/" in pattern)
+
+    assert re.search(docs_pattern, "See docs/agents/agent-workflow.md.\n")
+    assert re.search(tasks_pattern, "Run tasks/check.sh.\n")
+    assert not re.search(tasks_pattern, "Runtime artifacts use tasks/{task_id}/outputs.\n")
+
+
 def test_check_just_argument_forwarding_rejects_variadic_passthrough(tmp_path: Path):
     justfile = tmp_path / ".just"
     justfile.write_text(
@@ -100,6 +109,33 @@ def test_check_ci_directory_is_config_only_rejects_scripts(tmp_path: Path, monke
     errors = check_toolchain.check_ci_directory_is_config_only(tmp_path)
 
     assert errors == ["ci/check.py: ci/ is for vendor CI config; move implementation scripts under just/*/scripts"]
+
+
+def test_check_legacy_layout_paths_rejects_tracked_legacy_paths(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(
+        check_toolchain,
+        "_tracked_files",
+        lambda repo: [
+            "docs/agents/agent-guide.md",
+            "docs/dev/notes.md",
+            "docs/subsystems/indexing.md",
+            "tasks/check.sh",
+            "bin/tool.py",
+            "packages/pkg/docs/agents/build-notes.md",
+            "packages/pkg/agents/build-notes.md",
+        ],
+    )
+
+    errors = check_toolchain.check_legacy_layout_paths(tmp_path)
+
+    assert errors == [
+        "docs/agents/agent-guide.md: use agents/ for agent-only docs; docs/ is the published package index root",
+        "docs/dev/notes.md: use agents/ for agent-only docs; docs/dev is legacy",
+        "docs/subsystems/indexing.md: use docs/design/ for human architecture docs",
+        "tasks/check.sh: root tasks/ is legacy for command code; use just/*/scripts",
+        "bin/tool.py: root bin/ is legacy for command code; use importable modules or just/*/scripts",
+        "packages/pkg/docs/agents/build-notes.md: use packages/<name>/agents/ for package-local agent notes",
+    ]
 
 
 def test_check_workflow_command_surface_requires_just_or_pre_commit(tmp_path: Path):

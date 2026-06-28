@@ -71,6 +71,45 @@ checksum = "sha256:6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f
 url = "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_windows_amd64.zip"
 provenance = "github-attestations"
 
+[[tools."aqua:rvben/rumdl"]]
+version = "0.2.20"
+backend = "aqua:rvben/rumdl"
+
+[tools."aqua:rvben/rumdl"."platforms.linux-arm64"]
+checksum = "sha256:696d8471822d032f6f4924ced5d9bdef08d344034ee39939eddd5be28d41eaae"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-aarch64-unknown-linux-musl.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.linux-arm64-musl"]
+checksum = "sha256:696d8471822d032f6f4924ced5d9bdef08d344034ee39939eddd5be28d41eaae"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-aarch64-unknown-linux-musl.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.linux-x64"]
+checksum = "sha256:a5255b57958a493549dc33c73e86b9f9345a058a79d10e87d6086a74e45016d0"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-x86_64-unknown-linux-musl.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.linux-x64-musl"]
+checksum = "sha256:a5255b57958a493549dc33c73e86b9f9345a058a79d10e87d6086a74e45016d0"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-x86_64-unknown-linux-musl.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.macos-arm64"]
+checksum = "sha256:d00c1cb1278db6db8acad32c16d0b47370263063436767e2fef4a3c7c5ff85c0"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-aarch64-apple-darwin.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.macos-x64"]
+checksum = "sha256:59001f50cefd77ac84bc8d3fa16c31d7aeff2cbe0ed016cce2d40fd930d9b597"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-x86_64-apple-darwin.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:rvben/rumdl"."platforms.windows-x64"]
+checksum = "sha256:6a73c70f7e60082c7f250c7dafd70db8439d9d51da29dc942d98d93ffc627e43"
+url = "https://github.com/rvben/rumdl/releases/download/v0.2.20/rumdl-v0.2.20-x86_64-pc-windows-msvc.zip"
+provenance = "github-attestations"
+
 [[tools.gh]]
 version = "2.95.0"
 backend = "aqua:cli/cli"

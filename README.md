@@ -28,7 +28,7 @@ Package-specific truth is colocated under `packages/<name>`:
 
 - `pai-package.toml`: package descriptor and build-contract deltas.
 - `build.sh`: package-local build implementation.
-- `docs/agents/build-notes.md`: package-local agent notes.
+- `agents/build-notes.md`: package-local agent notes.
 - `pyproject.toml` and `uv.lock`: package build environment.
 
 Use shared commands instead of editing central package lists:
@@ -57,7 +57,7 @@ lockfiles. Do not modify old published package indices or existing GitHub
 release assets. Stable index manifests are append-only; scratch work belongs in
 indices marked `stability: "unstable"`.
 
-Release/index details live in `docs/agents/release-safety.md`.
+Release/index details live in `agents/release-safety.md`.
 
 ## License
 
