@@ -37,9 +37,9 @@ def test_parse_name_status():
 
 
 def test_parse_jj_summary():
-    assert parse_jj_summary("M docs/v1.5.0/index.html\nA docs/dev/agent-workflow.md\n") == [
+    assert parse_jj_summary("M docs/v1.5.0/index.html\nA docs/agents/agent-workflow.md\n") == [
         ChangedPath(status="M", path="docs/v1.5.0/index.html"),
-        ChangedPath(status="A", path="docs/dev/agent-workflow.md"),
+        ChangedPath(status="A", path="docs/agents/agent-workflow.md"),
     ]
 
 
@@ -47,7 +47,7 @@ def test_forbidden_index_changes_allows_new_index_files():
     changes = [
         ChangedPath(status="A", path="docs/v1.6.0/index.html"),
         ChangedPath(status="A", path="docs/v1.6.0/natten/index.html"),
-        ChangedPath(status="M", path="docs/dev/agent-guide.md"),
+        ChangedPath(status="M", path="docs/agents/agent-guide.md"),
     ]
 
     assert forbidden_index_changes(changes) == []

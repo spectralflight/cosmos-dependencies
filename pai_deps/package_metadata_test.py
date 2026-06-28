@@ -37,7 +37,7 @@ backend = "uv-build"
     assert package.project_name == "sample"
     assert package.build.script == "build.sh"
     assert package.build.requires_torch is True
-    assert package.docs == "docs/dev/build-notes.md"
+    assert package.docs == "docs/agents/build-notes.md"
     assert package.license.expression == "NOASSERTION"
 
 

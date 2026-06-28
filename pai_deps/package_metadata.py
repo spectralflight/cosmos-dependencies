@@ -147,7 +147,7 @@ def load_package_descriptor(descriptor_path: Path) -> PackageDescriptor:
         status=_require_string(data, "status", source=descriptor_path),
         upstream=_require_string(data, "upstream", source=descriptor_path),
         gpu_risk=_require_string(data, "gpu_risk", source=descriptor_path),
-        docs=str(data.get("docs", "docs/dev/build-notes.md")),
+        docs=str(data.get("docs", "docs/agents/build-notes.md")),
         license=LicenseDescriptor(
             expression=str(license_data.get("expression", "NOASSERTION")),
             files=_string_tuple(license_data, "files"),

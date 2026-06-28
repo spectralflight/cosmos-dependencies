@@ -4,8 +4,8 @@ Status: candidate, 2026-06-26. This document is for coding agents working on
 the build and publishing harness.
 
 For locked-tool policy, no-GPU checks, package descriptor commands, and release
-dry runs, start with `docs/dev/agent-workflow.md`. For attribution and
-wheel-license checks, use `docs/dev/legal-audit.md`.
+dry runs, start with `docs/agents/agent-workflow.md`. For attribution and
+wheel-license checks, use `docs/agents/legal-audit.md`.
 
 ## Operating Model
 
@@ -103,7 +103,7 @@ Several other package directories are retained as historical documentation and
 may not build. Do not spend time reviving broken packages unless the owner
 specifically asks for that package.
 
-Package-local agent notes live at `packages/<name>/docs/dev/build-notes.md`.
+Package-local agent notes live at `packages/<name>/docs/agents/build-notes.md`.
 Use `just package list` and `just package show <name>` to inspect the package
 descriptor before editing package scripts or docs.
 

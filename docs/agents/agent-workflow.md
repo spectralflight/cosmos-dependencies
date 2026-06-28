@@ -13,7 +13,7 @@ Status: candidate, 2026-06-27.
   into a stable release.
 - Do not start Docker containers or package builds when another package-build
   thread is active on the same one-GPU machine.
-- Use `packages/<name>/docs/dev/build-notes.md` for package-local agent notes.
+- Use `packages/<name>/docs/agents/build-notes.md` for package-local agent notes.
 
 ## Locked Tools
 

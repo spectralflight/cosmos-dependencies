@@ -37,7 +37,7 @@ SCAN_PATHS = [
     "README.md",
     "Dockerfile",
     "justfile",
-    "docs/dev",
+    "docs/agents",
     "packages",
     "docker",
     "just",

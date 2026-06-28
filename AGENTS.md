@@ -25,7 +25,7 @@ package-index, and release-asset contracts.
 
 - Package-specific truth belongs under `packages/<name>`.
 - Each package owns `pai-package.toml`, `build.sh`, `pyproject.toml`,
-  `uv.lock`, and `docs/dev/build-notes.md`.
+  `uv.lock`, and `docs/agents/build-notes.md`.
 - Shared importable code belongs in `pai_deps/`. Command implementations belong
   under the owning `just/*/scripts` module, and CI must call public `just`
   recipes rather than implementation scripts directly.
@@ -56,8 +56,8 @@ package-index, and release-asset contracts.
 
 ## Pointers
 
-- `docs/dev/agent-workflow.md`: locked tools, no-GPU checks, package workflow.
-- `docs/dev/agent-guide.md`: Docker build loop and package-build notes.
-- `docs/dev/legal-audit.md`: attribution, wheel-license, and package legal
+- `docs/agents/agent-workflow.md`: locked tools, no-GPU checks, package workflow.
+- `docs/agents/agent-guide.md`: Docker build loop and package-build notes.
+- `docs/agents/legal-audit.md`: attribution, wheel-license, and package legal
   review checks.
-- `docs/dev/release-safety.md`: index and release invariants.
+- `docs/agents/release-safety.md`: index and release invariants.
