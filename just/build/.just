@@ -21,7 +21,7 @@ natten package_version='0.21.6.dev6' python_version='3.12' torch_version='2.9':
 
 # Check Docker tool pins against mise.lock.
 tool-versions-check:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_toolchain.py --docker-only
+    cd "{{ repo }}" && mise exec -- uv run --frozen python just/check/scripts/check_toolchain.py --docker-only
 
 # Run the docker container for a CUDA version.
 docker-shell cuda_version='12.8.1':

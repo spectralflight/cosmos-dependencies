@@ -14,12 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root_dir="$(pwd)"
 package_dir="${root_dir}/packages/${PACKAGE_NAME}"
 export PAI_DEPS_REPO_ROOT="${root_dir}"
 
-# shellcheck source=bin/build_helpers.sh
-source "${root_dir}/bin/build_helpers.sh"
+# shellcheck source=just/build/scripts/build-helpers.sh
+source "${script_dir}/build-helpers.sh"
 
 CUDA_VERSION=$(nvcc --version | sed -n 's/^.*release \([0-9]\+\.[0-9]\+\).*$/\1/p')
 CUDA_NAME="${CUDA_VERSION//./}"
@@ -115,4 +116,4 @@ ccache --show-stats
 # Optionally append a build-variant suffix to the local version (e.g. LOCAL_VERSION_SUFFIX=gb300
 # -> '...+cu130.torch210.gb300') to distinguish a custom build from the upstream wheel.
 LOCAL_VERSION="cu${CUDA_NAME}.torch${TORCH_NAME}${LOCAL_VERSION_SUFFIX:+.${LOCAL_VERSION_SUFFIX}}"
-uv run --frozen --no-dev bin/fix_wheel.py -i "${OUTPUT_DIR}"/*.whl --version="${PACKAGE_VERSION}" --local-version="${LOCAL_VERSION}"
+uv run --frozen --no-dev pai-deps-fix-wheel -i "${OUTPUT_DIR}"/*.whl --version="${PACKAGE_VERSION}" --local-version="${LOCAL_VERSION}"

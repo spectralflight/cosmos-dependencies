@@ -39,7 +39,6 @@ SCAN_PATHS = [
     "justfile",
     "docs/dev",
     "packages",
-    "bin",
     "docker",
     "just",
     ".github",

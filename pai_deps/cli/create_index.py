@@ -251,7 +251,7 @@ def _write_index(output_dir: Path, all_lines: dict[str, set[_IndexLine]]) -> Non
         )
 
 
-def main(args: Args):
+def main(args: Args) -> None:
     args = _resolve_index_name(args)
     shutil.rmtree(args.output_dir, ignore_errors=True)
     assets = _collect_release_assets(args)
@@ -259,6 +259,9 @@ def main(args: Args):
     _write_index(args.output_dir, all_lines)
 
 
+def cli() -> None:
+    main(tyro.cli(Args, description=__doc__))
+
+
 if __name__ == "__main__":
-    args = tyro.cli(Args, description=__doc__)
-    main(args)
+    cli()

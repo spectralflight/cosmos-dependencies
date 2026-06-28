@@ -24,6 +24,12 @@ dependencies = [
     "wheel-filename",
 ]
 
+[project.scripts]
+pai-deps-copy-release-assets = "pai_deps.cli.copy_release_assets:main"
+pai-deps-create-index = "pai_deps.cli.create_index:cli"
+pai-deps-fix-wheel = "pai_deps.cli.fix_wheel:cli"
+pai-deps-package-info = "pai_deps.cli.package_info:main"
+
 [project.optional-dependencies]
 build = [
     "cmake",

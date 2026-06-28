@@ -17,7 +17,7 @@ from pathlib import Path
 
 from pai_deps.release_artifacts import WHEEL_SIDECAR_SUFFIXES, wheel_upload_names
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True, order=True)

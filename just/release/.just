@@ -13,19 +13,19 @@ default:
 
 # Generate a temporary package index for an index name.
 create index_name=tag:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-create-index --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Publish a package index under docs for GitHub Pages.
 publish index_name=tag:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "docs/{{ index_name }}" --index-name {{ quote(index_name) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-create-index --wheels-file=wheels.txt -o "docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Create a package index from an explicit manifest.
 create-manifest manifest_path output_dir:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --manifest {{ quote(manifest_path) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-create-index --wheels-file=wheels.txt -o {{ quote(output_dir) }} --manifest {{ quote(manifest_path) }}
 
 # Create a package index for an arbitrary release under a caller-selected path.
 create-release repo_name release_tag output_dir:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o {{ quote(output_dir) }} --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-create-index --wheels-file=wheels.txt -o {{ quote(output_dir) }} --repo {{ quote(repo_name) }} --tag {{ quote(release_tag) }}
 
 # Upload wheels to a GitHub release without deleting local artifacts.
 upload pattern repo_name release_tag=tag:
@@ -45,11 +45,11 @@ upload-batch pattern batch_id repo_name index_tag=tag:
 
 # Copy selected assets from one GitHub release to another.
 copy-assets source_repo source_tag dest_repo dest_tag include='*':
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/copy_release_assets.py --source-repo {{ quote(source_repo) }} --source-tag {{ quote(source_tag) }} --dest-repo {{ quote(dest_repo) }} --dest-tag {{ quote(dest_tag) }} --include {{ quote(include) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-copy-release-assets --source-repo {{ quote(source_repo) }} --source-tag {{ quote(source_tag) }} --dest-repo {{ quote(dest_repo) }} --dest-tag {{ quote(dest_tag) }} --include {{ quote(include) }}
 
 # Print selected release assets for a copy operation without downloading or uploading.
 copy-plan source_repo source_tag dest_repo dest_tag include='*':
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/copy_release_assets.py --dry-run --source-repo {{ quote(source_repo) }} --source-tag {{ quote(source_tag) }} --dest-repo {{ quote(dest_repo) }} --dest-tag {{ quote(dest_tag) }} --include {{ quote(include) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-copy-release-assets --dry-run --source-repo {{ quote(source_repo) }} --source-tag {{ quote(source_tag) }} --dest-repo {{ quote(dest_repo) }} --dest-tag {{ quote(dest_tag) }} --include {{ quote(include) }}
 
 # Verify that a package installs from a generated local index.
 verify-install index_dir package_name package_version import_name='' python_version='3.12':

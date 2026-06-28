@@ -12,7 +12,7 @@ from pathlib import Path
 from pai_deps.package_metadata import PackageDescriptor, discover_package_descriptors
 
 REPO = Path(__file__).resolve().parents[3]
-BUILD_HELPERS = REPO / "bin/build_helpers.sh"
+BUILD_HELPERS = REPO / "just/build/scripts/build-helpers.sh"
 COMMON_PIP_WHEEL_HELPER_TOKENS = [
     "pip wheel",
     "--no-deps",

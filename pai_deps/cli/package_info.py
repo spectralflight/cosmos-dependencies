@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pai_deps.package_metadata import PackageDescriptor, discover_package_descriptors
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 
 def _descriptor_to_dict(package: PackageDescriptor) -> dict[str, object]:

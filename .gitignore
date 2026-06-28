@@ -9,6 +9,11 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+!just/build/
+!just/build/.just
+!just/build/scripts/
+!just/build/scripts/*.py
+!just/build/scripts/*.sh
 develop-eggs/
 dist/
 downloads/

@@ -15,11 +15,8 @@
 
 project-includes = [
     "pai_deps/",
-    "bin/build_script_test.py",
-    "bin/create_index.py",
-    "bin/create_index_test.py",
-    "bin/docker_build_package_script_test.py",
-    "bin/package_info.py",
+    "just/build/scripts/build-package_test.py",
+    "just/build/scripts/docker-build-package_test.py",
     "just/check/scripts/check_toolchain.py",
     "just/check/scripts/check_toolchain_test.py",
     "just/package/scripts/check_package_build_contracts.py",

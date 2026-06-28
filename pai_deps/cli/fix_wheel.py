@@ -39,7 +39,7 @@ class Args:
     """Override local version (e.g. 'cu128.torch27')."""
 
 
-def main(args: Args):
+def main(args: Args) -> None:
     for input_path in args.input_paths:
         print(f"Fixing wheel: '{input_path}'")
         pwf = WheelFilename.parse(input_path.name)
@@ -66,6 +66,9 @@ def main(args: Args):
         print(f"Renamed wheel: '{input_path}' -> '{output_path}'")
 
 
+def cli() -> None:
+    main(tyro.cli(Args, description=__doc__))
+
+
 if __name__ == "__main__":
-    args = tyro.cli(Args, description=__doc__)
-    main(args)
+    cli()

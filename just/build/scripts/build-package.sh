@@ -114,7 +114,7 @@ _append_build_env_assignment() {
 	value="$(_trim "${BASH_REMATCH[2]}")"
 	value="$(_strip_matching_quotes "${value}")"
 	if _is_reserved_env_name "${key}"; then
-		echo "Error: ${source}: ${key} is controlled by bin/build.sh and cannot be set in PAI_DEPS_BUILD_ENV_FILE or PAI_DEPS_BUILD_ENV" >&2
+		echo "Error: ${source}: ${key} is controlled by just/build/scripts/build-package.sh and cannot be set in PAI_DEPS_BUILD_ENV_FILE or PAI_DEPS_BUILD_ENV" >&2
 		exit 1
 	fi
 	build_env_extra_args+=("${key}=${value}")
@@ -209,7 +209,7 @@ _write_wheel_sidecars() {
 
 	for wheel in "${wheels[@]}"; do
 		cp "${log_file}" "${wheel}.build.log"
-		"${provenance_cmd[@]}" "${script_dir}/write_build_provenance.py" \
+		"${provenance_cmd[@]}" -m pai_deps.build_tools.write_build_provenance \
 			--wheel "${wheel}" \
 			--build-log "${wheel}.build.log" \
 			--output "${wheel}.build.json" \
@@ -261,5 +261,5 @@ build_env_args=(
 	UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT}"
 	CCACHE_DIR="${CCACHE_DIR}"
 )
-env -i "${build_env_args[@]}" "${build_env_extra_args[@]}" bash -euxo pipefail "bin/_build.sh" "$@" |& tee "${log_file}"
+env -i "${build_env_args[@]}" "${build_env_extra_args[@]}" bash -euxo pipefail "${script_dir}/build-package-inner.sh" "$@" |& tee "${log_file}"
 _write_wheel_sidecars

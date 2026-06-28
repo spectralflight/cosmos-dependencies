@@ -6,7 +6,7 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[3]
 DOCKER_BUILD_SCRIPT = ROOT_DIR / "just" / "build" / "scripts" / "docker-build-package.sh"
 
 
@@ -62,7 +62,7 @@ def test_docker_build_package_mounts_absolute_output_and_root_mode(tmp_path: Pat
         "--run-arg",
         "PAI_DEPS_CHOWN_PATHS=/pai-deps-output",
         "--",
-        "bin/build.sh",
+        "just/build/scripts/build-package.sh",
         "cosmos-dummy",
         "0.1.0",
         "3.12",

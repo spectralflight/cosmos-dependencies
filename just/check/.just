@@ -28,19 +28,19 @@ lint: shell shell-format ruff format
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
+    cd "{{ repo }}" && mise exec -- shellcheck just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh
 
 # Run Python linting.
 ruff:
-    cd "{{ repo }}" && mise exec -- ruff check bin just pai_deps
+    cd "{{ repo }}" && mise exec -- ruff check just pai_deps
 
 # Check Python formatting.
 format:
-    cd "{{ repo }}" && mise exec -- ruff format --check bin just pai_deps
+    cd "{{ repo }}" && mise exec -- ruff format --check just pai_deps
 
 # Check locked toolchain policy and Docker tool pins.
 toolchain:
@@ -69,7 +69,7 @@ typecheck:
 
 # Run focused unit tests.
 unit:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python -m pytest bin/build_script_test.py bin/copy_release_assets_test.py bin/docker_build_package_script_test.py bin/write_build_provenance_test.py just/check/scripts/check_toolchain_test.py just/package/scripts/check_package_build_contracts_test.py just/package/scripts/check_package_docs_test.py just/release/scripts/check_docs_indices_test.py just/release/scripts/check_index_manifests_test.py just/release/scripts/check_release_artifacts_test.py just/release/scripts/scan_release_artifacts_test.py just/release/scripts/write_release_ledger_test.py just/license/scripts/write_wheel_legal_sidecars_test.py bin/create_index_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen python -m pytest just/build/scripts/build-package_test.py just/build/scripts/docker-build-package_test.py just/check/scripts/check_toolchain_test.py just/package/scripts/check_package_build_contracts_test.py just/package/scripts/check_package_docs_test.py just/release/scripts/check_docs_indices_test.py just/release/scripts/check_index_manifests_test.py just/release/scripts/check_release_artifacts_test.py just/release/scripts/scan_release_artifacts_test.py just/release/scripts/write_release_ledger_test.py just/license/scripts/write_wheel_legal_sidecars_test.py pai_deps/build_test.py pai_deps/package_metadata_test.py pai_deps/cli/copy_release_assets_test.py pai_deps/cli/create_index_test.py pai_deps/build_tools/write_build_provenance_test.py
 
 # Check that existing package indices were not modified.
 index-guard base='origin/main':
@@ -81,7 +81,7 @@ manifest-guard base='origin/main':
 
 # Generate a temporary package index.
 index-smoke index_name=tag:
-    cd "{{ repo }}" && mise exec -- uv run --frozen bin/create_index.py --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-create-index --wheels-file=wheels.txt -o "tmp/docs/{{ index_name }}" --index-name {{ quote(index_name) }}
 
 # Run the standard local test lane.
 test: lint toolchain package-docs package-contracts typecheck unit index-smoke

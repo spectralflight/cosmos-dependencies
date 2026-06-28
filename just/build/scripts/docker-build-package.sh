@@ -57,7 +57,7 @@ fi
 for ((attempt = 1; attempt <= attempts; attempt++)); do
 	echo "Docker build attempt ${attempt}/${attempts}: ${package_name} ${package_version} py${python_version} torch${torch_version} cuda${cuda_version}"
 	if "${script_dir}/docker-run.sh" --cuda-version "${cuda_version}" --no-tty "${docker_run_args[@]}" -- \
-		bin/build.sh "${package_name}" "${package_version}" "${python_version}" "${torch_version}" "${build_dir}" "$@"; then
+		just/build/scripts/build-package.sh "${package_name}" "${package_version}" "${python_version}" "${torch_version}" "${build_dir}" "$@"; then
 		exit 0
 	else
 		exit_code=$?

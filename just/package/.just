@@ -10,19 +10,19 @@ default:
 
 # List discovered package descriptors.
 list:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python bin/package_info.py list
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-package-info list
 
 # List discovered package descriptors as JSON.
 list-json:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python bin/package_info.py list --json
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-package-info list --json
 
 # Show descriptor and build-doc details for one package.
 show package_name:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python bin/package_info.py show {{ quote(package_name) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-package-info show {{ quote(package_name) }}
 
 # Show descriptor and build-doc details for one package as JSON.
 show-json package_name:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python bin/package_info.py show {{ quote(package_name) }} --json
+    cd "{{ repo }}" && mise exec -- uv run --frozen pai-deps-package-info show {{ quote(package_name) }} --json
 
 # Check package descriptors and package-local agent docs.
 docs-check:

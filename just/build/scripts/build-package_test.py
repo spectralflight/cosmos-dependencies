@@ -19,14 +19,17 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-BUILD_SCRIPT = ROOT_DIR / "bin" / "build.sh"
+ROOT_DIR = Path(__file__).resolve().parents[3]
+BUILD_SCRIPT = ROOT_DIR / "just" / "build" / "scripts" / "build-package.sh"
 
 
-def _write_fake_build_script(work_dir: Path) -> None:
-    bin_dir = work_dir / "bin"
-    bin_dir.mkdir()
-    fake_build = bin_dir / "_build.sh"
+def _write_fake_build_script(work_dir: Path) -> Path:
+    scripts_dir = work_dir / "just" / "build" / "scripts"
+    scripts_dir.mkdir(parents=True)
+    build_script = scripts_dir / "build-package.sh"
+    build_script.write_text(BUILD_SCRIPT.read_text())
+    build_script.chmod(0o755)
+    fake_build = scripts_dir / "build-package-inner.sh"
     fake_build.write_text(
         textwrap.dedent(
             """\
@@ -39,6 +42,7 @@ def _write_fake_build_script(work_dir: Path) -> None:
         )
     )
     fake_build.chmod(0o755)
+    return build_script
 
 
 def _run_build_script(
@@ -46,13 +50,14 @@ def _run_build_script(
     env_file: Path | None = None,
     inline_env: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    _write_fake_build_script(work_dir)
+    build_script = _write_fake_build_script(work_dir)
     env = {
         "CUDA_VERSION": "12.8",
         "HOST_ONLY_VARIABLE": "must-not-leak",
         "HOME": str(work_dir / "home"),
         "NATTEN_N_WORKERS": "99",
         "PATH": os.environ["PATH"],
+        "PYTHONPATH": str(ROOT_DIR),
         "USER": "tester",
     }
     if env_file is not None:
@@ -61,7 +66,7 @@ def _run_build_script(
         env["PAI_DEPS_BUILD_ENV"] = inline_env
     return subprocess.run(
         [
-            str(BUILD_SCRIPT),
+            str(build_script),
             "cosmos-dummy",
             "0.1.0",
             "3.12",
@@ -148,7 +153,7 @@ def test_build_script_rejects_reserved_env_file_variables(tmp_path: Path) -> Non
     result = _run_build_script(tmp_path, env_file)
 
     assert result.returncode != 0
-    assert "PACKAGE_NAME is controlled by bin/build.sh" in result.stderr
+    assert "PACKAGE_NAME is controlled by just/build/scripts/build-package.sh" in result.stderr
     assert not (tmp_path / "build").exists()
 
 
@@ -156,5 +161,5 @@ def test_build_script_rejects_reserved_inline_env_variables(tmp_path: Path) -> N
     result = _run_build_script(tmp_path, inline_env="PACKAGE_NAME=other")
 
     assert result.returncode != 0
-    assert "PACKAGE_NAME is controlled by bin/build.sh" in result.stderr
+    assert "PACKAGE_NAME is controlled by just/build/scripts/build-package.sh" in result.stderr
     assert not (tmp_path / "build").exists()
