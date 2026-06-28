@@ -30,6 +30,7 @@ notes = "Do not publish model checkpoints here; upstream checkpoint terms vary b
 backend = "pip-wheel-git"
 script = "build.sh"
 common_pip_flags = true
+requires_torch = false
 
 [build.source]
 url = "https://github.com/DepthAnything/Video-Depth-Anything.git"
