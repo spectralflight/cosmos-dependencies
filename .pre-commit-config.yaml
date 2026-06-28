@@ -13,45 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exclude: (?x)(
-    ^docs/
-  )
 repos:
-  - repo: https://github.com/google/addlicense
-    rev: v1.2.0
-    hooks:
-      - id: addlicense
-        args: ["-f", "ci/license.txt"]
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
   - repo: local
     hooks:
-      - id: uv-lock
-        name: Generate uv lock files for projects
-        entry: ./ci/uv_lock.sh
+      - id: gitleaks
+        name: Detect hardcoded secrets
+        entry: ./just/check/scripts/gitleaks-tracked.sh
         language: script
-        files: pyproject\.toml$
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
-    hooks:
-      - id: ruff-check
-        args: [--fix]
-      - id: ruff-format
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
-    hooks:
-      - id: shellcheck
-        args: [--shell, bash]
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.12.0-2
-    hooks:
-      - id: shfmt
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.8
-    hooks:
-      - id: actionlint
+        pass_filenames: false
+      - id: forbid-submodules
+        name: Forbid git submodules
+        entry: ./just/check/scripts/git-safety.sh submodules
+        language: script
+        pass_filenames: false
+      - id: check-large-files
+        name: Check large tracked files
+        entry: ./just/check/scripts/git-safety.sh large-files --max-kb 5000
+        language: script

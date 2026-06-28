@@ -51,6 +51,13 @@ def test_forbidden_patterns_catch_mise_exec_uvx_without_flagging_policy_prose():
     assert not re.search(uvx_pattern, "Do not use `uvx` in committed workflows.\n")
 
 
+def test_forbidden_patterns_catch_remote_pre_commit_hooks():
+    repo_pattern = next(pattern for pattern in check_toolchain.FORBIDDEN_PATTERNS if "repo:" in pattern)
+
+    assert re.search(repo_pattern, "  - repo: https://github.com/pre-commit/pre-commit-hooks\n")
+    assert not re.search(repo_pattern, "  - repo: local\n")
+
+
 def test_check_just_argument_forwarding_rejects_variadic_passthrough(tmp_path: Path):
     justfile = tmp_path / ".just"
     justfile.write_text(

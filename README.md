@@ -12,11 +12,15 @@ and verification commands.
 
 ```shell
 mise install --locked
+pre-commit install
 mise exec -- just help
 ```
 
-Do not use unlocked committed workflows such as `uvx`, `uv tool install`,
-`uv run --with ...`, curl-piped installers, or `eget`.
+The pre-commit config is intentionally limited to local Git safety hooks.
+Linters, tests, audits, and release checks live behind `just` recipes and use
+tools pinned by `mise.lock` or `uv.lock`. Do not use unlocked committed
+workflows such as `uvx`, `uv tool install`, `uv run --with ...`, curl-piped
+installers, or `eget`.
 
 ## Package Work
 

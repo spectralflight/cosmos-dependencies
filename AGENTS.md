@@ -33,6 +33,8 @@ package-index, and release-asset contracts.
 ## Useful Commands
 
 - `mise install --locked`: install pinned standalone tools.
+- `pre-commit install`: install minimal local Git safety hooks for secrets,
+  submodules, and large files.
 - `just help`: list root and module recipes.
 - `just no-gpu-check`: safe lane with no Docker, package build, or GPU use.
 - `just check fast`: shell, Python, type, package, release, index, and manifest

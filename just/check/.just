@@ -17,26 +17,22 @@ setup:
 
 # Setup pre-commit hooks.
 hooks: setup
-    cd "{{ repo }}" && mise exec -- pre-commit install -c ci/.pre-commit-config-base.yaml
+    cd "{{ repo }}" && mise exec -- pre-commit install
 
-# Run pre-commit base safety hooks.
-pre-commit-base:
-    cd "{{ repo }}" && mise exec -- pre-commit run -c ci/.pre-commit-config-base.yaml -a
-
-# Run full pre-commit hooks.
-pre-commit: pre-commit-base
-    cd "{{ repo }}" && mise exec -- pre-commit run -a || mise exec -- pre-commit run -a
+# Run minimal Git safety pre-commit hooks.
+pre-commit:
+    cd "{{ repo }}" && mise exec -- pre-commit run -a
 
 # Run linting and formatting hooks.
-lint: pre-commit
+lint: shell shell-format ruff format
 
 # Run shell checks on maintained shell scripts.
 shell:
-    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh ci/uv_lock.sh
+    cd "{{ repo }}" && mise exec -- shellcheck bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh
 
 # Check shell script formatting.
 shell-format:
-    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh ci/gitleaks_tracked.sh ci/uv_lock.sh
+    cd "{{ repo }}" && mise exec -- shfmt -d bin/build.sh bin/_build.sh bin/build_helpers.sh just/build/scripts/*.sh just/check/scripts/*.sh just/release/scripts/*.sh just/deps/scripts/*.sh just/license/scripts/*.sh docker/entrypoint.sh ci/uv_audit.sh
 
 # Run Python linting.
 ruff:
@@ -95,7 +91,7 @@ fast: shell shell-format ruff format toolchain package-docs package-contracts le
 
 # Scan tracked source files for leaked secrets.
 secrets:
-    cd "{{ repo }}" && mise exec -- ./ci/gitleaks_tracked.sh
+    cd "{{ repo }}" && mise exec -- ./just/check/scripts/gitleaks-tracked.sh
 
 # Scan Git history for leaked secrets.
 history-secrets:

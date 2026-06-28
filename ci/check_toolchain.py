@@ -30,8 +30,10 @@ FORBIDDEN_PATTERNS = {
     r"just\.systems/install\.sh": "install just from mise.lock, not the installer script",
     COMMAND_PREFIX + r"eget\b": "install standalone tools through mise, not eget",
     r"\bCOSMOS_DEPS_": "use PAI_DEPS_* environment variables; COSMOS_DEPS_* aliases are retired",
+    r"(?m)^\s*-\s*repo:\s+(?!local\b).+": "pre-commit hooks must be local; run pinned tools through mise or uv",
 }
 SCAN_PATHS = [
+    ".pre-commit-config.yaml",
     "README.md",
     "Dockerfile",
     "justfile",
