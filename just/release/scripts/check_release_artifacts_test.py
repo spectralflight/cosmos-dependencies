@@ -24,7 +24,7 @@ check_release_artifacts = _load_check_release_artifacts()
 
 
 def _load_write_wheel_legal_sidecars():
-    module_path = Path(__file__).with_name("write_wheel_legal_sidecars.py")
+    module_path = Path(__file__).resolve().parents[2] / "license" / "scripts" / "write_wheel_legal_sidecars.py"
     spec = importlib.util.spec_from_file_location("write_wheel_legal_sidecars", module_path)
     assert spec is not None
     module = importlib.util.module_from_spec(spec)

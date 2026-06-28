@@ -164,8 +164,12 @@ def _check_downloaded_artifacts(files: list[Path]) -> None:
     wheels = [file for file in files if file.name.endswith(".whl")]
     if not wheels:
         return
-    subprocess.check_call([sys.executable, str(REPO / "ci/check_release_artifacts.py"), *map(str, wheels)])
-    subprocess.check_call([sys.executable, str(REPO / "ci/scan_release_artifacts.py"), *map(str, files)])
+    subprocess.check_call(
+        [sys.executable, str(REPO / "just/release/scripts/check_release_artifacts.py"), *map(str, wheels)]
+    )
+    subprocess.check_call(
+        [sys.executable, str(REPO / "just/release/scripts/scan_release_artifacts.py"), *map(str, files)]
+    )
 
 
 def main() -> int:

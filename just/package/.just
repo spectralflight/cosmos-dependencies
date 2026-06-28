@@ -26,8 +26,8 @@ show-json package_name:
 
 # Check package descriptors and package-local agent docs.
 docs-check:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_package_docs.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen python just/package/scripts/check_package_docs.py
 
 # Check package descriptors against package-local build scripts.
 contracts-check:
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_package_build_contracts.py
+    cd "{{ repo }}" && mise exec -- uv run --frozen python just/package/scripts/check_package_build_contracts.py

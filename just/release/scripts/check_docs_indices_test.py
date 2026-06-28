@@ -1,7 +1,27 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from ci.check_docs_indices import ChangedPath, forbidden_index_changes, parse_jj_summary, parse_name_status
+import importlib.util
+import sys
+from pathlib import Path
+
+
+def _load_check_docs_indices():
+    module_path = Path(__file__).with_name("check_docs_indices.py")
+    spec = importlib.util.spec_from_file_location("check_docs_indices", module_path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+check_docs_indices = _load_check_docs_indices()
+ChangedPath = check_docs_indices.ChangedPath
+forbidden_index_changes = check_docs_indices.forbidden_index_changes
+parse_jj_summary = check_docs_indices.parse_jj_summary
+parse_name_status = check_docs_indices.parse_name_status
 
 SHA_A = "a" * 64
 SHA_B = "b" * 64

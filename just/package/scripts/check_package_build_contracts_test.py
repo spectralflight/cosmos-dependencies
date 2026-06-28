@@ -1,14 +1,29 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import importlib.util
+import sys
 from pathlib import Path
 
-from ci.check_package_build_contracts import check_packages
 from pai_deps.package_metadata import discover_package_descriptors
 
 
+def _load_check_package_build_contracts():
+    module_path = Path(__file__).with_name("check_package_build_contracts.py")
+    spec = importlib.util.spec_from_file_location("check_package_build_contracts", module_path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+check_package_build_contracts = _load_check_package_build_contracts()
+
+
 def test_repository_package_contracts_match_build_scripts() -> None:
-    assert check_packages() == []
+    assert check_package_build_contracts.check_packages() == []
 
 
 def test_detects_missing_source_url(tmp_path: Path) -> None:
@@ -36,7 +51,7 @@ revision = "v{package_version}"
 
     packages = discover_package_descriptors(tmp_path)
 
-    errors = check_packages(packages)
+    errors = check_package_build_contracts.check_packages(packages)
 
     assert any("https://example.invalid/pkg.git" in error for error in errors)
 
@@ -68,7 +83,7 @@ revision = "v{package_version}"
 
     packages = discover_package_descriptors(tmp_path)
 
-    errors = check_packages(packages)
+    errors = check_package_build_contracts.check_packages(packages)
 
     assert any("pai_deps_copy_license_files_py" in error for error in errors)
     assert any("license_files=" in error for error in errors)
@@ -102,7 +117,7 @@ revision = "v{package_version}"
 
     packages = discover_package_descriptors(tmp_path)
 
-    errors = check_packages(packages)
+    errors = check_package_build_contracts.check_packages(packages)
 
     assert any("[license_review].required" in error for error in errors)
     assert any("license_review.url" in error for error in errors)

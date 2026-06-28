@@ -175,7 +175,7 @@ def _attribution_md(info: WheelLicenseInfo) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _license_entries(info: WheelLicenseInfo) -> list[dict[str, str]]:
+def _license_entries(info: WheelLicenseInfo) -> list[dict[str, object]]:
     if info.license_expression:
         return [{"expression": info.license_expression}]
     if info.license_field and info.license_field.upper() != "UNKNOWN":

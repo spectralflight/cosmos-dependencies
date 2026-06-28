@@ -19,12 +19,12 @@ attributions-check:
 
 # Check staged wheel artifacts for license metadata and license files.
 wheel-check pattern='tmp/build/**/*.whl':
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/write_wheel_legal_sidecars.py --allow-empty {{ quote(pattern) }}
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/check_release_artifacts.py --allow-empty {{ quote(pattern) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen python "{{ scripts }}/write_wheel_legal_sidecars.py" --allow-empty {{ quote(pattern) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen python just/release/scripts/check_release_artifacts.py --allow-empty {{ quote(pattern) }}
 
 # Generate per-wheel legal/SBOM sidecars for staged wheel artifacts.
 sidecars pattern='tmp/build/**/*.whl':
-    cd "{{ repo }}" && mise exec -- uv run --frozen python ci/write_wheel_legal_sidecars.py --allow-empty {{ quote(pattern) }}
+    cd "{{ repo }}" && mise exec -- uv run --frozen python "{{ scripts }}/write_wheel_legal_sidecars.py" --allow-empty {{ quote(pattern) }}
 
 # Export a CycloneDX SBOM for the locked root build/legal dependency set.
 sbom output='tmp/legal-sbom/pai-deps-root.cdx.json':

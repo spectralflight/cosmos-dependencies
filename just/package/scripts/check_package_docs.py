@@ -21,7 +21,7 @@ from pai_deps.package_metadata import (
     discover_package_descriptors,
 )
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
 REQUIRED_HEADINGS = [
     "Status",
     "Local Build Entry Point",

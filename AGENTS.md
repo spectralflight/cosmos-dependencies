@@ -26,8 +26,9 @@ package-index, and release-asset contracts.
 - Package-specific truth belongs under `packages/<name>`.
 - Each package owns `pai-package.toml`, `build.sh`, `pyproject.toml`,
   `uv.lock`, and `docs/dev/build-notes.md`.
-- Shared discovery, checks, and harness code belong in `pai_deps/`,
-  `ci/`, `bin/`, or `just/`.
+- Shared importable code belongs in `pai_deps/`. Command implementations belong
+  under the owning `just/*/scripts` module, and CI must call public `just`
+  recipes rather than implementation scripts directly.
 - Prefer shared parametrized tests over per-package boilerplate.
 
 ## Useful Commands

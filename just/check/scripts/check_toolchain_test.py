@@ -92,3 +92,31 @@ def test_check_forbidden_public_artifacts_rejects_tracked_wheels(tmp_path: Path,
     assert errors == [
         "dist/pkg-1.0.0-py3-none-any.whl: do not commit built binary/archive artifacts to the public repo"
     ]
+
+
+def test_check_ci_directory_is_config_only_rejects_scripts(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(check_toolchain, "_tracked_files", lambda repo: ["ci/check.py", "ci/vendor-config.yml"])
+
+    errors = check_toolchain.check_ci_directory_is_config_only(tmp_path)
+
+    assert errors == ["ci/check.py: ci/ is for vendor CI config; move implementation scripts under just/*/scripts"]
+
+
+def test_check_workflow_command_surface_requires_just_or_pre_commit(tmp_path: Path):
+    workflow = tmp_path / "workflow.yml"
+    workflow.write_text(
+        """
+jobs:
+  check:
+    steps:
+      - run: mise exec -- just check fast
+      - run: mise exec -- pre-commit run --all-files
+      - run: mise exec -- uv run --frozen python just/check/scripts/check_toolchain.py
+"""
+    )
+
+    errors = check_toolchain.check_workflow_command_surface([workflow])
+
+    assert errors == [
+        f"{workflow}:7: workflow run commands must call a public just recipe or the minimal pre-commit hook"
+    ]

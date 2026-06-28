@@ -10,12 +10,12 @@ import argparse
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import tomllib
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
 TARGET_PLATFORMS = ("linux-arm64", "linux-x64")
 DOCKER_TOOLS = ("uv", "just")
 COMMAND_PREFIX = r"(?m)(?:^|\brun:\s+|[;&|]\s*|\bmise\s+exec\s+--\s+)"
@@ -40,14 +40,13 @@ SCAN_PATHS = [
     "docs/dev",
     "packages",
     "bin",
-    "ci",
     "docker",
     "just",
     ".github",
 ]
 SCAN_SKIP = {
-    "ci/check_toolchain.py",
-    "ci/check_toolchain_test.py",
+    "just/check/scripts/check_toolchain.py",
+    "just/check/scripts/check_toolchain_test.py",
 }
 JUST_ARGUMENT_FORWARDING_PATTERNS = {
     r"\{\{\s*args\s*\}\}": "just recipes must not interpolate variadic args; use explicit recipes or scripts",
@@ -66,6 +65,10 @@ FORBIDDEN_TRACKED_ARTIFACT_RE = re.compile(
     r"bin|run"
     r")$"
 )
+WORKFLOW_RUN_RE = re.compile(r"(?m)^\s*(?:-\s*)?run:\s*(.+?)\s*$")
+WORKFLOW_JUST_RE = re.compile(r"(?:^|\s)(?:mise\s+exec\s+--\s+)?just(?:\s|$)")
+WORKFLOW_PRE_COMMIT_RE = re.compile(r"(?:^|\s)(?:mise\s+exec\s+--\s+)?pre-commit\s+run(?:\s|$)")
+CI_IMPLEMENTATION_SUFFIXES = {".py", ".sh", ".bash", ".zsh"}
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
@@ -234,6 +237,37 @@ def check_forbidden_public_artifacts(repo: Path = REPO) -> list[str]:
     return errors
 
 
+def check_ci_directory_is_config_only(repo: Path = REPO) -> list[str]:
+    errors: list[str] = []
+    for relative in _tracked_files(repo):
+        path = PurePosixPath(relative)
+        if len(path.parts) < 2 or path.parts[0] != "ci":
+            continue
+        if path.suffix in CI_IMPLEMENTATION_SUFFIXES:
+            errors.append(f"{relative}: ci/ is for vendor CI config; move implementation scripts under just/*/scripts")
+    return errors
+
+
+def check_workflow_command_surface(workflow_paths: list[Path] | None = None) -> list[str]:
+    if workflow_paths is None:
+        workflow_dir = REPO / ".github/workflows"
+        workflow_paths = sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")])
+    errors: list[str] = []
+    for path in workflow_paths:
+        text = path.read_text(errors="ignore")
+        relative = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else str(path)
+        for match in WORKFLOW_RUN_RE.finditer(text):
+            command = match.group(1)
+            line = text.count("\n", 0, match.start()) + 1
+            if WORKFLOW_JUST_RE.search(command) or WORKFLOW_PRE_COMMIT_RE.search(command):
+                continue
+            errors.append(
+                f"{relative}:{line}: workflow run commands must call a public just recipe "
+                "or the minimal pre-commit hook"
+            )
+    return errors
+
+
 def _tracked_files(repo: Path) -> list[str]:
     if not (repo / ".git").exists():
         return []
@@ -260,6 +294,8 @@ def main() -> int:
         errors.extend(check_unlocked_tool_invocations())
         errors.extend(check_just_argument_forwarding())
         errors.extend(check_forbidden_public_artifacts())
+        errors.extend(check_ci_directory_is_config_only())
+        errors.extend(check_workflow_command_surface())
     if errors:
         for error in errors:
             print(f"Error: {error}", file=sys.stderr)

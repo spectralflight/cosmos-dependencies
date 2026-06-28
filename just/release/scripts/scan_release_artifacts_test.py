@@ -7,8 +7,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SCAN_SCRIPT = ROOT / "ci" / "scan_release_artifacts.py"
+SCAN_SCRIPT = Path(__file__).with_name("scan_release_artifacts.py")
 
 
 def _fake_gitleaks(tmp_path: Path) -> tuple[Path, Path]:

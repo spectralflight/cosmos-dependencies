@@ -35,8 +35,8 @@ upgrade project_dir:
 
 # Audit root and package build dependencies.
 audit:
-    cd "{{ repo }}" && mise exec -- ./ci/uv_audit.sh
+    cd "{{ repo }}" && mise exec -- "{{ scripts }}/uv-audit.sh"
 
 # Audit without advisory allowlist ignores.
 audit-strict:
-    cd "{{ repo }}" && PAI_DEPS_AUDIT_STRICT=1 mise exec -- ./ci/uv_audit.sh
+    cd "{{ repo }}" && PAI_DEPS_AUDIT_STRICT=1 mise exec -- "{{ scripts }}/uv-audit.sh"

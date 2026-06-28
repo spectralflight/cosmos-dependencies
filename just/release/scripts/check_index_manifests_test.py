@@ -1,9 +1,25 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import importlib.util
 import json
+import sys
+from pathlib import Path
 
-from ci.check_index_manifests import check_manifest_change
+
+def _load_check_index_manifests():
+    module_path = Path(__file__).with_name("check_index_manifests.py")
+    spec = importlib.util.spec_from_file_location("check_index_manifests", module_path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+check_index_manifests = _load_check_index_manifests()
+check_manifest_change = check_index_manifests.check_manifest_change
 
 
 def _manifest(

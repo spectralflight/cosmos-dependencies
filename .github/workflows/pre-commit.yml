@@ -35,14 +35,14 @@ jobs:
           install: true
       - name: Check package index immutability
         if: github.event_name == 'pull_request'
-        run: mise exec -- uv run --no-dev --frozen python ci/check_docs_indices.py --base "origin/${{ github.base_ref }}"
+        run: mise exec -- just check index-guard "origin/${{ github.base_ref }}"
       - name: Check package manifest immutability
         if: github.event_name == 'pull_request'
-        run: mise exec -- uv run --no-dev --frozen python ci/check_index_manifests.py --base "origin/${{ github.base_ref }}"
+        run: mise exec -- just check manifest-guard "origin/${{ github.base_ref }}"
       - name: Check package index immutability on push
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
-        run: mise exec -- uv run --no-dev --frozen python ci/check_docs_indices.py --base "${{ github.event.before }}"
+        run: mise exec -- just check index-guard "${{ github.event.before }}"
       - name: Check package manifest immutability on push
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
-        run: mise exec -- uv run --no-dev --frozen python ci/check_index_manifests.py --base "${{ github.event.before }}"
+        run: mise exec -- just check manifest-guard "${{ github.event.before }}"
       - run: mise exec -- pre-commit run --all-files
